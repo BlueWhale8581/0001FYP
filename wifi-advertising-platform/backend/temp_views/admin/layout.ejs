@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WiFi Advertising Platform - Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.5.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2/dist/tailwind.min.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="drawer lg:drawer-open">
+        <input id="my-drawer-2" type="checkbox" class="drawer-toggle" />
+        <div class="drawer-content flex flex-col">
+            <!-- Page content here -->
+            <div class="navbar bg-primary text-primary-content">
+                <div class="flex-none lg:hidden">
+                    <label for="my-drawer-2" class="btn btn-square btn-ghost">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-6 h-6 stroke-current">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </label>
+                </div>
+                <div class="flex-1">
+                    <span class="text-xl font-bold">Admin Dashboard</span>
+                </div>
+                <div class="flex-none">
+                    <div class="dropdown dropdown-end">
+                        <label tabindex="0" class="btn btn-ghost btn-circle avatar">
+                            <div class="w-10 rounded-full">
+                                <img src="https://placehold.co/200x200?text=Admin" />
+                            </div>
+                        </label>
+                        <ul tabindex="0" class="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
+                            <li><a href="/admin/profile">Profile</a></li>
+                            <li><a href="/admin/settings">Settings</a></li>
+                            <li><a href="/logout">Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-4">
+                <%- body %>
+            </div>
+        </div> 
+        <div class="drawer-side">
+            <label for="my-drawer-2" class="drawer-overlay"></label> 
+            <ul class="menu p-4 w-80 h-full bg-base-200 text-base-content">
+                <li class="mb-2">
+                    <div class="font-bold text-lg px-4 py-2">WiFi Ad Platform</div>
+                </li>
+                <li><a href="/admin/dashboard" class="<%= path === '/admin/dashboard' ? 'active' : '' %>">Dashboard</a></li>
+                <li><a href="/admin/users" class="<%= path === '/admin/users' ? 'active' : '' %>">User Management</a></li>
+                <li><a href="/admin/merchants" class="<%= path === '/admin/merchants' ? 'active' : '' %>">Merchants</a></li>
+                <li><a href="/admin/advertisers" class="<%= path === '/admin/advertisers' ? 'active' : '' %>">Advertisers</a></li>
+                <li><a href="/admin/agents" class="<%= path === '/admin/agents' ? 'active' : '' %>">Agents</a></li>
+                <li><a href="/admin/campaigns" class="<%= path === '/admin/campaigns' ? 'active' : '' %>">Campaigns</a></li>
+                <li><a href="/admin/transactions" class="<%= path === '/admin/transactions' ? 'active' : '' %>">Transactions</a></li>
+                <li><a href="/admin/reports" class="<%= path === '/admin/reports' ? 'active' : '' %>">Reports</a></li>
+                <li><a href="/admin/audit-logs" class="<%= path === '/admin/audit-logs' ? 'active' : '' %>">Audit Logs</a></li>
+                <li><a href="/admin/settings" class="<%= path === '/admin/settings' ? 'active' : '' %>">System Settings</a></li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

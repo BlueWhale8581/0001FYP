@@ -1,0 +1,443 @@
+<div class="container mx-auto px-4">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">Transaction Management</h1>
+    <div class="flex gap-2">
+      <button class="btn btn-outline btn-sm" onclick="exportTransactions()">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
+        </svg>
+        Export
+      </button>
+    </div>
+  </div>
+  
+  <!-- Filters and Search -->
+  <div class="bg-base-200 p-4 rounded-lg mb-6">
+    <div class="flex flex-col sm:flex-row justify-between gap-4">
+      <div class="flex flex-col sm:flex-row gap-2">
+        <select id="filterType" class="select select-bordered select-sm w-full max-w-xs">
+          <option value="">All Transaction Types</option>
+          <option value="ad_revenue">Ad Revenue</option>
+          <option value="merchant_payment">Merchant Payment</option>
+          <option value="agent_commission">Agent Commission</option>
+          <option value="advertiser_payment">Advertiser Payment</option>
+        </select>
+        
+        <select id="filterStatus" class="select select-bordered select-sm w-full max-w-xs">
+          <option value="">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="completed">Completed</option>
+          <option value="failed">Failed</option>
+          <option value="refunded">Refunded</option>
+        </select>
+        
+        <div class="flex gap-2">
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">From</span>
+            </label>
+            <input type="date" id="dateFrom" class="input input-bordered input-sm" />
+          </div>
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">To</span>
+            </label>
+            <input type="date" id="dateTo" class="input input-bordered input-sm" />
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text">Search</span>
+        </label>
+        <div class="input-group">
+          <input type="text" id="searchInput" placeholder="Search by reference ID, amount..." class="input input-bordered input-sm" />
+          <button class="btn btn-primary btn-sm" id="searchBtn">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-base-100 p-4 rounded-lg shadow-md">
+      <div class="stat-title">Total Transactions</div>
+      <div class="stat-value text-primary"><%= transactions.summary?.total || 0 %></div>
+      <div class="stat-desc">All time</div>
+    </div>
+    <div class="bg-base-100 p-4 rounded-lg shadow-md">
+      <div class="stat-title">Pending Amount</div>
+      <div class="stat-value text-warning">$<%= transactions.summary?.pendingAmount.toFixed(2) || '0.00' %></div>
+      <div class="stat-desc"><%= transactions.summary?.pendingCount || 0 %> transactions</div>
+    </div>
+    <div class="bg-base-100 p-4 rounded-lg shadow-md">
+      <div class="stat-title">Completed Amount</div>
+      <div class="stat-value text-success">$<%= transactions.summary?.completedAmount.toFixed(2) || '0.00' %></div>
+      <div class="stat-desc"><%= transactions.summary?.completedCount || 0 %> transactions</div>
+    </div>
+    <div class="bg-base-100 p-4 rounded-lg shadow-md">
+      <div class="stat-title">Failed/Refunded</div>
+      <div class="stat-value text-error">$<%= transactions.summary?.failedAmount.toFixed(2) || '0.00' %></div>
+      <div class="stat-desc"><%= transactions.summary?.failedCount || 0 %> transactions</div>
+    </div>
+  </div>
+  
+  <!-- Transaction Table -->
+  <div class="overflow-x-auto bg-base-100 rounded-lg shadow-md">
+    <table class="table w-full">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Amount</th>
+          <th>Reference ID</th>
+          <th>Related Entity</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (transactions.data && transactions.data.length > 0) { %>
+          <% transactions.data.forEach(transaction => { %>
+            <tr class="hover">
+              <td><%= transaction.id %></td>
+              <td><%= new Date(transaction.created_at).toLocaleDateString() %></td>
+              <td>
+                <span class="badge <%= 
+                  transaction.type === 'ad_revenue' ? 'badge-primary' : 
+                  transaction.type === 'merchant_payment' ? 'badge-secondary' : 
+                  transaction.type === 'agent_commission' ? 'badge-accent' : 'badge-info' %>">
+                  <%= transaction.type.replace('_', ' ') %>
+                </span>
+              </td>
+              <td>$<%= transaction.amount.toFixed(2) %></td>
+              <td><%= transaction.reference_id || 'N/A' %></td>
+              <td>
+                <% if (transaction.merchant_id) { %>
+                  <a href="/admin/merchants/<%= transaction.merchant_id %>" class="link link-hover">Merchant #<%= transaction.merchant_id %></a>
+                <% } else if (transaction.advertiser_id) { %>
+                  <a href="/admin/advertisers/<%= transaction.advertiser_id %>" class="link link-hover">Advertiser #<%= transaction.advertiser_id %></a>
+                <% } else if (transaction.agent_id) { %>
+                  <a href="/admin/agents/<%= transaction.agent_id %>" class="link link-hover">Agent #<%= transaction.agent_id %></a>
+                <% } else if (transaction.campaign_id) { %>
+                  <a href="/admin/campaigns/<%= transaction.campaign_id %>" class="link link-hover">Campaign #<%= transaction.campaign_id %></a>
+                <% } else { %>
+                  N/A
+                <% } %>
+              </td>
+              <td>
+                <span class="badge <%= 
+                  transaction.status === 'completed' ? 'badge-success' : 
+                  transaction.status === 'pending' ? 'badge-warning' : 
+                  transaction.status === 'failed' ? 'badge-error' : 'badge-ghost' %>">
+                  <%= transaction.status %>
+                </span>
+              </td>
+              <td>
+                <div class="dropdown dropdown-end">
+                  <label tabindex="0" class="btn btn-ghost btn-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
+                    </svg>
+                  </label>
+                  <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                    <li><a href="/admin/transactions/<%= transaction.id %>" class="text-info">View Details</a></li>
+                    <% if (transaction.status === 'pending') { %>
+                      <li><a href="#" onclick="approveTransaction('<%= transaction.id %>')" class="text-success">Approve</a></li>
+                      <li><a href="#" onclick="rejectTransaction('<%= transaction.id %>')" class="text-error">Reject</a></li>
+                    <% } %>
+                    <% if (transaction.status === 'completed' && transaction.type !== 'agent_commission') { %>
+                      <li><a href="#" onclick="refundTransaction('<%= transaction.id %>')" class="text-warning">Refund</a></li>
+                    <% } %>
+                  </ul>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        <% } else { %>
+          <tr>
+            <td colspan="8" class="text-center py-4">No transactions found</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+  
+  <!-- Pagination -->
+  <div class="flex justify-between items-center mt-6">
+    <div>
+      <span class="text-sm">Showing <%= transactions.pagination?.start || 0 %> to <%= transactions.pagination?.end || 0 %> of <%= transactions.pagination?.total || 0 %> entries</span>
+    </div>
+    <div class="btn-group">
+      <% if (transactions.pagination) { %>
+        <% for(let i = 1; i <= transactions.pagination.totalPages; i++) { %>
+          <button class="btn btn-sm <%= transactions.pagination.currentPage === i ? 'btn-active' : '' %>" onclick="goToPage('<%= i %>')"><%= i %></button>
+        <% } %>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<!-- Transaction Details Modal -->
+<div id="transactionModal" class="modal">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg" id="modalTitle">Transaction Details</h3>
+    <div id="modalContent" class="py-4">
+      <!-- Content will be loaded dynamically -->
+    </div>
+    <div class="modal-action">
+      <button class="btn" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Simple filter functionality
+  document.getElementById('searchBtn').addEventListener('click', function() {
+    applyFilters();
+  });
+  
+  document.getElementById('filterType').addEventListener('change', function() {
+    applyFilters();
+  });
+  
+  document.getElementById('filterStatus').addEventListener('change', function() {
+    applyFilters();
+  });
+  
+  document.getElementById('dateFrom').addEventListener('change', function() {
+    applyFilters();
+  });
+  
+  document.getElementById('dateTo').addEventListener('change', function() {
+    applyFilters();
+  });
+  
+  function applyFilters() {
+    const type = document.getElementById('filterType').value;
+    const status = document.getElementById('filterStatus').value;
+    const dateFrom = document.getElementById('dateFrom').value;
+    const dateTo = document.getElementById('dateTo').value;
+    const search = document.getElementById('searchInput').value;
+    
+    let url = '/admin/transactions?';
+    if (type) url += `type=${type}&`;
+    if (status) url += `status=${status}&`;
+    if (dateFrom) url += `from=${dateFrom}&`;
+    if (dateTo) url += `to=${dateTo}&`;
+    if (search) url += `search=${encodeURIComponent(search)}&`;
+    
+    window.location.href = url.slice(0, -1); // Remove trailing & or ?
+  }
+  
+  function goToPage(page) {
+    // Get current URL and its parameters
+    const url = new URL(window.location.href);
+    // Update or add the page parameter
+    url.searchParams.set('page', page);
+    // Redirect to the updated URL
+    window.location.href = url.toString();
+  }
+  
+  function exportTransactions() {
+    // Get current filters
+    const type = document.getElementById('filterType').value;
+    const status = document.getElementById('filterStatus').value;
+    const dateFrom = document.getElementById('dateFrom').value;
+    const dateTo = document.getElementById('dateTo').value;
+    const search = document.getElementById('searchInput').value;
+    
+    let url = '/admin/transactions/export?format=csv';
+    if (type) url += `&type=${type}`;
+    if (status) url += `&status=${status}`;
+    if (dateFrom) url += `&from=${dateFrom}`;
+    if (dateTo) url += `&to=${dateTo}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+    
+    window.location.href = url;
+  }
+  
+  async function approveTransaction(id) {
+    if (confirm('Are you sure you want to approve this transaction?')) {
+      try {
+        const response = await fetch(`/admin/transactions/${id}/approve`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          alert('Transaction approved successfully');
+          window.location.reload();
+        } else {
+          const data = await response.json();
+          alert(`Error: ${data.message || 'Something went wrong'}`);
+        }
+      } catch (error) {
+        alert('Error approving transaction');
+      }
+    }
+  }
+  
+  async function rejectTransaction(id) {
+    const reason = prompt('Please provide a reason for rejection:', '');
+    if (reason !== null) {
+      try {
+        const response = await fetch(`/admin/transactions/${id}/reject`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ reason })
+        });
+        
+        if (response.ok) {
+          alert('Transaction rejected successfully');
+          window.location.reload();
+        } else {
+          const data = await response.json();
+          alert(`Error: ${data.message || 'Something went wrong'}`);
+        }
+      } catch (error) {
+        alert('Error rejecting transaction');
+      }
+    }
+  }
+  
+  async function refundTransaction(id) {
+    if (confirm('Are you sure you want to refund this transaction?')) {
+      try {
+        const response = await fetch(`/admin/transactions/${id}/refund`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          alert('Transaction refunded successfully');
+          window.location.reload();
+        } else {
+          const data = await response.json();
+          alert(`Error: ${data.message || 'Something went wrong'}`);
+        }
+      } catch (error) {
+        alert('Error refunding transaction');
+      }
+    }
+  }
+  
+  async function viewTransactionDetails(id) {
+    try {
+      document.getElementById('transactionModal').classList.add('modal-open');
+      document.getElementById('modalContent').innerHTML = 'Loading...';
+      
+      const response = await fetch(`/admin/transactions/${id}/details`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        let content = `
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="font-bold">ID:</p>
+              <p>${data.id}</p>
+            </div>
+            <div>
+              <p class="font-bold">Type:</p>
+              <p>${data.type.replace('_', ' ')}</p>
+            </div>
+            <div>
+              <p class="font-bold">Amount:</p>
+              <p>$${data.amount.toFixed(2)}</p>
+            </div>
+            <div>
+              <p class="font-bold">Status:</p>
+              <p>${data.status}</p>
+            </div>
+            <div>
+              <p class="font-bold">Reference ID:</p>
+              <p>${data.reference_id || 'N/A'}</p>
+            </div>
+            <div>
+              <p class="font-bold">Created:</p>
+              <p>${new Date(data.created_at).toLocaleString()}</p>
+            </div>
+          </div>
+          <div class="mt-4">
+            <p class="font-bold">Description:</p>
+            <p>${data.description || 'No description provided'}</p>
+          </div>
+        `;
+        
+        // Add related entity info if available
+        if (data.entityDetails) {
+          content += `
+            <div class="divider"></div>
+            <h4 class="font-bold">Related Entity Details</h4>
+            <div class="grid grid-cols-2 gap-4 mt-2">
+              <div>
+                <p class="font-bold">Entity Type:</p>
+                <p>${data.entityType}</p>
+              </div>
+              <div>
+                <p class="font-bold">Entity ID:</p>
+                <p>${data.entityId}</p>
+              </div>
+            </div>
+            <div class="mt-4">
+              ${Object.entries(data.entityDetails).map(([key, value]) => 
+                `<div class="mb-2">
+                  <p class="font-bold">${key.replace('_', ' ')}:</p>
+                  <p>${value}</p>
+                </div>`
+              ).join('')}
+            </div>
+          `;
+        }
+        
+        // Add audit trail if available
+        if (data.auditTrail && data.auditTrail.length > 0) {
+          content += `
+            <div class="divider"></div>
+            <h4 class="font-bold">Audit Trail</h4>
+            <ul class="timeline timeline-vertical mt-2">
+              ${data.auditTrail.map((entry, index) => `
+                <li>
+                  <div class="timeline-start">${new Date(entry.created_at).toLocaleString()}</div>
+                  <div class="timeline-middle">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                  <div class="timeline-end timeline-box">
+                    <p class="font-bold">${entry.action}</p>
+                    <p class="text-sm">By: ${entry.user_name || 'System'}</p>
+                    ${entry.notes ? `<p class="text-sm mt-1">${entry.notes}</p>` : ''}
+                  </div>
+                  ${index < data.auditTrail.length - 1 ? '<hr/>' : ''}
+                </li>
+              `).join('')}
+            </ul>
+          `;
+        }
+        
+        document.getElementById('modalContent').innerHTML = content;
+      } else {
+        document.getElementById('modalContent').innerHTML = `<p class="text-error">Error: ${data.message || 'Failed to load transaction details'}</p>`;
+      }
+    } catch (error) {
+      document.getElementById('modalContent').innerHTML = '<p class="text-error">Error loading transaction details</p>';
+    }
+  }
+  
+  function closeModal() {
+    document.getElementById('transactionModal').classList.remove('modal-open');
+  }
+</script>

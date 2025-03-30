@@ -1,0 +1,16 @@
+<!--error.ejs-->
+<%- include('layout', { 
+  title: 'Error', 
+  body: `
+  <div class="container mx-auto mt-10">
+    <div class="bg-white shadow-md rounded-lg p-6">
+      <h1 class="text-3xl font-bold text-red-600 mb-4">Error <%= error.status %></h1>
+      <p class="text-lg"><%= message %></p>
+      <% if (error.stack) { %>
+        <pre class="mt-4 p-4 bg-gray-100 rounded-lg"><%= error.stack %></pre>
+      <% } %>
+      <a href="/" class="btn btn-primary mt-6">Go to Home</a>
+    </div>
+  </div>
+  ` 
+}) %>
