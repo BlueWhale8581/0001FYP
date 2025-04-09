@@ -1,3 +1,5 @@
+// backend/controllers/userController.js
+
 /**
  * User Controller
  * Handles functionality for non-logged-in users including Wi-Fi access, ad viewing, 

@@ -1,3 +1,4 @@
+// backend/controllers/adminController.js
 const User = require('../models/User');
 const Transaction = require('../models/Transaction');
 const SystemSettings = require('../models/SystemSettings');

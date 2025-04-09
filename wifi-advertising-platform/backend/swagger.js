@@ -33,10 +33,10 @@ const swaggerOptions = {
   },
   // Path to API docs - adjust these paths to where your route documentation will be
   apis: [
-    './routes/*.js',                 // If you move routes to separate files
-    './controllers/*.js',            // Documentation in controller files
-    './index.js',                    // For routes in this file
-    './swagger-docs/*.js',           // For dedicated swagger documentation files
+    './routes/*.js',          // If you move routes to separate files
+    './controllers/*.js',     // Documentation in controller files
+    './index.js',             // For routes in this file
+    './swagger-docs/*.js',    // For dedicated swagger documentation files
   ],
 };
 

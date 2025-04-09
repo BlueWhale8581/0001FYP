@@ -13,11 +13,32 @@ router.use(authorizeRole('admin'));
  */
 
 /**
- * @route   GET /api/admin/dashboard
+ * @route   GET /api/admin/dashboard/stats
  * @desc    Get admin dashboard data
  * @access  Private (Admin)
  */
-router.get('/dashboard', adminController.getDashboard);
+router.get('/dashboard/stats', adminController.getDashboardStats);
+
+/**
+ * @route   GET /api/admin/dashboard/metrics
+ * @desc    Get system metrics
+ * @access  Private (Admin)
+ */
+router.get('/dashboard/metrics', adminController.getSystemMetrics);
+
+/**
+ * @route   GET /api/admin/notification
+ * @desc    Get admin notification
+ * @access  Private (Admin)
+ */
+router.get('/notifications', adminController.getNotifications);
+
+/**
+ * @route   GET /api/admin/alerts
+ * @desc    Get system alerts
+ * @access  Private (Admin)
+ */
+router.get('/alerts', adminController.getAlerts);
 
 /**
  * User Management Routes
@@ -28,7 +49,7 @@ router.get('/dashboard', adminController.getDashboard);
  * @desc    Get list of all users with filtering and pagination
  * @access  Private (Admin)
  */
-router.get('/users', adminController.getUsers);
+router.get('/users', adminController.getAllUsers);
 
 /**
  * @route   POST /api/admin/users
@@ -56,7 +77,7 @@ router.put('/users/:id', adminController.updateUser);
  * @desc    Change user status (active/inactive/suspended)
  * @access  Private (Admin)
  */
-router.put('/users/:id/status', adminController.updateUserStatus);
+router.put('/users/:id/status', adminController.changeUserStatus);
 
 /**
  * @route   DELETE /api/admin/users/:id
@@ -84,50 +105,57 @@ router.get('/transactions', adminController.getTransactions);
 router.get('/transactions/:id', adminController.getTransactionById);
 
 /**
- * @route   PUT /api/admin/transactions/:id
- * @desc    Update transaction status
+ * @route   PUT /api/admin/transactions/:id/approve
+ * @desc    Approve transaction
  * @access  Private (Admin)
  */
-router.put('/transactions/:id', adminController.updateTransactionStatus);
+router.put('/transactions/:id/approve', adminController.approveTransaction);
+
+/**
+ * @route   PUT /api/admin/transactions/:id/reject
+ * @desc    Reject transaction
+ * @access  Private (Admin)
+ */
+router.put('/transactions/:id/reject', adminController.rejectTransaction);
+
+/**
+ * @route   PUT /api/admin/revenue/overview
+ * @desc    Get revenue overview
+ * @access  Private (Admin)
+ */
+router.put('/revenue/overview', adminController.getRevenueOverview);
 
 /**
  * Reporting & Analytics Routes
  */
 
 /**
- * @route   GET /api/admin/reports/revenue
- * @desc    Generate revenue report
+ * @route   GET /api/admin/reports/generate
+ * @desc    Generate system report
  * @access  Private (Admin)
  */
-router.get('/reports/revenue', adminController.getRevenueReport);
+router.get('/reports/generate', adminController.generateSystemReport);
 
 /**
- * @route   GET /api/admin/reports/ad-performance
- * @desc    Generate ad performance report
+ * @route   GET /api/admin/analytics
+ * @desc    Generate system analytics
  * @access  Private (Admin)
  */
-router.get('/reports/ad-performance', adminController.getAdPerformanceReport);
+router.get('/analytics', adminController.getSystemAnalytics);
 
 /**
- * @route   GET /api/admin/reports/wifi-usage
- * @desc    Generate WiFi usage report
+ * @route   GET /api/admin/performance-metrics
+ * @desc    Get performance metrics
  * @access  Private (Admin)
  */
-router.get('/reports/wifi-usage', adminController.getWiFiUsageReport);
+router.get('/performance-metrics', adminController.getPerformanceMetrics);
 
 /**
- * @route   GET /api/admin/reports/agents
- * @desc    Generate agent performance report
+ * @route   GET /api/admin/reports/export
+ * @desc    Export report data
  * @access  Private (Admin)
  */
-router.get('/reports/agents', adminController.getAgentPerformanceReport);
-
-/**
- * @route   GET /api/admin/reports/system
- * @desc    Generate system summary report
- * @access  Private (Admin)
- */
-router.get('/reports/system', adminController.getSystemSummaryReport);
+router.get('/reports/export', adminController.exportReportData);
 
 /**
  * System Management Routes
@@ -139,6 +167,13 @@ router.get('/reports/system', adminController.getSystemSummaryReport);
  * @access  Private (Admin)
  */
 router.get('/audit-logs', adminController.getAuditLogs);
+
+/**
+ * @route   GET /api/admin/audit-logs/:id
+ * @desc    Get audit log details
+ * @access  Private (Admin)
+ */
+router.get('/audit-logs/:id', adminController.getAuditLogById);
 
 /**
  * @route   GET /api/admin/system-settings
@@ -155,25 +190,11 @@ router.get('/system-settings', adminController.getSystemSettings);
 router.put('/system-settings', adminController.updateSystemSettings);
 
 /**
- * @route   PUT /api/admin/system-settings/:key
- * @desc    Update a specific system setting
- * @access  Private (Admin)
- */
-router.put('/system-settings/:key', adminController.updateSystemSetting);
-
-/**
  * @route   GET /api/admin/merchants
  * @desc    Get all merchants with filtering
  * @access  Private (Admin)
  */
 router.get('/merchants', adminController.getMerchants);
-
-/**
- * @route   PUT /api/admin/merchants/:id/approval
- * @desc    Update merchant approval status
- * @access  Private (Admin)
- */
-router.put('/merchants/:id/approval', adminController.updateMerchantApproval);
 
 /**
  * @route   GET /api/admin/advertisers
