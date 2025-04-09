@@ -7,8 +7,7 @@ import { fileURLToPath } from 'url';
 import { verifyToken, authorizeRole } from './config/auth.js';
 import db from './config/database.js';
 // Import swagger packages
-import swaggerJsdoc from 'swagger-jsdoc';
-import swaggerUi from 'swagger-ui-express';
+import setupSwagger from './swagger.js';
 
 // Convert ES module paths to directory names
 const __filename = fileURLToPath(import.meta.url);
@@ -16,56 +15,14 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// Swagger Definition
-const swaggerOptions = {
-  definition: {
-    openapi: '3.0.0',
-    info: {
-      title: 'WiFi Connect API Documentation',
-      version: '1.0.0',
-      description: 'API documentation for WiFi Connect application',
-    },
-    servers: [
-      {
-        url: `http://localhost:${process.env.PORT || 3001}`,
-        description: 'Development server',
-      },
-    ],
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-        },
-        cookieAuth: {
-          type: 'apiKey',
-          in: 'cookie',
-          name: 'token',
-        },
-      },
-    },
-  },
-  // Path to API docs - adjust these paths to where your route documentation will be
-  apis: [
-    './routes/*.js',                 // If you move routes to separate files
-    './controllers/*.js',            // Documentation in controller files
-    './index.js',                    // For routes in this file
-    './swagger-docs/*.js',           // For dedicated swagger documentation files
-  ],
-};
-
-// Initialize swagger-jsdoc
-const swaggerDocs = swaggerJsdoc(swaggerOptions);
-
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Serve Swagger UI
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+// Setup Swagger UI
+setupSwagger(app);
 
 // Serve React Frontend
 const frontendPath = path.join(__dirname, '../frontend/build');
