@@ -1,13 +1,21 @@
+// backend/index.js
 import express from 'express';
 import path from 'path';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import { fileURLToPath } from 'url';
-import { verifyToken, authorizeRole } from './config/auth.js';
 import db from './config/database.js';
-// Import swagger packages
 import setupSwagger from './swagger.js';
+
+// Import routes
+import adminRoutes from './routes/admin.js';
+import advertiserRoutes from './routes/advertiser.js';
+import agentRoutes from './routes/agent.js';
+import authRoutes from './routes/auth.js';
+import merchantRoutes from './routes/merchant.js';
+import publicRoutes from './routes/public.js';
+import userRoutes from './routes/user.js';
 
 // Convert ES module paths to directory names
 const __filename = fileURLToPath(import.meta.url);
@@ -37,23 +45,14 @@ db.testConnection().then(connected => {
   }
 });
 
-// ✅ AUTH Middleware
-const authenticate = (req, res, next) => {
-  const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ message: 'Unauthorized: No token provided' });
-  }
-
-  try {
-    const decoded = verifyToken(token);
-    req.user = decoded;
-    next();
-  } catch (error) {
-    res.clearCookie('token');
-    return res.status(401).json({ message: 'Unauthorized: Invalid token' });
-  }
-};
+// API Routes
+app.use('/api/admin', adminRoutes);
+app.use('/api/advertiser', advertiserRoutes);
+app.use('/api/agent', agentRoutes);
+app.use('/api', authRoutes);
+app.use('/api/merchant', merchantRoutes);
+app.use('/api/public', publicRoutes);
+app.use('/api', userRoutes);
 
 // ======== ⚠️ Error Handling ========
 // 404 Not Found
