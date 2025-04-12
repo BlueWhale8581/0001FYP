@@ -1,35 +1,113 @@
+// backend/routes/user.js
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
-const authController = require('../controllers/authController');
 const { verifyToken } = require('../config/auth');
 
 // Apply authentication middleware to all user routes
 router.use(verifyToken);
 
-// User profile routes
+/**
+ * Dashboard Routes
+ */
+
+/**
+ * @route   GET /api/user/dashboard
+ * @desc    Get user dashboard data
+ * @access  Private (Any logged in user)
+ */
+router.get('/dashboard', userController.getDashboard);
+
+/**
+ * @route   GET /api/user/profile
+ * @desc    Get user profile information
+ * @access  Private (Any logged in user)
+ */
 router.get('/profile', userController.getUserProfile);
+
+/**
+ * @route   PUT /api/user/profile
+ * @desc    Update user profile information
+ * @access  Private (Any logged in user)
+ */
 router.put('/profile', userController.updateUserProfile);
 
-// Notification routes
+/**
+ * @route   PUT /api/user/password
+ * @desc    Change user password
+ * @access  Private (Any logged in user)
+ */
+router.put('/password', userController.changePassword);
+
+/**
+ * Notification Routes
+ */
+
+/**
+ * @route   GET /api/user/notifications
+ * @desc    Get user notifications
+ * @access  Private (Any logged in user)
+ */
 router.get('/notifications', userController.getUserNotifications);
-router.put('/notifications/:id', userController.markNotificationAsRead);
-router.put('/notifications/read-all', userController.markAllNotificationsAsRead);
+
+/**
+ * @route   PUT /api/user/notifications/:id/read
+ * @desc    Mark notification as read
+ * @access  Private (Any logged in user)
+ */
+router.put('/notifications/:id/read', userController.markNotificationRead);
+
+/**
+ * @route   PUT /api/user/notifications/read-all
+ * @desc    Mark all notifications as read
+ * @access  Private (Any logged in user)
+ */
+router.put('/notifications/read-all', userController.markAllNotificationsRead);
+
+/**
+ * @route   DELETE /api/user/notifications/:id
+ * @desc    Delete a notification
+ * @access  Private (Any logged in user)
+ */
 router.delete('/notifications/:id', userController.deleteNotification);
 
-// WiFi sessions for authenticated users
-router.get('/wifi-sessions', userController.getUserWiFiSessions);
+/**
+ * Account Management Routes
+ */
 
-// WiFi connection for authenticated users (with additional user data)
-router.post('/wifi-connect', userController.connectToWiFi);
+/**
+ * @route   GET /api/user/activity-logs
+ * @desc    Get user activity logs
+ * @access  Private (Any logged in user)
+ */
+router.get('/activity-logs', userController.getActivityLogs);
 
-// Ad viewing for authenticated users
-router.post('/ad-view', userController.recordAdView);
+/**
+ * @route   PUT /api/user/settings
+ * @desc    Update user settings and preferences
+ * @access  Private (Any logged in user)
+ */
+router.put('/settings', userController.updateUserSettings);
 
-// Password change (requires authentication)
-router.post('/change-password', authController.changePassword);
+/**
+ * @route   POST /api/user/feedback
+ * @desc    Submit user feedback
+ * @access  Private (Any logged in user)
+ */
+router.post('/feedback', userController.submitFeedback);
 
-// Get user dashboard data (based on role)
-router.get('/dashboard', userController.getUserDashboard);
+/**
+ * @route   GET /api/user/transactions
+ * @desc    Get user transaction history
+ * @access  Private (Any logged in user)
+ */
+router.get('/transactions', userController.getUserTransactions);
+
+/**
+ * @route   GET /api/user/transactions/:id
+ * @desc    Get specific transaction details
+ * @access  Private (Any logged in user)
+ */
+router.get('/transactions/:id', userController.getTransactionDetails);
 
 module.exports = router;

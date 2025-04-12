@@ -1,14 +1,15 @@
 // backend/swagger.js
-import swaggerJsdoc from 'swagger-jsdoc';
-import swaggerUi from 'swagger-ui-express';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+const swaggerJsdoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
+const fs = require('fs');
+const path = require('path');
 
-// Get current directory with ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
+const apis = [
+     './wifi-advertising-platform/backend/routes/*.js',
+     './wifi-advertising-platform/backend/controllers/*.js',
+     './wifi-advertising-platform/backend/app.js'
+   ];
+   
 // Swagger Configuration
 const swaggerOptions = {
   definition: {
@@ -40,16 +41,11 @@ const swaggerOptions = {
     },
   },
   // Path to API docs - adjust these paths to where your route documentation will be
-  apis: [
-    './routes/*.js',
-    './controllers/*.js',
-    './app.js',
-    './index.js',
-  ],
+  apis,
 };
 
 console.log("Swagger is scanning these files:");
-['./routes/*.js', './controllers/*.js', './index.js'].forEach(pattern => {
+apis.forEach(pattern => {
   const directory = path.dirname(pattern);
   const filePattern = path.basename(pattern);
   if (filePattern === '*.js') {
@@ -81,4 +77,4 @@ const setupSwagger = (app) => {
   console.log(`📚 API Documentation available at http://localhost:${process.env.PORT || 3001}/api-docs`);
 };
 
-export default setupSwagger;
+module.exports = setupSwagger;

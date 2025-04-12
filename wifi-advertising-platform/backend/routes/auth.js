@@ -5,12 +5,88 @@ const authController = require('../controllers/authController');
 const { verifyToken } = require('../config/auth');
 
 /**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: User registration
+ *     description: Register a new user
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - firstName
+ *               - lastName
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 format: password
+ *               firstName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *                 enum: [admin, agent, advertiser, merchant]
+ *     responses:
+ *       200:
+ *         description: Registration successful
+ *       400:
+ *         description: Registration failed
+ */
+/**
  * @route   POST /api/auth/register
  * @desc    Register a new user
  * @access  Public
  */
 router.post('/register', authController.register);
 
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: User login
+ *     description: Authenticates a user and returns a JWT token
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 format: password
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 user:
+ *                   type: object
+ *       401:
+ *         description: Invalid credentials
+ */
 /**
  * @route   POST /api/auth/login
  * @desc    Login user and get token
@@ -46,6 +122,17 @@ router.post('/change-password', verifyToken, authController.changePassword);
  */
 router.get('/verify-token', verifyToken, authController.verifyToken);
 
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   get:
+ *     summary: User logout
+ *     description: Logs out the user on the client-side by clearing the token
+ *     tags: [Authentication]
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ */
 /**
  * @route   GET /api/auth/logout
  * @desc    Logout user (client-side only, invalidates token on client)

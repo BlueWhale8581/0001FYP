@@ -1,34 +1,24 @@
-import express from 'express';
-import path from 'path';
-import cors from 'cors';
-import bodyParser from 'body-parser';
-import cookieParser from 'cookie-parser';
-import { fileURLToPath } from 'url';
-import { verifyToken, authorizeRole } from './config/auth.js';
-import db from './config/database.js';
-// Import swagger packages
-import setupSwagger from './swagger.js';
-
-// Convert ES module paths to directory names
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// backend/app.js
+const express = require('express');
+const path = require('path');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+const db = require('./config/database');
+const setupSwagger = require('./swagger');
 
 const app = express();
 
-// Middleware
+// ======= 🧼 Middleware =======
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Setup Swagger UI
+// ======= 📘 Swagger UI =======
 setupSwagger(app);
 
-// Serve React Frontend
-const frontendPath = path.join(__dirname, '../frontend/build');
-app.use(express.static(frontendPath));
-
-// Database Connection Test
+// ======= 🧠 DB Test =======
 db.testConnection().then(connected => {
   if (connected) {
     console.log('✅ Database connected successfully');
@@ -37,38 +27,39 @@ db.testConnection().then(connected => {
   }
 });
 
-// ✅ AUTH Middleware
-const authenticate = (req, res, next) => {
-  const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
+// ======= 🛣️ API Routes =======
+const adminRoutes = require('./wifi-advertising-platform/backend/routes/admin.js');
+const advertiserRoutes = require('./wifi-advertising-platform/backend/routes/advertiser.js');
+const agentRoutes = require('./wifi-advertising-platform/backend/routes/agent.js');
+const authRoutes = require('./wifi-advertising-platform/backend/routes/auth.js');
+const merchantRoutes = require('./wifi-advertising-platform/backend/routes/merchant.js');
+const publicRoutes = require('./wifi-advertising-platform/backend/routes/public.js');
+const userRoutes = require('./wifi-advertising-platform/backend/routes/user.js');
 
-  if (!token) {
-    return res.status(401).json({ message: 'Unauthorized: No token provided' });
-  }
+app.use('/api/admin', adminRoutes);
+app.use('/api/advertiser', advertiserRoutes);
+app.use('/api/agent', agentRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/merchant', merchantRoutes);
+app.use('/api/public', publicRoutes);
+app.use('/api/user', userRoutes);
 
-  try {
-    const decoded = verifyToken(token);
-    req.user = decoded;
-    next();
-  } catch (error) {
-    res.clearCookie('token');
-    return res.status(401).json({ message: 'Unauthorized: Invalid token' });
-  }
-};
+// ======= 🧼 Serve Frontend =======
+const frontendPath = path.join(__dirname, '../frontend/build');
+app.use(express.static(frontendPath));
 
-// ======== ⚠️ Error Handling ========
-// 404 Not Found
-app.use((req, res, next) => {
+// ======= ❌ 404 + General Error Handler =======
+app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-// General Error Handler
 app.use((err, req, res, next) => {
   res.status(err.status || 500).json({ message: err.message || 'Internal Server Error' });
 });
 
-// ======== 🔥 Start Server ========
+// ======= 🚀 Start Server =======
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📚 API Documentation available at http://localhost:${PORT}/api-docs`);
+  console.log(`🚀 Server running at http://localhost:${PORT}`);
+  console.log(`📚 Swagger docs at http://localhost:${PORT}/api-docs`);
 });

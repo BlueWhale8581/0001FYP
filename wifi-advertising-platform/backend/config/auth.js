@@ -1,5 +1,6 @@
-import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
+//backend/config/auth.js
+const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv');
 
 dotenv.config();
 
@@ -26,4 +27,7 @@ function authorizeRole(allowedRole) {
   };
 }
 
-export { verifyToken, authorizeRole };
+module.exports = {
+  verifyToken,
+  authorizeRole
+};

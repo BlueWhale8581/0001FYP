@@ -1,5 +1,6 @@
-import sql from 'mssql';
-import dotenv from 'dotenv';
+//backend/config/database.js
+const sql = require('mssql');
+const dotenv = require('dotenv');
 
 dotenv.config();
 
@@ -39,6 +40,6 @@ async function testConnection() {
   }
 }
 
-export default {
+module.exports = {
   testConnection
 };
