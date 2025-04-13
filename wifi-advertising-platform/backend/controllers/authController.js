@@ -544,4 +544,59 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Verify if token is valid
+ * @route   GET /api/auth/verify-token
+ * @access  Private
+ */
+exports.verifyToken = (req, res) => {
+  try {
+    // If the verifyToken middleware passed, the token is valid
+    res.status(200).json({ success: true, message: 'Token is valid' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+/**
+ * @desc    Get current user's data
+ * @route   GET /api/auth/me
+ * @access  Private
+ */
+exports.getCurrentUser = async (req, res) => {
+  try {
+    const userId = req.user.id; // Extracted from the token by the verifyToken middleware
+
+    // Fetch user data from the database
+    const user = await UserModel.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    // Return user data (excluding sensitive information like password)
+    return res.status(200).json({
+      success: true,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        firstName: user.first_name,
+        lastName: user.last_name,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching current user:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch user data',
+      error: error.message,
+    });
+  }
+};
+
 module.exports = exports;
