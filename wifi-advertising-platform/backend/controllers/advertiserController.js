@@ -926,4 +926,619 @@ function convertToCsv(data) {
   return header + rows;
 }
 
+// Dashboard functions
+exports.getDashboard = async (req, res) => {
+  try {
+    const advertiserId = req.user.advertiserId;
+    
+    // Use DashboardService to get comprehensive dashboard data
+    const dashboardData = await DashboardService.getAdvertiserDashboard(advertiserId);
+    
+    return res.status(200).json({
+      success: true,
+      data: dashboardData
+    });
+  } catch (error) {
+    console.error('Error getting dashboard data:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch dashboard data',
+      error: error.message
+    });
+  }
+};
+
+// Notification functions
+exports.getNotifications = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { limit = 10, page = 1 } = req.query;
+    
+    // Get notifications
+    const notifications = await NotificationService.getUserNotifications(userId, {
+      limit: parseInt(limit),
+      page: parseInt(page)
+    });
+    
+    // Get unread count
+    const unreadCount = await NotificationService.getUnreadNotificationsCount(userId);
+    
+    return res.status(200).json({
+      success: true,
+      data: {
+        notifications,
+        unreadCount,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error getting notifications:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch notifications',
+      error: error.message
+    });
+  }
+};
+
+exports.markNotificationAsRead = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+    
+    // Mark notification as read
+    const result = await NotificationService.markAsRead(id, userId);
+    
+    if (!result) {
+      return res.status(404).json({
+        success: false,
+        message: 'Notification not found or you are not authorized to update it'
+      });
+    }
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Notification marked as read'
+    });
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to mark notification as read',
+      error: error.message
+    });
+  }
+};
+
+exports.markAllNotificationsAsRead = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Mark all notifications as read
+    await NotificationService.markAllAsRead(userId);
+    
+    return res.status(200).json({
+      success: true,
+      message: 'All notifications marked as read'
+    });
+  } catch (error) {
+    console.error('Error marking all notifications as read:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to mark all notifications as read',
+      error: error.message
+    });
+  }
+};
+
+// Campaign functions
+exports.getCampaigns = async (req, res) => {
+  try {
+    const advertiserId = req.user.advertiserId;
+    const { status, page = 1, limit = 10, sortBy = 'created_at', sortOrder = 'desc' } = req.query;
+    
+    // Get campaigns with optional filtering
+    const campaigns = await Campaign.findByAdvertiserId(
+      advertiserId, 
+      { status, page, limit, sortBy, sortOrder }
+    );
+    
+    // Get total count for pagination
+    const totalCampaigns = await Campaign.countByAdvertiserId(advertiserId, { status });
+    
+    return res.status(200).json({
+      success: true,
+      data: {
+        campaigns,
+        pagination: {
+          total: totalCampaigns,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          pages: Math.ceil(totalCampaigns / limit)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error getting campaigns:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch campaigns',
+      error: error.message
+    });
+  }
+};
+
+exports.updateCampaignStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const advertiserId = req.user.advertiserId;
+    const { status } = req.body;
+    
+    if (!['active', 'paused', 'completed'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status value. Must be one of: active, paused, completed'
+      });
+    }
+    
+    // Update campaign status
+    const updatedCampaign = await CampaignService.changeCampaignStatus(id, status, advertiserId);
+    
+    if (!updatedCampaign) {
+      return res.status(404).json({
+        success: false,
+        message: 'Campaign not found or you are not authorized to update it'
+      });
+    }
+    
+    return res.status(200).json({
+      success: true,
+      message: `Campaign ${status} successfully`,
+      data: updatedCampaign
+    });
+  } catch (error) {
+    console.error('Error updating campaign status:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to update campaign status',
+      error: error.message
+    });
+  }
+};
+
+exports.getCampaignPerformance = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { startDate, endDate, metrics = 'all' } = req.query;
+    const advertiserId = req.user.advertiserId;
+    
+    // Verify campaign belongs to advertiser
+    const campaign = await Campaign.findById(id);
+    if (!campaign || campaign.advertiser_id !== advertiserId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access to campaign performance data'
+      });
+    }
+    
+    // Get campaign performance metrics
+    const performance = await CampaignService.getCampaignPerformance(
+      id, 
+      { startDate, endDate, metrics: metrics.split(',') }
+    );
+    
+    return res.status(200).json({
+      success: true,
+      data: performance
+    });
+  } catch (error) {
+    console.error('Error getting campaign performance:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch campaign performance data',
+      error: error.message
+    });
+  }
+};
+
+// Ad functions
+exports.getAds = async (req, res) => {
+  try {
+    const advertiserId = req.user.advertiserId;
+    const { campaignId, status, page = 1, limit = 10 } = req.query;
+    
+    // Get ads with optional filtering
+    const ads = await Ad.findByAdvertiserId(
+      advertiserId, 
+      { campaignId, status, page, limit }
+    );
+    
+    // Get total count for pagination
+    const totalAds = await Ad.countByAdvertiserId(advertiserId, { campaignId, status });
+    
+    return res.status(200).json({
+      success: true,
+      data: {
+        ads,
+        pagination: {
+          total: totalAds,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          pages: Math.ceil(totalAds / limit)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error getting ads:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch ads',
+      error: error.message
+    });
+  }
+};
+
+exports.getAdById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const advertiserId = req.user.advertiserId;
+    
+    // Find ad
+    const ad = await Ad.findById(id);
+    
+    // Check if ad exists
+    if (!ad) {
+      return res.status(404).json({
+        success: false,
+        message: 'Ad not found'
+      });
+    }
+    
+    // Check if ad belongs to advertiser
+    const campaign = await Campaign.findById(ad.campaign_id);
+    if (campaign.advertiser_id !== advertiserId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access to this ad'
+      });
+    }
+    
+    return res.status(200).json({
+      success: true,
+      data: ad
+    });
+  } catch (error) {
+    console.error('Error getting ad:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch ad details',
+      error: error.message
+    });
+  }
+};
+
+exports.getAdMetrics = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { startDate, endDate } = req.query;
+    const advertiserId = req.user.advertiserId;
+    
+    // Find ad
+    const ad = await Ad.findById(id);
+    
+    // Check if ad exists
+    if (!ad) {
+      return res.status(404).json({
+        success: false,
+        message: 'Ad not found'
+      });
+    }
+    
+    // Check if ad belongs to advertiser
+    const campaign = await Campaign.findById(ad.campaign_id);
+    if (campaign.advertiser_id !== advertiserId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access to this ad metrics'
+      });
+    }
+    
+    // Get ad metrics
+    const metrics = await AdService.getAdMetrics(id, { startDate, endDate });
+    
+    return res.status(200).json({
+      success: true,
+      data: metrics
+    });
+  } catch (error) {
+    console.error('Error getting ad metrics:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch ad metrics',
+      error: error.message
+    });
+  }
+};
+
+// Budget & Payment functions
+exports.getBudgetOverview = async (req, res) => {
+  try {
+    const advertiserId = req.user.advertiserId;
+    
+    // Get budget overview
+    const budgetData = await TransactionService.getAdvertiserBudgetOverview(advertiserId);
+    
+    return res.status(200).json({
+      success: true,
+      data: budgetData
+    });
+  } catch (error) {
+    console.error('Error getting budget overview:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch budget overview',
+      error: error.message
+    });
+  }
+};
+
+exports.getCampaignBudgetDetails = async (req, res) => {
+  try {
+    const advertiserId = req.user.advertiserId;
+    const { campaignId } = req.params;
+    
+    // Verify campaign belongs to advertiser
+    const campaign = await Campaign.findById(campaignId);
+    if (!campaign || campaign.advertiser_id !== advertiserId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access to campaign budget'
+      });
+    }
+    
+    // Get campaign budget details
+    const budgetDetails = await TransactionService.getCampaignBudgetDetails(campaignId);
+    
+    return res.status(200).json({
+      success: true,
+      data: budgetDetails
+    });
+  } catch (error) {
+    console.error('Error getting campaign budget details:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch campaign budget details',
+      error: error.message
+    });
+  }
+};
+
+// Analytics & Reporting functions
+exports.getAnalyticsOverview = async (req, res) => {
+  try {
+    const advertiserId = req.user.advertiserId;
+    const { startDate, endDate } = req.query;
+    
+    // Get analytics overview
+    const analytics = await ReportingService.getAdvertiserAnalyticsOverview(
+      advertiserId,
+      { startDate, endDate }
+    );
+    
+    return res.status(200).json({
+      success: true,
+      data: analytics
+    });
+  } catch (error) {
+    console.error('Error getting analytics overview:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch analytics overview',
+      error: error.message
+    });
+  }
+};
+
+exports.getImpressionAnalytics = async (req, res) => {
+  try {
+    const advertiserId = req.user.advertiserId;
+    const { startDate, endDate, campaignId, groupBy = 'day' } = req.query;
+    
+    // Filters for analytics
+    const filters = { startDate, endDate, campaignId, groupBy };
+    
+    // Get impression analytics
+    const impressionData = await ReportingService.getImpressionAnalytics(
+      advertiserId,
+      filters
+    );
+    
+    return res.status(200).json({
+      success: true,
+      data: impressionData
+    });
+  } catch (error) {
+    console.error('Error getting impression analytics:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch impression analytics',
+      error: error.message
+    });
+  }
+};
+
+exports.getPerformanceAnalytics = async (req, res) => {
+  try {
+    const advertiserId = req.user.advertiserId;
+    const { startDate, endDate, campaignId, metricType = 'all', groupBy = 'day' } = req.query;
+    
+    // Filters for analytics
+    const filters = { startDate, endDate, campaignId, metricType, groupBy };
+    
+    // Get performance analytics
+    const performanceData = await ReportingService.getPerformanceAnalytics(
+      advertiserId,
+      filters
+    );
+    
+    return res.status(200).json({
+      success: true,
+      data: performanceData
+    });
+  } catch (error) {
+    console.error('Error getting performance analytics:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch performance analytics',
+      error: error.message
+    });
+  }
+};
+
+exports.generateReport = async (req, res) => {
+  try {
+    const advertiserId = req.user.advertiserId;
+    const { 
+      startDate, endDate, campaignId, reportType = 'campaign', 
+      format = 'json', metrics = 'all' 
+    } = req.query;
+    
+    // Generate report based on type
+    const reportData = await ReportingService.generateReport({
+      advertiserId,
+      startDate, 
+      endDate, 
+      campaignId,
+      reportType,
+      metrics: metrics.split(',')
+    });
+    
+    // Format response according to requested format
+    if (format.toLowerCase() === 'csv') {
+      // Convert JSON to CSV
+      const csvData = convertToCsv(reportData);
+      
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="${reportType}_report.csv"`);
+      return res.status(200).send(csvData);
+    } else {
+      // Default to JSON format
+      return res.status(200).json({
+        success: true,
+        data: reportData
+      });
+    }
+  } catch (error) {
+    console.error('Error generating report:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to generate report',
+      error: error.message
+    });
+  }
+};
+
+// Profile functions
+exports.getProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const advertiserId = req.user.advertiserId;
+    
+    // Get advertiser with user data
+    const advertiserData = await Advertiser.findWithUserData(advertiserId);
+    
+    if (!advertiserData) {
+      return res.status(404).json({
+        success: false,
+        message: 'Advertiser profile not found'
+      });
+    }
+    
+    // Remove sensitive information
+    delete advertiserData.user.password;
+    
+    return res.status(200).json({
+      success: true,
+      data: advertiserData
+    });
+  } catch (error) {
+    console.error('Error getting advertiser profile:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch advertiser profile',
+      error: error.message
+    });
+  }
+};
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const advertiserId = req.user.advertiserId;
+    const { 
+      company_name, company_address, company_phone, 
+      company_email, industry, first_name, last_name, phone,
+      billing_address, billing_contact, payment_method, tax_id
+    } = req.body;
+    
+    // Update advertiser profile
+    const advertiserData = {
+      company_name,
+      company_address,
+      company_phone,
+      company_email,
+      industry,
+      billing_address,
+      billing_contact,
+      payment_method,
+      tax_id
+    };
+    
+    // Filter out undefined values
+    Object.keys(advertiserData).forEach(
+      key => advertiserData[key] === undefined && delete advertiserData[key]
+    );
+    
+    const updatedAdvertiser = await Advertiser.update(advertiserId, advertiserData);
+    
+    // Update user profile if user data is provided
+    const userData = {
+      first_name,
+      last_name,
+      phone
+    };
+    
+    // Filter out undefined values
+    Object.keys(userData).forEach(
+      key => userData[key] === undefined && delete userData[key]
+    );
+    
+    if (Object.keys(userData).length > 0) {
+      await User.update(userId, userData);
+    }
+    
+    // Get updated profile
+    const updatedProfile = await Advertiser.findWithUserData(advertiserId);
+    
+    // Remove sensitive information
+    delete updatedProfile.user.password;
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: updatedProfile
+    });
+  } catch (error) {
+    console.error('Error updating advertiser profile:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to update advertiser profile',
+      error: error.message
+    });
+  }
+};
+
 module.exports = exports;

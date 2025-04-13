@@ -776,4 +776,211 @@ exports.getAuditLogById = async (req, res) => {
   }
 };
 
+/**
+ * Merchant Management
+ */
+exports.getMerchants = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, status, search, sortBy = 'created_at', sortOrder = 'desc' } = req.query;
+    const offset = (page - 1) * limit;
+    
+    const filters = {};
+    if (status) filters.status = status;
+    if (search) filters.search = search;
+    
+    const merchants = await Merchant.findAll({ 
+      ...filters, 
+      limit, 
+      offset,
+      sortBy,
+      sortOrder
+    });
+    
+    const total = await Merchant.getCount(filters);
+    
+    // Get associated user data
+    const enrichedMerchants = await Promise.all(merchants.map(async (merchant) => {
+      const userData = await User.findById(merchant.user_id);
+      return {
+        ...merchant,
+        user: userData ? {
+          id: userData.id,
+          email: userData.email,
+          firstName: userData.first_name,
+          lastName: userData.last_name,
+          status: userData.status
+        } : null
+      };
+    }));
+    
+    res.status(200).json({
+      merchants: enrichedMerchants,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total
+      }
+    });
+  } catch (error) {
+    console.error('Error getting merchants:', error);
+    res.status(500).json({ message: 'Error retrieving merchants' });
+  }
+};
+
+/**
+ * Advertiser Management
+ */
+exports.getAdvertisers = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, status, search, sortBy = 'created_at', sortOrder = 'desc' } = req.query;
+    const offset = (page - 1) * limit;
+    
+    const filters = {};
+    if (status) filters.status = status;
+    if (search) filters.search = search;
+    
+    const advertisers = await Advertiser.findAll({ 
+      ...filters, 
+      limit, 
+      offset,
+      sortBy,
+      sortOrder
+    });
+    
+    const total = await Advertiser.getCount(filters);
+    
+    // Get associated user data
+    const enrichedAdvertisers = await Promise.all(advertisers.map(async (advertiser) => {
+      const userData = await User.findById(advertiser.user_id);
+      return {
+        ...advertiser,
+        user: userData ? {
+          id: userData.id,
+          email: userData.email,
+          firstName: userData.first_name,
+          lastName: userData.last_name,
+          status: userData.status
+        } : null
+      };
+    }));
+    
+    res.status(200).json({
+      advertisers: enrichedAdvertisers,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total
+      }
+    });
+  } catch (error) {
+    console.error('Error getting advertisers:', error);
+    res.status(500).json({ message: 'Error retrieving advertisers' });
+  }
+};
+
+/**
+ * Agent Management
+ */
+exports.getAgents = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, status, search, sortBy = 'created_at', sortOrder = 'desc' } = req.query;
+    const offset = (page - 1) * limit;
+    
+    const filters = {};
+    if (status) filters.status = status;
+    if (search) filters.search = search;
+    
+    const agents = await Agent.findAll({ 
+      ...filters, 
+      limit, 
+      offset,
+      sortBy,
+      sortOrder
+    });
+    
+    const total = await Agent.getCount(filters);
+    
+    // Get associated user data
+    const enrichedAgents = await Promise.all(agents.map(async (agent) => {
+      const userData = await User.findById(agent.user_id);
+      return {
+        ...agent,
+        user: userData ? {
+          id: userData.id,
+          email: userData.email,
+          firstName: userData.first_name,
+          lastName: userData.last_name,
+          status: userData.status
+        } : null
+      };
+    }));
+    
+    res.status(200).json({
+      agents: enrichedAgents,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total
+      }
+    });
+  } catch (error) {
+    console.error('Error getting agents:', error);
+    res.status(500).json({ message: 'Error retrieving agents' });
+  }
+};
+
+/**
+ * Campaign Management
+ */
+exports.getCampaigns = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, status, advertiserId, search, sortBy = 'created_at', sortOrder = 'desc' } = req.query;
+    const offset = (page - 1) * limit;
+    
+    const filters = {};
+    if (status) filters.status = status;
+    if (advertiserId) filters.advertiser_id = advertiserId;
+    if (search) filters.search = search;
+    
+    const campaigns = await Campaign.findAll({ 
+      ...filters, 
+      limit, 
+      offset,
+      sortBy,
+      sortOrder
+    });
+    
+    const total = await Campaign.getCount(filters);
+    
+    // Get associated advertiser data
+    const enrichedCampaigns = await Promise.all(campaigns.map(async (campaign) => {
+      const advertiserData = await Advertiser.findById(campaign.advertiser_id);
+      return {
+        ...campaign,
+        advertiser: advertiserData || null,
+        // Calculate remaining budget
+        remainingBudget: (campaign.budget - campaign.spent).toFixed(2),
+        // Calculate campaign performance metrics
+        performance: {
+          impressions: await AdImpression.getCountByCampaignId(campaign.id),
+          clicks: await AdImpression.getClicksByCampaignId(campaign.id),
+          ctr: await AdImpression.getCTRByCampaignId(campaign.id)
+        }
+      };
+    }));
+    
+    res.status(200).json({
+      campaigns: enrichedCampaigns,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total
+      }
+    });
+  } catch (error) {
+    console.error('Error getting campaigns:', error);
+    res.status(500).json({ message: 'Error retrieving campaigns' });
+  }
+};
+
 module.exports = exports;

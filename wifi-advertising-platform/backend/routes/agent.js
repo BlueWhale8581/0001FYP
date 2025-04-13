@@ -1,220 +1,196 @@
-// backend/routes/admin.js
+// backend/routes/agent.js
 const express = require('express');
 const router = express.Router();
-const adminController = require('../controllers/adminController');
+const agentController = require('../controllers/agentController');
 const { verifyToken, authorizeRole } = require('../config/auth');
 
-// Apply middleware to all admin routes
+// Apply middleware to all agent routes
 router.use(verifyToken);
-router.use(authorizeRole('admin'));
+router.use(authorizeRole('agent'));
 
 /**
  * Dashboard Routes
  */
 
 /**
- * @route   GET /api/admin/dashboard/stats
- * @desc    Get admin dashboard data
- * @access  Private (Admin)
+ * @route   GET /api/agent/dashboard/stats
+ * @desc    Get dashboard statistics for the agent
+ * @access  Private (Agent)
  */
-router.get('/dashboard/stats', adminController.getDashboardStats);
+router.get('/dashboard/stats', agentController.getDashboardStats);
 
 /**
- * @route   GET /api/admin/dashboard/metrics
- * @desc    Get system metrics
- * @access  Private (Admin)
+ * @route   GET /api/agent/notifications
+ * @desc    Get agent notifications
+ * @access  Private (Agent)
  */
-router.get('/dashboard/metrics', adminController.getSystemMetrics);
+router.get('/notifications', agentController.getAgentNotifications);
 
 /**
- * @route   GET /api/admin/notification
- * @desc    Get admin notification
- * @access  Private (Admin)
+ * @route   PUT /api/agent/notifications/:notificationId/read
+ * @desc    Mark notification as read
+ * @access  Private (Agent)
  */
-router.get('/notifications', adminController.getNotifications);
+router.put('/notifications/:notificationId/read', agentController.markNotificationAsRead);
 
 /**
- * @route   GET /api/admin/alerts
- * @desc    Get system alerts
- * @access  Private (Admin)
- */
-router.get('/alerts', adminController.getAlerts);
-
-/**
- * User Management Routes
+ * Merchant Management Routes
  */
 
 /**
- * @route   GET /api/admin/users
- * @desc    Get list of all users with filtering and pagination
- * @access  Private (Admin)
+ * @route   GET /api/agent/merchants
+ * @desc    Get all merchants onboarded by agent
+ * @access  Private (Agent)
  */
-router.get('/users', adminController.getAllUsers);
+router.get('/merchants', agentController.getAllMerchants);
 
 /**
- * @route   POST /api/admin/users
- * @desc    Create a new user
- * @access  Private (Admin)
+ * @route   GET /api/agent/merchants/onboarded
+ * @desc    Get merchants onboarded by agent
+ * @access  Private (Agent)
  */
-router.post('/users', adminController.createUser);
+router.get('/merchants/onboarded', agentController.getMerchantsOnboarded);
 
 /**
- * @route   GET /api/admin/users/:id
- * @desc    Get a specific user's details
- * @access  Private (Admin)
+ * @route   GET /api/agent/merchants/:merchantId
+ * @desc    Get merchant by ID
+ * @access  Private (Agent)
  */
-router.get('/users/:id', adminController.getUserById);
+router.get('/merchants/:merchantId', agentController.getMerchantById);
 
 /**
- * @route   PUT /api/admin/users/:id
- * @desc    Update user info
- * @access  Private (Admin)
+ * @route   POST /api/agent/merchants
+ * @desc    Register a new merchant
+ * @access  Private (Agent)
  */
-router.put('/users/:id', adminController.updateUser);
+router.post('/merchants', agentController.registerMerchant);
 
 /**
- * @route   PUT /api/admin/users/:id/status
- * @desc    Change user status (active/inactive/suspended)
- * @access  Private (Admin)
+ * @route   PUT /api/agent/merchants/:merchantId
+ * @desc    Update merchant details
+ * @access  Private (Agent)
  */
-router.put('/users/:id/status', adminController.changeUserStatus);
+router.put('/merchants/:merchantId', agentController.updateMerchant);
 
 /**
- * @route   DELETE /api/admin/users/:id
- * @desc    Delete a user
- * @access  Private (Admin)
+ * @route   PUT /api/agent/merchants/:merchantId/approve
+ * @desc    Approve merchant application
+ * @access  Private (Agent)
  */
-router.delete('/users/:id', adminController.deleteUser);
+router.put('/merchants/:merchantId/approve', agentController.approveMerchantApplication);
 
 /**
- * Revenue Management Routes
+ * @route   PUT /api/agent/merchants/:merchantId/reject
+ * @desc    Reject merchant application
+ * @access  Private (Agent)
  */
+router.put('/merchants/:merchantId/reject', agentController.rejectMerchantApplication);
 
 /**
- * @route   GET /api/admin/transactions
- * @desc    Get transaction history with filtering and pagination
- * @access  Private (Admin)
- */
-router.get('/transactions', adminController.getTransactions);
-
-/**
- * @route   GET /api/admin/transactions/:id
- * @desc    Get transaction details
- * @access  Private (Admin)
- */
-router.get('/transactions/:id', adminController.getTransactionById);
-
-/**
- * @route   PUT /api/admin/transactions/:id/approve
- * @desc    Approve transaction
- * @access  Private (Admin)
- */
-router.put('/transactions/:id/approve', adminController.approveTransaction);
-
-/**
- * @route   PUT /api/admin/transactions/:id/reject
- * @desc    Reject transaction
- * @access  Private (Admin)
- */
-router.put('/transactions/:id/reject', adminController.rejectTransaction);
-
-/**
- * @route   PUT /api/admin/revenue/overview
- * @desc    Get revenue overview
- * @access  Private (Admin)
- */
-router.put('/revenue/overview', adminController.getRevenueOverview);
-
-/**
- * Reporting & Analytics Routes
+ * QR Code Management Routes
  */
 
 /**
- * @route   GET /api/admin/reports/generate
- * @desc    Generate system report
- * @access  Private (Admin)
+ * @route   GET /api/agent/qrcodes
+ * @desc    Get all QR codes created by the agent
+ * @access  Private (Agent)
  */
-router.get('/reports/generate', adminController.generateSystemReport);
+router.get('/qrcodes', agentController.getAllQRCodes);
 
 /**
- * @route   GET /api/admin/analytics
- * @desc    Generate system analytics
- * @access  Private (Admin)
+ * @route   GET /api/agent/merchants/:merchantId/qrcodes
+ * @desc    Get QR codes by merchant
+ * @access  Private (Agent)
  */
-router.get('/analytics', adminController.getSystemAnalytics);
+router.get('/merchants/:merchantId/qrcodes', agentController.getQRCodesByMerchant);
 
 /**
- * @route   GET /api/admin/performance-metrics
- * @desc    Get performance metrics
- * @access  Private (Admin)
+ * @route   POST /api/agent/merchants/:merchantId/qrcodes
+ * @desc    Generate QR code for merchant
+ * @access  Private (Agent)
  */
-router.get('/performance-metrics', adminController.getPerformanceMetrics);
+router.post('/merchants/:merchantId/qrcodes', agentController.generateQRCode);
 
 /**
- * @route   GET /api/admin/reports/export
- * @desc    Export report data
- * @access  Private (Admin)
+ * @route   POST /api/agent/merchants/:merchantId/qrcodes/regenerate
+ * @desc    Regenerate QR code for merchant
+ * @access  Private (Agent)
  */
-router.get('/reports/export', adminController.exportReportData);
+router.post('/merchants/:merchantId/qrcodes/regenerate', agentController.regenerateQRCode);
 
 /**
- * System Management Routes
+ * @route   GET /api/agent/qrcodes/:qrCodeId/download
+ * @desc    Download QR code
+ * @access  Private (Agent)
+ */
+router.get('/qrcodes/:qrCodeId/download', agentController.downloadQRCode);
+
+/**
+ * Commission and Transaction Routes
  */
 
 /**
- * @route   GET /api/admin/audit-logs
- * @desc    View audit logs with filtering
- * @access  Private (Admin)
+ * @route   GET /api/agent/commissions
+ * @desc    Get commissions for the agent
+ * @access  Private (Agent)
  */
-router.get('/audit-logs', adminController.getAuditLogs);
+router.get('/commissions', agentController.getCommissions);
 
 /**
- * @route   GET /api/admin/audit-logs/:id
- * @desc    Get audit log details
- * @access  Private (Admin)
+ * @route   GET /api/agent/commissions/report
+ * @desc    Get commission reports
+ * @access  Private (Agent)
  */
-router.get('/audit-logs/:id', adminController.getAuditLogById);
+router.get('/commissions/report', agentController.getCommissionReports);
 
 /**
- * @route   GET /api/admin/system-settings
- * @desc    Get all system settings
- * @access  Private (Admin)
+ * @route   GET /api/agent/commissions/period
+ * @desc    Get commission by period
+ * @access  Private (Agent)
  */
-router.get('/system-settings', adminController.getSystemSettings);
+router.get('/commissions/period', agentController.getCommissionByPeriod);
 
 /**
- * @route   PUT /api/admin/system-settings
- * @desc    Update system settings (bulk)
- * @access  Private (Admin)
+ * @route   GET /api/agent/transactions
+ * @desc    Get transaction history
+ * @access  Private (Agent)
  */
-router.put('/system-settings', adminController.updateSystemSettings);
+router.get('/transactions', agentController.getTransactionHistory);
 
 /**
- * @route   GET /api/admin/merchants
- * @desc    Get all merchants with filtering
- * @access  Private (Admin)
+ * @route   GET /api/agent/earnings
+ * @desc    Get earnings summary
+ * @access  Private (Agent)
  */
-router.get('/merchants', adminController.getMerchants);
+router.get('/earnings', agentController.getEarningsSummary);
 
 /**
- * @route   GET /api/admin/advertisers
- * @desc    Get all advertisers with filtering
- * @access  Private (Admin)
+ * Profile Management Routes
  */
-router.get('/advertisers', adminController.getAdvertisers);
 
 /**
- * @route   GET /api/admin/agents
- * @desc    Get all agents with filtering
- * @access  Private (Admin)
+ * @route   GET /api/agent/profile
+ * @desc    Get agent profile
+ * @access  Private (Agent)
  */
-router.get('/agents', adminController.getAgents);
+router.get('/profile', agentController.getAgentProfile);
 
 /**
- * @route   GET /api/admin/campaigns
- * @desc    Get all campaigns with filtering
- * @access  Private (Admin)
+ * @route   PUT /api/agent/profile
+ * @desc    Update agent profile
+ * @access  Private (Agent)
  */
-router.get('/campaigns', adminController.getCampaigns);
+router.put('/profile', agentController.updateAgentProfile);
+
+/**
+ * Help Resources
+ */
+
+/**
+ * @route   GET /api/agent/help
+ * @desc    Get help resources
+ * @access  Private (Agent)
+ */
+router.get('/help', agentController.getHelpResources);
 
 module.exports = router;
