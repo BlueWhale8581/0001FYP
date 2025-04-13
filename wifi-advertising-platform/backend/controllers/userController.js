@@ -14,6 +14,8 @@ const QRCodeModel = require('../models/QRCode');
 const UserModel = require('../models/User');
 const AdvertiserModel = require('../models/Advertiser');
 const AgentModel = require('../models/Agent');
+const NotificationService = require('../services/notificationService');
+const TransactionService = require('../services/transactionService');
 
 const wifiService = require('../services/wifiService');
 const adService = require('../services/adService');
@@ -571,6 +573,298 @@ exports.registerAsAgent = async (req, res) => {
       });
     }
     return res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+/**
+ * @desc    Get user dashboard data
+ * @route   GET /api/user/dashboard
+ * @access  Private (Any logged-in user)
+ */
+exports.getDashboard = async (req, res) => {
+  try {
+    const userId = req.user.id; // Extracted from the token by the verifyToken middleware
+
+    // Use DashboardService to get comprehensive dashboard data for the user
+    const dashboardData = await DashboardService.getUserDashboard(userId);
+
+    return res.status(200).json({
+      success: true,
+      data: dashboardData,
+    });
+  } catch (error) {
+    console.error('Error getting dashboard data:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch dashboard data',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @desc    Get user profile information
+ * @route   GET /api/user/profile
+ * @access  Private (Any logged-in user)
+ */
+exports.getUserProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    return res.status(500).json({ success: false, message: 'Failed to fetch user profile' });
+  }
+};
+
+/**
+ * @desc    Update user profile information
+ * @route   PUT /api/user/profile
+ * @access  Private (Any logged-in user)
+ */
+exports.updateUserProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const updates = req.body;
+
+    const updatedUser = await UserModel.findByIdAndUpdate(userId, updates, { new: true });
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    return res.status(500).json({ success: false, message: 'Failed to update user profile' });
+  }
+};
+
+/**
+ * @desc    Change user password
+ * @route   PUT /api/user/password
+ * @access  Private (Any logged-in user)
+ */
+exports.changePassword = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { oldPassword, newPassword } = req.body;
+
+    const user = await UserModel.findById(userId);
+    if (!user || !(await user.comparePassword(oldPassword))) {
+      return res.status(400).json({ success: false, message: 'Invalid current password' });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    return res.status(200).json({ success: true, message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Error changing password:', error);
+    return res.status(500).json({ success: false, message: 'Failed to change password' });
+  }
+};
+
+/**
+ * @desc    Get user notifications
+ * @route   GET /api/user/notifications
+ * @access  Private (Any logged-in user)
+ */
+exports.getUserNotifications = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const notifications = await NotificationService.getNotificationsForUser(userId);
+    return res.status(200).json({ success: true, notifications });
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    return res.status(500).json({ success: false, message: 'Failed to fetch notifications' });
+  }
+};
+
+/**
+ * @desc    Mark notification as read
+ * @route   PUT /api/user/notifications/:id/read
+ * @access  Private (Any logged-in user)
+ */
+exports.markNotificationRead = async (req, res) => {
+  try {
+    const notificationId = req.params.id;
+
+    const updatedNotification = await NotificationService.markAsRead(notificationId);
+    if (!updatedNotification) {
+      return res.status(404).json({ success: false, message: 'Notification not found' });
+    }
+
+    return res.status(200).json({ success: true, message: 'Notification marked as read' });
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+    return res.status(500).json({ success: false, message: 'Failed to mark notification as read' });
+  }
+};
+
+/**
+ * @desc    Mark all notifications as read
+ * @route   PUT /api/user/notifications/read-all
+ * @access  Private (Any logged-in user)
+ */
+exports.markAllNotificationsRead = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    await NotificationService.markAllAsRead(userId);
+    return res.status(200).json({ success: true, message: 'All notifications marked as read' });
+  } catch (error) {
+    console.error('Error marking all notifications as read:', error);
+    return res.status(500).json({ success: false, message: 'Failed to mark all notifications as read' });
+  }
+};
+
+/**
+ * @desc    Delete a notification
+ * @route   DELETE /api/user/notifications/:id
+ * @access  Private (Any logged-in user)
+ */
+exports.deleteNotification = async (req, res) => {
+  try {
+    const notificationId = req.params.id;
+
+    const deletedNotification = await NotificationService.deleteNotification(notificationId);
+    if (!deletedNotification) {
+      return res.status(404).json({ success: false, message: 'Notification not found' });
+    }
+
+    return res.status(200).json({ success: true, message: 'Notification deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting notification:', error);
+    return res.status(500).json({ success: false, message: 'Failed to delete notification' });
+  }
+};
+
+/**
+ * @desc    Get user transaction history
+ * @route   GET /api/user/transactions
+ * @access  Private (Any logged-in user)
+ */
+exports.getUserTransactions = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const transactions = await TransactionService.getTransactionsForUser(userId);
+    return res.status(200).json({ success: true, transactions });
+  } catch (error) {
+    console.error('Error fetching transactions:', error);
+    return res.status(500).json({ success: false, message: 'Failed to fetch transactions' });
+  }
+};
+
+/**
+ * @desc    Get specific transaction details
+ * @route   GET /api/user/transactions/:id
+ * @access  Private (Any logged-in user)
+ */
+exports.getTransactionDetails = async (req, res) => {
+  try {
+    const transactionId = req.params.id;
+
+    const transaction = await TransactionService.getTransactionById(transactionId);
+    if (!transaction) {
+      return res.status(404).json({ success: false, message: 'Transaction not found' });
+    }
+
+    return res.status(200).json({ success: true, transaction });
+  } catch (error) {
+    console.error('Error fetching transaction details:', error);
+    return res.status(500).json({ success: false, message: 'Failed to fetch transaction details' });
+  }
+};
+
+/**
+ * @desc    Update user settings and preferences
+ * @route   PUT /api/user/settings
+ * @access  Private (Any logged-in user)
+ */
+exports.updateUserSettings = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const settings = req.body;
+
+    // Update user settings in the database
+    const updatedSettings = await UserModel.findByIdAndUpdate(
+      userId,
+      { settings },
+      { new: true }
+    );
+
+    if (!updatedSettings) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Settings updated successfully',
+      settings: updatedSettings.settings,
+    });
+  } catch (error) {
+    console.error('Error updating user settings:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to update user settings',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @desc    Submit user feedback
+ * @route   POST /api/user/feedback
+ * @access  Private (Any logged-in user)
+ */
+exports.submitFeedback = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { feedback } = req.body;
+
+    if (!feedback || feedback.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        message: 'Feedback cannot be empty',
+      });
+    }
+
+    // Save feedback to the database or send it to a service
+    await FeedbackService.saveFeedback({ userId, feedback });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Feedback submitted successfully',
+    });
+  } catch (error) {
+    console.error('Error submitting feedback:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to submit feedback',
+      error: error.message,
+    });
   }
 };
 

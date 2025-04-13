@@ -72,17 +72,6 @@ router.put('/notifications/read-all', userController.markAllNotificationsRead);
 router.delete('/notifications/:id', userController.deleteNotification);
 
 /**
- * Account Management Routes
- */
-
-/**
- * @route   GET /api/user/activity-logs
- * @desc    Get user activity logs
- * @access  Private (Any logged in user)
- */
-router.get('/activity-logs', userController.getActivityLogs);
-
-/**
  * @route   PUT /api/user/settings
  * @desc    Update user settings and preferences
  * @access  Private (Any logged in user)
