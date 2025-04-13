@@ -46,9 +46,30 @@ router.put('/notifications/read-all', advertiserController.markAllNotificationsA
  */
 
 /**
- * @route   GET /api/advertiser/campaigns
- * @desc    Get all campaigns for advertiser
- * @access  Private (Advertiser)
+ * @swagger
+ * /api/advertiser/campaigns:
+ *   get:
+ *     summary: Get all campaigns
+ *     description: Fetches all campaigns for the logged-in advertiser.
+ *     tags: [Campaigns]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Campaigns retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 campaigns:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       401:
+ *         description: Unauthorized.
  */
 router.get('/campaigns', advertiserController.getCampaigns);
 
@@ -60,9 +81,37 @@ router.get('/campaigns', advertiserController.getCampaigns);
 router.post('/campaigns', advertiserController.createCampaign);
 
 /**
- * @route   GET /api/advertiser/campaigns/:id
- * @desc    Get campaign details by ID
- * @access  Private (Advertiser)
+ * @swagger
+ * /api/advertiser/campaigns/{id}:
+ *   get:
+ *     summary: Get campaign details
+ *     description: Fetches details of a specific campaign by ID.
+ *     tags: [Campaigns]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the campaign.
+ *     responses:
+ *       200:
+ *         description: Campaign details retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 campaign:
+ *                   type: object
+ *       404:
+ *         description: Campaign not found.
+ *       401:
+ *         description: Unauthorized.
  */
 router.get('/campaigns/:id', advertiserController.getCampaignById);
 
@@ -99,9 +148,30 @@ router.get('/campaigns/:id/performance', advertiserController.getCampaignPerform
  */
 
 /**
- * @route   GET /api/advertiser/ads
- * @desc    Get all ads for advertiser
- * @access  Private (Advertiser)
+ * @swagger
+ * /api/advertiser/ads:
+ *   get:
+ *     summary: Get all ads
+ *     description: Fetches all ads for the logged-in advertiser.
+ *     tags: [Ads]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Ads retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 ads:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       401:
+ *         description: Unauthorized.
  */
 router.get('/ads', advertiserController.getAds);
 
@@ -113,9 +183,37 @@ router.get('/ads', advertiserController.getAds);
 router.post('/campaigns/:campaignId/ads', uploadService.uploadAdMedia, advertiserController.createAd);
 
 /**
- * @route   GET /api/advertiser/ads/:id
- * @desc    Get ad details by ID
- * @access  Private (Advertiser)
+ * @swagger
+ * /api/advertiser/ads/{id}:
+ *   get:
+ *     summary: Get ad details
+ *     description: Fetches details of a specific ad by ID.
+ *     tags: [Ads]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the ad.
+ *     responses:
+ *       200:
+ *         description: Ad details retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 ad:
+ *                   type: object
+ *       404:
+ *         description: Ad not found.
+ *       401:
+ *         description: Unauthorized.
  */
 router.get('/ads/:id', advertiserController.getAdById);
 
@@ -145,10 +243,36 @@ router.get('/ads/:id/metrics', advertiserController.getAdMetrics);
  */
 
 /**
- * @route   GET /api/advertiser/payments
- * @desc    Get payment history
- * @access  Private (Advertiser)
+ * @swagger
+ * /api/advertiser/payments:
+ *   get:
+ *     summary: Get payment history
+ *     description: Fetches the payment history for the logged-in advertiser.
+ *     tags: [Payments]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Payment history retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 payments:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       401:
+ *         description: Unauthorized.
  */
+/**
+     * @route   GET /api/advertiser/payments
+     * @desc    Get payment history
+     * @access  Private (Advertiser)
+**/
 router.get('/payments', advertiserController.getPaymentHistory);
 
 /**
@@ -177,9 +301,28 @@ router.get('/budget/:campaignId', advertiserController.getCampaignBudgetDetails)
  */
 
 /**
- * @route   GET /api/advertiser/analytics/overview
- * @desc    Get analytics overview
- * @access  Private (Advertiser)
+ * @swagger
+ * /api/advertiser/analytics/overview:
+ *   get:
+ *     summary: Get analytics overview
+ *     description: Fetches an overview of analytics for the advertiser.
+ *     tags: [Analytics]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Analytics overview retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 analytics:
+ *                   type: object
+ *       401:
+ *         description: Unauthorized.
  */
 router.get('/analytics/overview', advertiserController.getAnalyticsOverview);
 
@@ -209,9 +352,28 @@ router.get('/reports', advertiserController.generateReport);
  */
 
 /**
- * @route   GET /api/advertiser/profile
- * @desc    Get advertiser profile
- * @access  Private (Advertiser)
+ * @swagger
+ * /api/advertiser/profile:
+ *   get:
+ *     summary: Get advertiser profile
+ *     description: Fetches the profile information of the logged-in advertiser.
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Profile retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 profile:
+ *                   type: object
+ *       401:
+ *         description: Unauthorized.
  */
 router.get('/profile', advertiserController.getProfile);
 

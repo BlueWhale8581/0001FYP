@@ -15,17 +15,65 @@ router.use(authorizeRole('merchant'));
  */
 
 /**
- * @route   GET /api/merchant/dashboard/stats
- * @desc    Get merchant dashboard data
- * @access  Private (Merchant)
+ * @swagger
+ * /api/merchant/dashboard/stats:
+ *   get:
+ *     summary: Get merchant dashboard statistics
+ *     description: Fetches key statistics for the merchant dashboard.
+ *     tags: [Merchant]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Dashboard statistics retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       401:
+ *         description: Unauthorized.
  */
+/**
+ * @route   GET /api/merchant/dashboard/stats
+ * @desc    Get merchant dashboard statistics
+ * @access  Private (Merchant)
+ **/
 router.get('/dashboard/stats', merchantController.getDashboardStats);
 
+/**
+ * @swagger
+ * /api/merchant/dashboard/wifi-usage:
+ *   get:
+ *     summary: Get WiFi usage statistics
+ *     description: Fetches WiFi usage statistics for the merchant dashboard.
+ *     tags: [Merchant]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: WiFi usage statistics retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 wifiUsage:
+ *                   type: object
+ *       401:
+ *         description: Unauthorized.
+ */
 /**
  * @route   GET /api/merchant/dashboard/wifi-usage
  * @desc    Get WiFi usage statistics
  * @access  Private (Merchant)
- */
+ **/
 router.get('/dashboard/wifi-usage', merchantController.getWiFiUsageStats);
 
 /**
@@ -47,15 +95,83 @@ router.get('/dashboard/revenue', merchantController.getRevenueDetails);
  */
 
 /**
- * @route   GET /api/merchant/wifi-settings
- * @desc    Get merchant's WiFi settings
- * @access  Private (Merchant)
+ * @swagger
+ * /api/merchant/wifi-settings:
+ *   get:
+ *     summary: Get WiFi settings
+ *     description: Fetches the WiFi settings configured by the merchant.
+ *     tags: [WiFi Settings]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: WiFi settings retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 settings:
+ *                   type: object
+ *       401:
+ *         description: Unauthorized.
  */
+/**
+ * @route   GET /api/merchant/wifi-settings
+ * @desc    Get WiFi settings
+ * @access  Private (Merchant)
+ **/
 router.get('/wifi-settings', merchantController.getWiFiSettings);
 
 /**
+ * @swagger
+ * /api/merchant/wifi-settings:
+ *   put:
+ *     summary: Update WiFi settings
+ *     description: Updates the WiFi settings for the merchant.
+ *     tags: [WiFi Settings]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               ssid:
+ *                 type: string
+ *               encryption_type:
+ *                 type: string
+ *                 enum: [WPA2, WPA3, Open]
+ *               bandwidth_limit:
+ *                 type: number
+ *               session_timeout:
+ *                 type: number
+ *               ads_before_access:
+ *                 type: integer
+ *                 minimum: 0
+ *                 maximum: 5
+ *     responses:
+ *       200:
+ *         description: WiFi settings updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *       400:
+ *         description: Invalid input.
+ *       401:
+ *         description: Unauthorized.
+ */
+/**
  * @route   PUT /api/merchant/wifi-settings
- * @desc    Update merchant's WiFi settings
+ * @desc    Update WiFi settings
  * @access  Private (Merchant)
  */
 router.put('/wifi-settings', [
@@ -63,7 +179,7 @@ router.put('/wifi-settings', [
   body('encryption_type').optional().isIn(['WPA2', 'WPA3', 'Open']),
   body('bandwidth_limit').optional().isNumeric(),
   body('session_timeout').optional().isNumeric(),
-  body('ads_before_access').optional().isInt({min: 0, max: 5})
+  body('ads_before_access').optional().isInt({ min: 0, max: 5 }),
 ], merchantController.updateWiFiSettings);
 
 /**
@@ -96,10 +212,34 @@ router.put('/redirect-url', [
  */
 
 /**
+ * @swagger
+ * /api/merchant/profile:
+ *   get:
+ *     summary: Get merchant profile
+ *     description: Fetches the profile information of the logged-in merchant.
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Profile retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 profile:
+ *                   type: object
+ *       401:
+ *         description: Unauthorized.
+ */
+/**
  * @route   GET /api/merchant/profile
  * @desc    Get merchant's profile information
  * @access  Private (Merchant)
- */
+ **/
 router.get('/profile', merchantController.getMerchantProfile);
 
 /**
@@ -127,10 +267,34 @@ router.put('/profile/logo', upload.single('logo'), merchantController.updateBusi
  */
 
 /**
+ * @swagger
+ * /api/merchant/reports/earnings:
+ *   get:
+ *     summary: Get earnings report
+ *     description: Fetches the earnings report for the merchant.
+ *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Earnings report retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 earnings:
+ *                   type: object
+ *       401:
+ *         description: Unauthorized.
+ */
+/**
  * @route   GET /api/merchant/reports/earnings
  * @desc    Get merchant's earnings report
  * @access  Private (Merchant)
- */
+ **/
 router.get('/reports/earnings', merchantController.getEarningsReport);
 
 /**
@@ -141,10 +305,34 @@ router.get('/reports/earnings', merchantController.getEarningsReport);
 router.get('/reports/commission', merchantController.getCommissionBreakdown);
 
 /**
- * @route   GET /api/merchant/reports/revenue
- * @desc    Get merchant's revenue by period
- * @access  Private (Merchant)
+ * @swagger
+ * /api/merchant/reports/revenue:
+ *   get:
+ *     summary: Get revenue report
+ *     description: Fetches the revenue report for the merchant by period.
+ *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Revenue report retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 revenue:
+ *                   type: object
+ *       401:
+ *         description: Unauthorized.
  */
+/**
+ * @route   GET /api/merchant/reports/revenue
+ * @desc    Get revenue report by period
+ * @access  Private (Merchant)
+ **/
 router.get('/reports/revenue', merchantController.getRevenueByPeriod);
 
 module.exports = router;

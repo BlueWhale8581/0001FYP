@@ -13,16 +13,54 @@ router.use(authorizeRole('admin'));
  */
 
 /**
- * @route   GET /api/admin/dashboard/stats
- * @desc    Get admin dashboard data
- * @access  Private (Admin)
+ * @swagger
+ * /api/admin/dashboard/stats:
+ *   get:
+ *     summary: Get admin dashboard data
+ *     description: Fetches key statistics for the admin dashboard.
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Dashboard statistics retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       401:
+ *         description: Unauthorized.
  */
 router.get('/dashboard/stats', adminController.getDashboardStats);
 
 /**
- * @route   GET /api/admin/dashboard/metrics
- * @desc    Get system metrics
- * @access  Private (Admin)
+ * @swagger
+ * /api/admin/dashboard/metrics:
+ *   get:
+ *     summary: Get system metrics
+ *     description: Fetches system performance metrics for the admin dashboard.
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: System metrics retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 metrics:
+ *                   type: object
+ *       401:
+ *         description: Unauthorized.
  */
 router.get('/dashboard/metrics', adminController.getSystemMetrics);
 
@@ -45,9 +83,46 @@ router.get('/alerts', adminController.getAlerts);
  */
 
 /**
- * @route   GET /api/admin/users
- * @desc    Get list of all users with filtering and pagination
- * @access  Private (Admin)
+ * @swagger
+ * /api/admin/users:
+ *   get:
+ *     summary: Get list of all users
+ *     description: Fetches a paginated list of all users with optional filters.
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number for pagination.
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of users per page.
+ *       - in: query
+ *         name: role
+ *         schema:
+ *           type: string
+ *         description: Filter users by role.
+ *     responses:
+ *       200:
+ *         description: List of users retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 users:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       401:
+ *         description: Unauthorized.
  */
 router.get('/users', adminController.getAllUsers);
 
@@ -59,9 +134,37 @@ router.get('/users', adminController.getAllUsers);
 router.post('/users', adminController.createUser);
 
 /**
- * @route   GET /api/admin/users/:id
- * @desc    Get a specific user's details
- * @access  Private (Admin)
+ * @swagger
+ * /api/admin/users/{id}:
+ *   get:
+ *     summary: Get user details
+ *     description: Fetches details of a specific user by ID.
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the user.
+ *     responses:
+ *       200:
+ *         description: User details retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 user:
+ *                   type: object
+ *       404:
+ *         description: User not found.
+ *       401:
+ *         description: Unauthorized.
  */
 router.get('/users/:id', adminController.getUserById);
 
@@ -91,9 +194,46 @@ router.delete('/users/:id', adminController.deleteUser);
  */
 
 /**
- * @route   GET /api/admin/transactions
- * @desc    Get transaction history with filtering and pagination
- * @access  Private (Admin)
+ * @swagger
+ * /api/admin/transactions:
+ *   get:
+ *     summary: Get transaction history
+ *     description: Fetches a paginated list of transactions with optional filters.
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number for pagination.
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of transactions per page.
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         description: Filter transactions by status.
+ *     responses:
+ *       200:
+ *         description: Transaction history retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 transactions:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       401:
+ *         description: Unauthorized.
  */
 router.get('/transactions', adminController.getTransactions);
 
@@ -130,9 +270,28 @@ router.put('/revenue/overview', adminController.getRevenueOverview);
  */
 
 /**
- * @route   GET /api/admin/reports/generate
- * @desc    Generate system report
- * @access  Private (Admin)
+ * @swagger
+ * /api/admin/reports/generate:
+ *   get:
+ *     summary: Generate system report
+ *     description: Generates a detailed system report for the admin.
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: System report generated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 report:
+ *                   type: object
+ *       401:
+ *         description: Unauthorized.
  */
 router.get('/reports/generate', adminController.generateSystemReport);
 
