@@ -38,26 +38,22 @@ CREATE TABLE merchants (
 -- Agents table
 CREATE TABLE agents (
   id INT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-  user_id INT NOT NULL,
   commission_rate DECIMAL(5,2) DEFAULT 0.00,
   territory VARCHAR(100),
   created_at DATETIME DEFAULT GETDATE(),
-  updated_at DATETIME DEFAULT GETDATE(),
-  FOREIGN KEY (user_id) REFERENCES users(id)
+  updated_at DATETIME DEFAULT GETDATE()
 );
 
 -- Advertisers table
 CREATE TABLE advertisers (
   id INT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-  user_id INT NOT NULL,
   company_name VARCHAR(100) NOT NULL,
   company_address TEXT,
   company_phone VARCHAR(20),
   company_email VARCHAR(100),
   industry VARCHAR(50),
   created_at DATETIME DEFAULT GETDATE(),
-  updated_at DATETIME DEFAULT GETDATE(),
-  FOREIGN KEY (user_id) REFERENCES users(id)
+  updated_at DATETIME DEFAULT GETDATE()
 );
 
 -- Campaigns table
