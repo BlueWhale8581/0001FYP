@@ -1,0 +1,34 @@
+// components/layout/PageContainer.jsx
+import React from 'react';
+import { ChevronLeft } from 'lucide-react';
+
+const PageContainer = ({ 
+  children,
+  showBackButton = false,
+  onBackClick,
+  title = ''
+}) => {
+  return (
+    <div className="flex-1 overflow-y-auto p-4">
+      {(showBackButton || title) && (
+        <div className="flex items-center text-sm text-gray-500 mb-4">
+          {showBackButton && (
+            <button className="flex items-center" onClick={onBackClick}>
+              <ChevronLeft size={16} className="mr-1" />
+              <span>Back</span>
+            </button>
+          )}
+          {title && (
+            <h2 className={`${showBackButton ? 'ml-4' : ''} font-medium`}>{title}</h2>
+          )}
+        </div>
+      )}
+      
+      <div className="grid gap-4">
+        {children}
+      </div>
+    </div>
+  );
+};
+
+export default PageContainer;
