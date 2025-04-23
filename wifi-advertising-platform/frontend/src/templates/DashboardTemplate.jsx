@@ -1,5 +1,6 @@
 // templates/DashboardTemplate.jsx
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // Layout components
 import Header from '../components/layout/Header';
@@ -22,17 +23,24 @@ const DashboardTemplate = ({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
-  
+  const navigate = useNavigate();
+
   // Get role-specific configurations
   const { bgColor, textColor } = roleColors[role];
   const dashboardTitle = dashboardTitles[role];
   const navItems = navigationItems[role];
-  
+
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
     setSidebarOpen(false);
+
+    // Find the route for the selected tab and navigate
+    const selectedTab = navItems.find((item) => item.id === tabId);
+    if (selectedTab && selectedTab.route) {
+      navigate(selectedTab.route);
+    }
   };
-  
+
   return (
     <div className="flex flex-col h-screen bg-gray-100">
       <Header 
