@@ -7,7 +7,6 @@ import DashboardTemplate from '../../templates/DashboardTemplate';
 // Common components
 import Card from '../../components/common/Card';
 import StatusIndicator from '../../components/common/StatusIndicator';
-import '../../../tailwind.config.js';
 
 const UserDashboardPage = () => {
   return (
