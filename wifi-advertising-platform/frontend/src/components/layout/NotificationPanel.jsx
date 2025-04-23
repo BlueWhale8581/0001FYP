@@ -1,6 +1,8 @@
 // components/layout/NotificationPanel.jsx
 import React from 'react';
 import { X } from 'lucide-react';
+import NotificationItem from '../notifications/NotificationItem';
+import NotificationCounter from '../notifications/NotificationCounter';
 
 const NotificationPanel = ({ 
   isOpen,
@@ -8,22 +10,9 @@ const NotificationPanel = ({
   notifications = []
 }) => {
   if (!isOpen) return null;
-  
-  const getNotificationStyle = (type) => {
-    switch (type) {
-      case 'critical':
-        return 'border-red-500 bg-red-50';
-      case 'warning':
-        return 'border-amber-500 bg-amber-50';
-      case 'info':
-        return 'border-blue-500 bg-blue-50';
-      case 'success':
-        return 'border-green-500 bg-green-50';
-      default:
-        return 'border-gray-500 bg-gray-50';
-    }
-  };
-  
+
+  const unreadCount = notifications.filter(notification => !notification.read).length;
+
   return (
     <div className="fixed inset-0 z-30 bg-black/50" onClick={onClose}>
       <div 
@@ -31,7 +20,12 @@ const NotificationPanel = ({
         onClick={e => e.stopPropagation()}
       >
         <div className="p-4 border-b flex items-center justify-between">
-          <h3 className="font-semibold">Notifications</h3>
+          <h3 className="font-semibold flex items-center">
+            Notifications
+            {unreadCount > 0 && (
+              <NotificationCounter count={unreadCount} />
+            )}
+          </h3>
           <button onClick={onClose}>
             <X size={20} />
           </button>
@@ -45,15 +39,13 @@ const NotificationPanel = ({
           ) : (
             <>
               {notifications.map(notification => (
-                <div 
-                  key={notification.id} 
-                  className={`p-3 mb-3 rounded-lg border-l-4 ${
-                    getNotificationStyle(notification.type)
-                  } ${notification.read ? 'opacity-70' : ''}`}
-                >
-                  <p className="text-sm font-medium">{notification.message}</p>
-                  <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
-                </div>
+                <NotificationItem
+                  key={notification.id}
+                  type={notification.type}
+                  message={notification.message}
+                  time={notification.time}
+                  read={notification.read}
+                />
               ))}
               
               <button className="w-full text-center text-sm text-blue-600 mt-2">
