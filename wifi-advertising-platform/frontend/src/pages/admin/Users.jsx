@@ -11,21 +11,60 @@ import StatusIndicator from '../../components/common/StatusIndicator';
 import Button from '../../components/common/Button';
 import EmptyState from '../../components/common/EmptyState';
 
+// Hooks
+import { useUsers, useDashboardStats } from '../../hooks/useAdmin';
+
 const UsersPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Mock user data
-  const users = [
-    { id: 1, name: 'Jane Doe', email: 'jane.doe@example.com', role: 'user', status: 'Active', lastActive: '5m ago' },
-    { id: 2, name: 'John Smith', email: 'john.smith@example.com', role: 'merchant', status: 'Active', lastActive: '2h ago' },
-    { id: 3, name: 'Emily Johnson', email: 'emily.j@example.com', role: 'agent', status: 'Inactive', lastActive: '3d ago' },
-    { id: 4, name: 'Michael Brown', email: 'michael.b@example.com', role: 'user', status: 'Active', lastActive: '1h ago' },
-    { id: 5, name: 'Sarah Wilson', email: 'sarah.w@example.com', role: 'advertiser', status: 'Pending', lastActive: 'Never' },
-  ];
+  // Fetch users using the hook
+  const { 
+    users, 
+    loading: usersLoading, 
+    error: usersError,
+    params,
+    setParams,
+    fetchUsers,
+    createUser,
+    updateUser,
+    deleteUser,
+    changeUserStatus
+  } = useUsers();
+  
+  // Fetch dashboard stats for user counts
+  const { 
+    stats, 
+    loading: statsLoading, 
+    error: statsError 
+  } = useDashboardStats();
 
   const handleSearch = () => {
-    console.log('Searching for:', searchTerm);
-    // Implement search logic
+    setParams({
+      ...params,
+      search: searchTerm
+    });
+    fetchUsers({
+      ...params,
+      search: searchTerm
+    });
+  };
+
+  const handleAddUser = () => {
+    // Implementation for adding a new user
+    console.log('Add user clicked');
+  };
+
+  const handleEditUser = (userId) => {
+    // Implementation for editing a user
+    console.log('Edit user', userId);
+  };
+
+  const handleDeleteUser = async (userId) => {
+    await deleteUser(userId);
+  };
+
+  const handleChangeStatus = async (userId, newStatus) => {
+    await changeUserStatus(userId, newStatus);
   };
 
   return (
@@ -51,7 +90,7 @@ const UsersPage = () => {
           <Button
             text="Add User"
             className="flex items-center"
-            onClick={() => console.log('Add user clicked')}
+            onClick={handleAddUser}
           />
           <Button
             text="Filter"
@@ -66,26 +105,42 @@ const UsersPage = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <p className="text-sm text-gray-500">Total Users</p>
-            <p className="text-xl font-bold text-blue-600">12,456</p>
+            <p className="text-xl font-bold text-blue-600">
+              {statsLoading ? '...' : (stats?.users?.total || 0).toLocaleString()}
+            </p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Active Users</p>
-            <p className="text-xl font-bold text-green-600">10,245</p>
+            <p className="text-xl font-bold text-green-600">
+              {statsLoading ? '...' : (stats?.users?.active || 0).toLocaleString()}
+            </p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Pending Users</p>
-            <p className="text-xl font-bold text-yellow-600">125</p>
+            <p className="text-xl font-bold text-yellow-600">
+              {statsLoading ? '...' : (stats?.users?.pending || 0).toLocaleString()}
+            </p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Inactive Users</p>
-            <p className="text-xl font-bold text-red-600">2,086</p>
+            <p className="text-xl font-bold text-red-600">
+              {statsLoading ? '...' : (stats?.users?.inactive || 0).toLocaleString()}
+            </p>
           </div>
         </div>
       </Card>
 
       {/* Users List */}
       <Card title="Users List" actionText="Export">
-        {users.length > 0 ? (
+        {usersLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <p className="text-gray-500">Loading users...</p>
+          </div>
+        ) : usersError ? (
+          <div className="flex items-center justify-center h-64">
+            <p className="text-red-500">{usersError}</p>
+          </div>
+        ) : users && users.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -100,7 +155,7 @@ const UsersPage = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {users.map((user) => (
-                  <tr key={user.id}>
+                  <tr key={user._id || user.id}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center">
@@ -122,15 +177,44 @@ const UsersPage = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <StatusIndicator 
                         status={user.status} 
-                        color={user.status === 'Active' ? 'green' : user.status === 'Pending' ? 'yellow' : 'red'} 
+                        color={
+                          user.status === 'Active' ? 'green' : 
+                          user.status === 'Pending' ? 'yellow' : 'red'
+                        } 
                       />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {user.lastActive}
+                      {user.lastActiveFormatted || 'Never'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button className="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
-                      <button className="text-red-600 hover:text-red-900">Delete</button>
+                      <button 
+                        className="text-blue-600 hover:text-blue-900 mr-3"
+                        onClick={() => handleEditUser(user._id || user.id)}
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        className="text-red-600 hover:text-red-900"
+                        onClick={() => handleDeleteUser(user._id || user.id)}
+                      >
+                        Delete
+                      </button>
+                      {user.status !== 'Active' && (
+                        <button 
+                          className="text-green-600 hover:text-green-900 ml-3"
+                          onClick={() => handleChangeStatus(user._id || user.id, 'Active')}
+                        >
+                          Activate
+                        </button>
+                      )}
+                      {user.status === 'Active' && (
+                        <button 
+                          className="text-yellow-600 hover:text-yellow-900 ml-3"
+                          onClick={() => handleChangeStatus(user._id || user.id, 'Inactive')}
+                        >
+                          Deactivate
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -142,7 +226,7 @@ const UsersPage = () => {
             title="No Users Found" 
             description="There are no users matching your search criteria."
             actionText="Add New User"
-            onActionClick={() => console.log('Add user clicked')}
+            onActionClick={handleAddUser}
           />
         )}
       </Card>

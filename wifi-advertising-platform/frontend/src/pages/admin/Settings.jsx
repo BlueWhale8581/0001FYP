@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Save, Server, Lock, Globe, Bell, Shield } from 'lucide-react';
 
 // Template
@@ -7,6 +7,9 @@ import DashboardTemplate from '../../templates/DashboardTemplate';
 // Common components
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
+
+// Custom hooks
+import { useSystemSettings, useNotifications } from '../../hooks/useAdmin';
 
 const SettingsPage = () => {
   // Form states
@@ -29,6 +32,41 @@ const SettingsPage = () => {
     smsAlerts: false,
     alertThreshold: 'medium'
   });
+  
+  // Using custom hooks to fetch data
+  const { settings, loading, error, updateSettings } = useSystemSettings();
+  const { notifications } = useNotifications();
+
+  // Initialize form states with fetched settings
+  useEffect(() => {
+    if (settings) {
+      if (settings.server) {
+        setServerSettings({
+          maintenanceMode: settings.server.maintenanceMode || false,
+          debugMode: settings.server.debugMode || false,
+          cacheTimeout: settings.server.cacheTimeout || 60,
+          maxConnections: settings.server.maxConnections || 1000
+        });
+      }
+      
+      if (settings.security) {
+        setSecuritySettings({
+          twoFactorAuth: settings.security.twoFactorAuth || true,
+          passwordExpiry: settings.security.passwordExpiry || 90,
+          sessionTimeout: settings.security.sessionTimeout || 30,
+          allowedIPs: settings.security.allowedIPs || '0.0.0.0/0'
+        });
+      }
+      
+      if (settings.notifications) {
+        setNotificationSettings({
+          emailAlerts: settings.notifications.emailAlerts || true,
+          smsAlerts: settings.notifications.smsAlerts || false,
+          alertThreshold: settings.notifications.alertThreshold || 'medium'
+        });
+      }
+    }
+  }, [settings]);
 
   // Handle form changes
   const handleServerSettingChange = (e) => {
@@ -56,32 +94,60 @@ const SettingsPage = () => {
   };
 
   // Form submission handlers
-  const handleServerSettingsSubmit = (e) => {
+  const handleServerSettingsSubmit = async (e) => {
     e.preventDefault();
-    console.log('Submitting server settings:', serverSettings);
-    // Implementation would go here
+    await updateSettings({ server: serverSettings });
   };
 
-  const handleSecuritySettingsSubmit = (e) => {
+  const handleSecuritySettingsSubmit = async (e) => {
     e.preventDefault();
-    console.log('Submitting security settings:', securitySettings);
-    // Implementation would go here
+    await updateSettings({ security: securitySettings });
   };
 
-  const handleNotificationSettingsSubmit = (e) => {
+  const handleNotificationSettingsSubmit = async (e) => {
     e.preventDefault();
-    console.log('Submitting notification settings:', notificationSettings);
-    // Implementation would go here
+    await updateSettings({ notifications: notificationSettings });
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <DashboardTemplate
+        role="admin"
+        pageTitle="System Settings"
+      >
+        <div className="flex items-center justify-center h-64">
+          <p className="text-lg text-gray-600">Loading settings...</p>
+        </div>
+      </DashboardTemplate>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <DashboardTemplate
+        role="admin"
+        pageTitle="System Settings"
+      >
+        <div className="flex items-center justify-center h-64">
+          <p className="text-lg text-red-600">{error}</p>
+        </div>
+      </DashboardTemplate>
+    );
+  }
 
   return (
     <DashboardTemplate
       role="admin"
-      userName="John Admin"
-      notifications={[
-        { id: 1, type: 'warning', message: 'System update required', time: '5m ago', read: false },
-        { id: 2, type: 'error', message: 'Server #3 is offline', time: '30m ago', read: false },
-      ]}
+      userName={settings?.admin?.name || "Admin"}
+      notifications={notifications.slice(0, 3).map(notif => ({
+        id: notif._id,
+        type: notif.type,
+        message: notif.message,
+        time: notif.formattedTime || '5m ago',
+        read: notif.read
+      }))}
       pageTitle="System Settings"
     >
       {/* Server Settings */}

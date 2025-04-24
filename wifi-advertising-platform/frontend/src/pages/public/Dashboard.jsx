@@ -12,11 +12,9 @@ const UserDashboardPage = () => {
   return (
     <DashboardTemplate
       role="user"
-      userName="Jane Doe"
+      userName="Visitor"
       notifications={[
-        { id: 1, type: 'info', message: 'New shop added nearby!', time: '10m ago', read: false },
-        { id: 2, type: 'success', message: 'WiFi linked successfully.', time: '1h ago', read: true },
-      ]}
+        { id: 1, message: 'Welcome to the WiFi Dashboard!', type: 'info' },]}
       pageTitle="WiFi Dashboard"
     >
       {/* Current WiFi Status */}

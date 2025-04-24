@@ -71,3 +71,48 @@ export const navigationItems = {
     { id: 'aboutus', icon: <Settings size={20} />, label: 'About Us', route: '/aboutus' },
   ],
 };
+
+export const navigationSideBarItems = {
+  admin: [
+    { id: 'dashboard', icon: <Home size={20} />, label: 'Dashboard' , route:"/admin"},
+    { id: 'scan', icon: <Scan size={20} />, label: 'Scan QR', route: '/scan' },
+    { id: 'users', icon: <Users size={20} />, label: 'Users', route:"/users"},
+    { id: 'transactions', icon: <CreditCard size={20} />, label: 'Transactions', route:"/transactions"},
+    { id: 'settings', icon: <Settings size={20} />, label: 'Settings', route:"/settings"},
+    { id: 'aboutus', icon: <Settings size={20} />, label: 'About Us', route: '/aboutus' },
+    { id: 'profile', icon: <User size={20} />, label: 'Profile', route:"/profile"},
+  ],
+  merchant: [
+    { id: 'dashboard', icon: <Home size={20} />, label: 'Dashboard' , route:"/merchant"},
+    { id: 'scan', icon: <Scan size={20} />, label: 'Scan QR', route: '/scan' },
+    { id: 'wifi', icon: <Wifi size={20} />, label: 'WiFi', route:"/WiFi"},
+    { id: 'ads', icon: <PieChart size={20} />, label: 'Ads', route:"/ads"},
+    { id: 'revenue', icon: <CreditCard size={20} />, label: 'Revenue', route:"/revenue"},
+    { id: 'aboutus', icon: <Settings size={20} />, label: 'About Us', route: '/aboutus' },
+    { id: 'profile', icon: <User size={20} />, label: 'Profile', route:"/profile"},
+  ],
+  agent: [
+    { id: 'dashboard', icon: <Home size={20} />, label: 'Dashboard' , route:"/agent"},
+    { id: 'scan', icon: <Scan size={20} />, label: 'Scan QR', route: '/scan' },
+    { id: 'merchants', icon: <Users size={20} />, label: 'Merchants' , route:"/merchants"},
+    { id: 'qrcodes', icon: <FileText size={20} />, label: 'QR Codes' , route:"/QRcode"},
+    { id: 'earnings', icon: <CreditCard size={20} />, label: 'Earnings' , route:"/earning"},
+    { id: 'aboutus', icon: <Settings size={20} />, label: 'About Us', route: '/aboutus' },
+    { id: 'profile', icon: <User size={20} />, label: 'Profile' , route:"/profile"},
+  ],
+  advertiser: [
+    { id: 'dashboard', icon: <Home size={20} />, label: 'Dashboard' , route:"/advertiser"},
+    { id: 'scan', icon: <Scan size={20} />, label: 'Scan QR', route: '/scan' },
+    { id: 'campaigns', icon: <Award size={20} />, label: 'Campaigns'  , route:"/campaigns"},
+    { id: 'analytics', icon: <BarChart size={20} />, label: 'Analytics' , route:"/analytics"},
+    { id: 'payments', icon: <CreditCard size={20} />, label: 'Payments' , route:"/payments"},
+    { id: 'aboutus', icon: <Settings size={20} />, label: 'About Us', route: '/aboutus' },
+    { id: 'profile', icon: <User size={20} />, label: 'Profile' , route:"/profile"},
+  ],
+  user: [
+    { id: 'dashboard', icon: <Home size={20} />, label: 'Dashboard', route: '/' },
+    { id: 'scan', icon: <Scan size={20} />, label: 'Scan QR', route: '/scan' },
+    { id: 'register', icon: <User size={20} />, label: 'Register/Login', route: '/register' },
+    { id: 'aboutus', icon: <Settings size={20} />, label: 'About Us', route: '/aboutus' },
+  ],
+};

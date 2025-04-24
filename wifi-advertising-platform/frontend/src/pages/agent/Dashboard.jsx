@@ -7,9 +7,9 @@ import DashboardTemplate from '../../templates/DashboardTemplate';
 // Common components
 import Card from '../../components/common/Card';
 import StatusIndicator from '../../components/common/StatusIndicator';
-import MetricsChart from '../../components/common/MetricsChart';
-import QuickActions from '../../components/common/QuickActions';
-import ActivityFeed from '../../components/common/ActivityFeed';
+import MetricsChart from '../../components/dashboard/MetricsChart';
+import QuickActions from '../../components/dashboard/QuickActions';
+import ActivityFeed from '../../components/dashboard/ActivityFeed';
 
 const AgentDashboardPage = () => {
   // Mock data for agent dashboard

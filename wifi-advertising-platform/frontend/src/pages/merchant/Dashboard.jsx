@@ -6,10 +6,10 @@ import DashboardTemplate from '../../templates/DashboardTemplate';
 
 // Common components
 import Card from '../../components/common/Card';
-import StatusIndicator from '../../components/common/StatusIndicator';
 import ChartContainer from '../../components/common/ChartContainer';
-import QuickActions from '../../components/dashboard/QuickActions';
 import MetricsChart from '../../components/dashboard/MetricsChart';
+import StatusIndicator from '../../components/common/StatusIndicator';
+import ActivityFeed from '../../components/dashboard/ActivityFeed';
 
 const MerchantDashboardPage = () => {
   const placeholderChart = <div className="h-48 bg-gray-100 rounded flex items-center justify-center">Chart Placeholder</div>;

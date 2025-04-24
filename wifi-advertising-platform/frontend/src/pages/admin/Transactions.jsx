@@ -11,21 +11,54 @@ import StatusIndicator from '../../components/common/StatusIndicator';
 import ChartContainer from '../../components/common/ChartContainer';
 import Button from '../../components/common/Button';
 
+// Hooks
+import { useTransactions, useRevenueOverview } from '../../hooks/useAdmin';
+
 const TransactionsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [queryParams, setQueryParams] = useState({});
   
-  // Mock transaction data
-  const transactions = [
-    { id: 'TRX-001', user: 'Jane Doe', amount: 129.99, date: '2025-04-22', type: 'Payment', status: 'Completed' },
-    { id: 'TRX-002', user: 'John Smith', amount: 89.50, date: '2025-04-22', type: 'Subscription', status: 'Completed' },
-    { id: 'TRX-003', user: 'Emily Johnson', amount: 45.75, date: '2025-04-21', type: 'Payment', status: 'Pending' },
-    { id: 'TRX-004', user: 'Michael Brown', amount: 199.99, date: '2025-04-21', type: 'Upgrade', status: 'Completed' },
-    { id: 'TRX-005', user: 'Sarah Wilson', amount: 64.25, date: '2025-04-20', type: 'Payment', status: 'Failed' },
-  ];
+  // Fetch transactions using the hook
+  const { 
+    transactions, 
+    loading: transactionsLoading, 
+    error: transactionsError,
+    params,
+    setParams,
+    fetchTransactions,
+    approveTransaction,
+    rejectTransaction
+  } = useTransactions();
+  
+  // Fetch revenue data using the hook
+  const { 
+    revenue, 
+    loading: revenueLoading, 
+    error: revenueError 
+  } = useRevenueOverview();
 
   const handleSearch = () => {
-    console.log('Searching for:', searchTerm);
-    // Implement search logic
+    setParams({
+      ...params,
+      search: searchTerm
+    });
+    fetchTransactions({
+      ...params,
+      search: searchTerm
+    });
+  };
+
+  const handleExport = async () => {
+    console.log('Export clicked');
+  };
+
+  // Handle transaction actions
+  const handleApprove = async (transactionId) => {
+    await approveTransaction(transactionId);
+  };
+
+  const handleReject = async (transactionId) => {
+    await rejectTransaction(transactionId, 'Rejected by administrator');
   };
 
   return (
@@ -50,7 +83,7 @@ const TransactionsPage = () => {
         <Button
           text="Export"
           className="bg-green-600 hover:bg-green-700 flex items-center"
-          onClick={() => console.log('Export clicked')}
+          onClick={handleExport}
         />
       </div>
 
@@ -63,7 +96,9 @@ const TransactionsPage = () => {
             </div>
             <div>
               <p className="text-sm text-gray-500">Today's Transactions</p>
-              <p className="text-xl font-bold text-blue-600">28</p>
+              <p className="text-xl font-bold text-blue-600">
+                {revenueLoading ? '...' : revenue?.today?.count || 0}
+              </p>
             </div>
           </div>
         </Card>
@@ -74,7 +109,9 @@ const TransactionsPage = () => {
             </div>
             <div>
               <p className="text-sm text-gray-500">Today's Revenue</p>
-              <p className="text-xl font-bold text-green-600">$1,249.50</p>
+              <p className="text-xl font-bold text-green-600">
+                {revenueLoading ? '...' : `$${revenue?.today?.amount?.toFixed(2) || '0.00'}`}
+              </p>
             </div>
           </div>
         </Card>
@@ -85,7 +122,9 @@ const TransactionsPage = () => {
             </div>
             <div>
               <p className="text-sm text-gray-500">Monthly Revenue</p>
-              <p className="text-xl font-bold text-purple-600">$24,518.75</p>
+              <p className="text-xl font-bold text-purple-600">
+                {revenueLoading ? '...' : `$${revenue?.month?.amount?.toFixed(2) || '0.00'}`}
+              </p>
             </div>
           </div>
         </Card>
@@ -96,7 +135,9 @@ const TransactionsPage = () => {
             </div>
             <div>
               <p className="text-sm text-gray-500">Refunds (Monthly)</p>
-              <p className="text-xl font-bold text-red-600">$875.25</p>
+              <p className="text-xl font-bold text-red-600">
+                {revenueLoading ? '...' : `$${revenue?.refunds?.amount?.toFixed(2) || '0.00'}`}
+              </p>
             </div>
           </div>
         </Card>
@@ -111,54 +152,103 @@ const TransactionsPage = () => {
 
       {/* Recent Transactions */}
       <Card title="Recent Transactions" actionText="View All" className="mt-4">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {transactions.map((transaction) => (
-                <tr key={transaction.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {transaction.id}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {transaction.user}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-green-600">${transaction.amount}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {transaction.date}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                      {transaction.type}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <StatusIndicator 
-                      status={transaction.status} 
-                      color={transaction.status === 'Completed' ? 'green' : transaction.status === 'Pending' ? 'yellow' : 'red'} 
-                    />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button className="text-blue-600 hover:text-blue-900 mr-3">View</button>
-                    <button className="text-gray-600 hover:text-gray-900">Receipt</button>
-                  </td>
+        {transactionsLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <p className="text-gray-500">Loading transactions...</p>
+          </div>
+        ) : transactionsError ? (
+          <div className="flex items-center justify-center h-64">
+            <p className="text-red-500">{transactionsError}</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {transactions && transactions.length > 0 ? (
+                  transactions.map((transaction) => (
+                    <tr key={transaction._id || transaction.id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {transaction.transactionId || transaction.id}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {transaction.userName || transaction.user?.name || 'Unknown'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-green-600">${transaction.amount?.toFixed(2) || '0.00'}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(transaction.createdAt || transaction.date).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                          {transaction.type}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <StatusIndicator 
+                          status={transaction.status} 
+                          color={
+                            transaction.status === 'Completed' ? 'green' : 
+                            transaction.status === 'Pending' ? 'yellow' : 'red'
+                          } 
+                        />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button 
+                          className="text-blue-600 hover:text-blue-900 mr-3"
+                          onClick={() => console.log('View transaction', transaction._id || transaction.id)}
+                        >
+                          View
+                        </button>
+                        {transaction.status === 'Pending' && (
+                          <>
+                            <button 
+                              className="text-green-600 hover:text-green-900 mr-3"
+                              onClick={() => handleApprove(transaction._id || transaction.id)}
+                            >
+                              Approve
+                            </button>
+                            <button 
+                              className="text-red-600 hover:text-red-900"
+                              onClick={() => handleReject(transaction._id || transaction.id)}
+                            >
+                              Reject
+                            </button>
+                          </>
+                        )}
+                        {transaction.status === 'Completed' && (
+                          <button 
+                            className="text-gray-600 hover:text-gray-900"
+                            onClick={() => console.log('Generate receipt', transaction._id || transaction.id)}
+                          >
+                            Receipt
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="7" className="px-6 py-4 text-center text-sm text-gray-500">
+                      No transactions found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Card>
     </DashboardTemplate>
   );

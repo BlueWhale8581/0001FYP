@@ -11,7 +11,7 @@ import Footer from '../components/layout/Footer';
 import PageContainer from '../components/layout/PageContainer';
 
 // Role configurations
-import { roleColors, dashboardTitles, navigationItems } from '../utils/roleConfig';
+import { roleColors, dashboardTitles, navigationItems, navigationSideBarItems } from '../utils/roleConfig';
 
 const DashboardTemplate = ({ 
   role = 'user',
@@ -58,7 +58,7 @@ const DashboardTemplate = ({
         userName={userName}
         userRole={role}
         roleColor={bgColor}
-        navigationItems={navItems}
+        navigationItems={navigationSideBarItems}
         activeTabId={activeTab}
         onTabChange={handleTabChange}
         onSettingsClick={() => console.log('Settings clicked')}
