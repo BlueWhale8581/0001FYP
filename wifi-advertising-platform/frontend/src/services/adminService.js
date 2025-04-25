@@ -1,7 +1,7 @@
 // src/services/adminService.js
 import axios from 'axios';
 
-const API_URL = '/api/admin';
+const API_URL = 'http://localhost:6419/api/admin';
 
 // Axios instance with auth token
 const authAxios = axios.create();

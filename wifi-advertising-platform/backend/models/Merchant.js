@@ -4,7 +4,6 @@ const db = require('../config/database');
 class Merchant {
   constructor(merchantData) {
     this.id = merchantData.id;
-    this.user_id = merchantData.user_id;
     this.business_name = merchantData.business_name;
     this.business_address = merchantData.business_address;
     this.business_phone = merchantData.business_phone;
@@ -22,14 +21,11 @@ class Merchant {
   static async create(merchantData) {
     try {
       const query = `
-        INSERT INTO merchants (
-          user_id, business_name, business_address, business_phone, 
-          business_email, business_category, tax_id, logo_url, agent_id, approval_status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO merchants (id, business_name, business_address, business_phone, business_email, business_category, tax_id, logo_url, agent_id, approval_status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
-      
       const [result] = await db.execute(query, [
-        merchantData.user_id,
+        merchantData.id,
         merchantData.business_name,
         merchantData.business_address,
         merchantData.business_phone,
@@ -38,9 +34,8 @@ class Merchant {
         merchantData.tax_id,
         merchantData.logo_url,
         merchantData.agent_id,
-        merchantData.approval_status || 'pending'
+        merchantData.approval_status || 'pending',
       ]);
-      
       return { id: result.insertId, ...merchantData };
     } catch (error) {
       throw error;
@@ -63,10 +58,10 @@ class Merchant {
   }
 
   // Find merchant by user ID
-  static async findByUserId(userId) {
+  static async findByUserId(id) {
     try {
-      const query = 'SELECT * FROM merchants WHERE user_id = ?';
-      const [rows] = await db.execute(query, [userId]);
+      const query = 'SELECT * FROM merchants WHERE id = ?';
+      const [rows] = await db.execute(query, [id]);
       
       if (rows.length === 0) return null;
       
@@ -117,7 +112,7 @@ class Merchant {
       const query = `
         SELECT m.*, u.username, u.email, u.first_name, u.last_name, u.phone, u.status
         FROM merchants m
-        JOIN users u ON m.user_id = u.id
+        JOIN users u ON m.id = u.id
         WHERE m.id = ?
       `;
       

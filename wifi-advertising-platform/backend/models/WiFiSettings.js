@@ -1,5 +1,4 @@
-const mysql = require('mysql2/promise');
-const db = require('../config/database');
+const { sql, poolPromise } = require('../config/database');
 
 class WiFiSettings {
   constructor(settingsData) {
@@ -16,141 +15,60 @@ class WiFiSettings {
     this.updated_at = settingsData.updated_at;
   }
 
-  // Create new WiFi settings
   static async create(settingsData) {
     try {
-      const query = `
-        INSERT INTO wifi_settings (
-          merchant_id, ssid, password, connection_limit, session_duration,
-          ads_before_access, redirect_url, terms_and_conditions
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `;
-      
-      const [result] = await db.execute(query, [
-        settingsData.merchant_id,
-        settingsData.ssid,
-        settingsData.password,
-        settingsData.connection_limit || 50,
-        settingsData.session_duration || 60,
-        settingsData.ads_before_access !== undefined ? settingsData.ads_before_access : true,
-        settingsData.redirect_url,
-        settingsData.terms_and_conditions
-      ]);
-      
-      return { id: result.insertId, ...settingsData };
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('merchant_id', sql.Int, settingsData.merchant_id)
+        .input('ssid', sql.NVarChar, settingsData.ssid)
+        .input('password', sql.NVarChar, settingsData.password)
+        .input('connection_limit', sql.Int, settingsData.connection_limit || 50)
+        .input('session_duration', sql.Int, settingsData.session_duration || 60)
+        .input('ads_before_access', sql.Bit, settingsData.ads_before_access !== undefined ? settingsData.ads_before_access : true)
+        .input('redirect_url', sql.NVarChar, settingsData.redirect_url)
+        .input('terms_and_conditions', sql.NVarChar, settingsData.terms_and_conditions)
+        .query(`
+          INSERT INTO wifi_settings (
+            merchant_id, ssid, password, connection_limit, session_duration,
+            ads_before_access, redirect_url, terms_and_conditions
+          )
+          OUTPUT INSERTED.id
+          VALUES (@merchant_id, @ssid, @password, @connection_limit, @session_duration, @ads_before_access, @redirect_url, @terms_and_conditions)
+        `);
+      return { id: result.recordset[0].id, ...settingsData };
     } catch (error) {
+      console.error('Error creating WiFi settings:', error);
       throw error;
     }
   }
 
-  // Find WiFi settings by ID
   static async findById(id) {
     try {
-      const query = 'SELECT * FROM wifi_settings WHERE id = ?';
-      const [rows] = await db.execute(query, [id]);
-      
-      if (rows.length === 0) return null;
-      
-      const settingsData = rows[0];
-      return new WiFiSettings(settingsData);
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('id', sql.Int, id)
+        .query('SELECT * FROM wifi_settings WHERE id = @id');
+      if (result.recordset.length === 0) return null;
+      return new WiFiSettings(result.recordset[0]);
     } catch (error) {
+      console.error('Error finding WiFi settings by ID:', error);
       throw error;
     }
   }
 
-  // Find WiFi settings by merchant ID
   static async findByMerchantId(merchantId) {
     try {
-      const query = 'SELECT * FROM wifi_settings WHERE merchant_id = ?';
-      const [rows] = await db.execute(query, [merchantId]);
-      
-      if (rows.length === 0) return null;
-      
-      const settingsData = rows[0];
-      return new WiFiSettings(settingsData);
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('merchant_id', sql.Int, merchantId)
+        .query('SELECT * FROM wifi_settings WHERE merchant_id = @merchant_id');
+      if (result.recordset.length === 0) return null;
+      return new WiFiSettings(result.recordset[0]);
     } catch (error) {
-      throw error;
-    }
-  }
-
-  // Update WiFi settings
-  static async update(merchantId, updates) {
-    try {
-      // Check if settings exist for this merchant
-      const existingSettings = await this.findByMerchantId(merchantId);
-      
-      if (!existingSettings) {
-        // If no settings exist, create new settings
-        return await this.create({ merchant_id: merchantId, ...updates });
-      }
-      
-      const allowedUpdates = [
-        'ssid', 'password', 'connection_limit', 'session_duration',
-        'ads_before_access', 'redirect_url', 'terms_and_conditions'
-      ];
-      
-      const updateFields = [];
-      const updateValues = [];
-      
-      for (const [key, value] of Object.entries(updates)) {
-        if (allowedUpdates.includes(key) && value !== undefined) {
-          updateFields.push(`${key} = ?`);
-          updateValues.push(value);
-        }
-      }
-      
-      if (updateFields.length === 0) {
-        return false;
-      }
-      
-      const query = `UPDATE wifi_settings SET ${updateFields.join(', ')} WHERE merchant_id = ?`;
-      updateValues.push(merchantId);
-      
-      const [result] = await db.execute(query, updateValues);
-      return result.affectedRows > 0;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // Get current WiFi connections count
-  static async getCurrentConnectionsCount(merchantId) {
-    try {
-      const query = `
-        SELECT COUNT(*) as connection_count
-        FROM wifi_access_logs
-        WHERE merchant_id = ? AND disconnection_time IS NULL
-      `;
-      
-      const [rows] = await db.execute(query, [merchantId]);
-      
-      return rows[0].connection_count;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // Check if connection limit reached
-  static async isConnectionLimitReached(merchantId) {
-    try {
-      const settings = await this.findByMerchantId(merchantId);
-      if (!settings) return true; // If no settings, consider limit reached
-      
-      const currentConnections = await this.getCurrentConnectionsCount(merchantId);
-      return currentConnections >= settings.connection_limit;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // Delete WiFi settings
-  static async delete(merchantId) {
-    try {
-      const query = 'DELETE FROM wifi_settings WHERE merchant_id = ?';
-      const [result] = await db.execute(query, [merchantId]);
-      
-      return result.affectedRows > 0;
-    } catch (error) {
+      console.error('Error finding WiFi settings by merchant ID:', error);
       throw error;
     }
   }

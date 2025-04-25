@@ -126,25 +126,12 @@ exports.getUserById = async (req, res) => {
   try {
     const { id } = req.params;
     const user = await User.findById(id);
-    
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
-    // Get role-specific data
-    let roleData = null;
-    if (user.role === 'merchant') {
-      roleData = await Merchant.findByUserId(id);
-    } else if (user.role === 'agent') {
-      roleData = await Agent.findByUserId(id);
-    } else if (user.role === 'advertiser') {
-      roleData = await Advertiser.findByUserId(id);
-    }
-    
-    res.status(200).json({
-      user: user,
-      roleData
-    });
+
+    res.status(200).json({ user });
   } catch (error) {
     console.error('Error getting user by ID:', error);
     res.status(500).json({ message: 'Error retrieving user details' });

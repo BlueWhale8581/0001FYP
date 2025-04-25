@@ -10,7 +10,11 @@ const setupSwagger = require('./swagger');
 const app = express();
 
 // ======= 🧼 Middleware =======
-app.use(cors());
+// Allow requests from the frontend
+app.use(cors({
+  origin: 'http://localhost:3000', // Frontend URL
+  credentials: true // Allow cookies if needed
+}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -28,13 +32,13 @@ db.testConnection().then(connected => {
 });
 
 // ======= 🛣️ API Routes =======
-const adminRoutes = require('./routes/admin.js');
-const advertiserRoutes = require('./routes/advertiser.js');
-const agentRoutes = require('./routes/agent.js');
-const authRoutes = require('./routes/auth.js');
-const merchantRoutes = require('./routes/merchant.js');
-const publicRoutes = require('./routes/public.js');
-const userRoutes = require('./routes/user.js');
+const adminRoutes = require('./routes/admin');
+const advertiserRoutes = require('./routes/advertiser');
+const agentRoutes = require('./routes/agent');
+const authRoutes = require('./routes/auth');
+const merchantRoutes = require('./routes/merchant');
+const publicRoutes = require('./routes/public');
+const userRoutes = require('./routes/user');
 
 app.use('/api/admin', adminRoutes);
 app.use('/api/advertiser', advertiserRoutes);

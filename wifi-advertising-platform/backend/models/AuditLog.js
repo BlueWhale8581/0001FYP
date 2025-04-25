@@ -1,40 +1,27 @@
-const db = require('../config/database');
+const { sql, poolPromise } = require('../config/database');
 
 class AuditLog {
   // Create a new audit log entry
   static async create(logData) {
     try {
-      const {
-        userId,
-        action,
-        entityType,
-        entityId,
-        oldValues,
-        newValues,
-        ipAddress
-      } = logData;
-
-      // Convert objects to JSON strings if they're not already
-      const oldValuesJson = typeof oldValues === 'string' ? oldValues : JSON.stringify(oldValues || null);
-      const newValuesJson = typeof newValues === 'string' ? newValues : JSON.stringify(newValues || null);
-
-      const query = `
-        INSERT INTO audit_logs 
-        (user_id, action, entity_type, entity_id, old_values, new_values, ip_address)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `;
-      
-      const [result] = await db.execute(query, [
-        userId || null,
-        action,
-        entityType,
-        entityId || null,
-        oldValuesJson,
-        newValuesJson,
-        ipAddress || null
-      ]);
-      
-      return result.insertId;
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('user_id', sql.Int, logData.userId || null)
+        .input('action', sql.NVarChar, logData.action)
+        .input('entity_type', sql.NVarChar, logData.entityType)
+        .input('entity_id', sql.Int, logData.entityId || null)
+        .input('old_values', sql.NVarChar, JSON.stringify(logData.oldValues || null))
+        .input('new_values', sql.NVarChar, JSON.stringify(logData.newValues || null))
+        .input('ip_address', sql.NVarChar, logData.ipAddress || null)
+        .query(`
+          INSERT INTO audit_logs (
+            user_id, action, entity_type, entity_id, old_values, new_values, ip_address
+          )
+          OUTPUT INSERTED.id
+          VALUES (@user_id, @action, @entity_type, @entity_id, @old_values, @new_values, @ip_address)
+        `);
+      return result.recordset[0].id;
     } catch (error) {
       console.error('Error creating audit log:', error);
       throw error;

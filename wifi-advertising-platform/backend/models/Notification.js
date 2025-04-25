@@ -1,15 +1,22 @@
-const db = require('../config/database');
+const { sql, poolPromise } = require('../config/database');
 
 class Notification {
   // Create a new notification
   static async create(userId, title, message, type = 'info') {
     try {
-      const query = `
-        INSERT INTO notifications (user_id, title, message, type)
-        VALUES (?, ?, ?, ?)
-      `;
-      const [result] = await db.execute(query, [userId, title, message, type]);
-      return result.insertId;
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('user_id', sql.Int, userId)
+        .input('title', sql.NVarChar, title)
+        .input('message', sql.NVarChar, message)
+        .input('type', sql.NVarChar, type)
+        .query(`
+          INSERT INTO notifications (user_id, title, message, type)
+          OUTPUT INSERTED.id
+          VALUES (@user_id, @title, @message, @type)
+        `);
+      return result.recordset[0].id;
     } catch (error) {
       console.error('Error creating notification:', error);
       throw error;

@@ -1,6 +1,5 @@
-const mysql = require('mysql2/promise');
+const { sql, poolPromise } = require('../config/database');
 const bcrypt = require('bcrypt');
-const db = require('../config/database');
 
 class User {
   constructor(userData) {
@@ -24,24 +23,26 @@ class User {
       // Hash the password
       const hashedPassword = await bcrypt.hash(userData.password, 10);
       
-      const query = `
-        INSERT INTO users (username, email, password, role, first_name, last_name, phone, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `;
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('username', sql.NVarChar, userData.username)
+        .input('email', sql.NVarChar, userData.email)
+        .input('password', sql.NVarChar, hashedPassword)
+        .input('role', sql.NVarChar, userData.role)
+        .input('first_name', sql.NVarChar, userData.first_name)
+        .input('last_name', sql.NVarChar, userData.last_name)
+        .input('phone', sql.NVarChar, userData.phone)
+        .input('status', sql.NVarChar, userData.status || 'pending')
+        .query(`
+          INSERT INTO users (username, email, password, role, first_name, last_name, phone, status)
+          OUTPUT INSERTED.id
+          VALUES (@username, @email, @password, @role, @first_name, @last_name, @phone, @status)
+        `);
       
-      const [result] = await db.execute(query, [
-        userData.username,
-        userData.email,
-        hashedPassword,
-        userData.role,
-        userData.first_name,
-        userData.last_name,
-        userData.phone,
-        userData.status || 'pending'
-      ]);
-      
-      return { id: result.insertId, ...userData, password: undefined };
+      return { id: result.recordset[0].id, ...userData, password: undefined };
     } catch (error) {
+      console.error('Error in User.create:', error);
       throw error;
     }
   }
@@ -49,14 +50,17 @@ class User {
   // Find user by ID
   static async findById(id) {
     try {
-      const query = 'SELECT * FROM users WHERE id = ?';
-      const [rows] = await db.execute(query, [id]);
-      
-      if (rows.length === 0) return null;
-      
-      const userData = rows[0];
-      return new User(userData);
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('id', sql.Int, id)
+        .query('SELECT * FROM users WHERE id = @id');
+
+      if (result.recordset.length === 0) return null;
+
+      return new User(result.recordset[0]);
     } catch (error) {
+      console.error('Error in User.findById:', error);
       throw error;
     }
   }
@@ -64,14 +68,17 @@ class User {
   // Find user by email
   static async findByEmail(email) {
     try {
-      const query = 'SELECT * FROM users WHERE email = ?';
-      const [rows] = await db.execute(query, [email]);
-      
-      if (rows.length === 0) return null;
-      
-      const userData = rows[0];
-      return new User(userData);
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('email', sql.NVarChar, email)
+        .query('SELECT * FROM users WHERE email = @email');
+
+      if (result.recordset.length === 0) return null;
+
+      return new User(result.recordset[0]);
     } catch (error) {
+      console.error('Error in User.findByEmail:', error);
       throw error;
     }
   }
@@ -79,14 +86,17 @@ class User {
   // Find user by username
   static async findByUsername(username) {
     try {
-      const query = 'SELECT * FROM users WHERE username = ?';
-      const [rows] = await db.execute(query, [username]);
-      
-      if (rows.length === 0) return null;
-      
-      const userData = rows[0];
-      return new User(userData);
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('username', sql.NVarChar, username)
+        .query('SELECT * FROM users WHERE username = @username');
+
+      if (result.recordset.length === 0) return null;
+
+      return new User(result.recordset[0]);
     } catch (error) {
+      console.error('Error in User.findByUsername:', error);
       throw error;
     }
   }
@@ -98,24 +108,29 @@ class User {
       const params = [];
       
       if (filters.role) {
-        query += ' AND role = ?';
-        params.push(filters.role);
+        query += ' AND role = @role';
+        params.push({ name: 'role', type: sql.NVarChar, value: filters.role });
       }
       
       if (filters.status) {
-        query += ' AND status = ?';
-        params.push(filters.status);
+        query += ' AND status = @status';
+        params.push({ name: 'status', type: sql.NVarChar, value: filters.status });
       }
       
       // Add pagination
       const offset = (page - 1) * limit;
-      query += ' LIMIT ? OFFSET ?';
-      params.push(parseInt(limit), parseInt(offset));
+      query += ' ORDER BY id OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY';
+      params.push({ name: 'offset', type: sql.Int, value: offset });
+      params.push({ name: 'limit', type: sql.Int, value: limit });
       
-      const [rows] = await db.execute(query, params);
+      const pool = await poolPromise;
+      const request = pool.request();
+      params.forEach(param => request.input(param.name, param.type, param.value));
+      const result = await request.query(query);
       
-      return rows.map(row => new User(row));
+      return result.recordset.map(row => new User(row));
     } catch (error) {
+      console.error('Error in User.findAll:', error);
       throw error;
     }
   }
@@ -125,12 +140,12 @@ class User {
     try {
       const allowedUpdates = ['username', 'email', 'first_name', 'last_name', 'phone', 'status'];
       const updateFields = [];
-      const updateValues = [];
+      const params = [];
       
       for (const [key, value] of Object.entries(updates)) {
         if (allowedUpdates.includes(key) && value !== undefined) {
-          updateFields.push(`${key} = ?`);
-          updateValues.push(value);
+          updateFields.push(`${key} = @${key}`);
+          params.push({ name: key, type: sql.NVarChar, value });
         }
       }
       
@@ -138,12 +153,16 @@ class User {
         return false;
       }
       
-      const query = `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`;
-      updateValues.push(id);
+      const query = `UPDATE users SET ${updateFields.join(', ')} WHERE id = @id`;
+      params.push({ name: 'id', type: sql.Int, value: id });
       
-      const [result] = await db.execute(query, updateValues);
-      return result.affectedRows > 0;
+      const pool = await poolPromise;
+      const request = pool.request();
+      params.forEach(param => request.input(param.name, param.type, param.value));
+      const result = await request.query(query);
+      return result.rowsAffected[0] > 0;
     } catch (error) {
+      console.error('Error in User.update:', error);
       throw error;
     }
   }
@@ -152,11 +171,15 @@ class User {
   static async updatePassword(id, newPassword) {
     try {
       const hashedPassword = await bcrypt.hash(newPassword, 10);
-      const query = 'UPDATE users SET password = ? WHERE id = ?';
-      
-      const [result] = await db.execute(query, [hashedPassword, id]);
-      return result.affectedRows > 0;
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('password', sql.NVarChar, hashedPassword)
+        .input('id', sql.Int, id)
+        .query('UPDATE users SET password = @password WHERE id = @id');
+      return result.rowsAffected[0] > 0;
     } catch (error) {
+      console.error('Error in User.updatePassword:', error);
       throw error;
     }
   }
@@ -164,11 +187,14 @@ class User {
   // Delete a user
   static async delete(id) {
     try {
-      const query = 'DELETE FROM users WHERE id = ?';
-      const [result] = await db.execute(query, [id]);
-      
-      return result.affectedRows > 0;
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('id', sql.Int, id)
+        .query('DELETE FROM users WHERE id = @id');
+      return result.rowsAffected[0] > 0;
     } catch (error) {
+      console.error('Error in User.delete:', error);
       throw error;
     }
   }
@@ -176,22 +202,28 @@ class User {
   // Authenticate user
   static async authenticate(usernameOrEmail, password) {
     try {
-      const query = 'SELECT * FROM users WHERE username = ? OR email = ?';
-      const [rows] = await db.execute(query, [usernameOrEmail, usernameOrEmail]);
-      
-      if (rows.length === 0) return null;
-      
-      const user = rows[0];
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('usernameOrEmail', sql.NVarChar, usernameOrEmail)
+        .query('SELECT * FROM users WHERE username = @usernameOrEmail OR email = @usernameOrEmail');
+
+      if (result.recordset.length === 0) return null;
+
+      const user = result.recordset[0];
       const isMatch = await bcrypt.compare(password, user.password);
-      
+
       if (!isMatch) return null;
-      
+
       // Update last login timestamp
-      const updateQuery = 'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?';
-      await db.execute(updateQuery, [user.id]);
-      
+      await pool
+        .request()
+        .input('id', sql.Int, user.id)
+        .query('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = @id');
+
       return new User(user);
     } catch (error) {
+      console.error('Error in User.authenticate:', error);
       throw error;
     }
   }
@@ -199,11 +231,13 @@ class User {
   // Count users by role
   static async countByRole() {
     try {
-      const query = 'SELECT role, COUNT(*) as count FROM users GROUP BY role';
-      const [rows] = await db.execute(query);
-      
-      return rows;
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .query('SELECT role, COUNT(*) as count FROM users GROUP BY role');
+      return result.recordset;
     } catch (error) {
+      console.error('Error in User.countByRole:', error);
       throw error;
     }
   }

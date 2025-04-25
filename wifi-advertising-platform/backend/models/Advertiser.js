@@ -4,7 +4,6 @@ const db = require('../config/database');
 class Advertiser {
   constructor(advertiserData) {
     this.id = advertiserData.id;
-    this.user_id = advertiserData.user_id;
     this.company_name = advertiserData.company_name;
     this.company_address = advertiserData.company_address;
     this.company_phone = advertiserData.company_phone;
@@ -18,21 +17,17 @@ class Advertiser {
   static async create(advertiserData) {
     try {
       const query = `
-        INSERT INTO advertisers (
-          user_id, company_name, company_address, company_phone, 
-          company_email, industry
-        ) VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO advertisers (id, company_name, company_address, company_phone, company_email, industry)
+        VALUES (?, ?, ?, ?, ?, ?)
       `;
-      
       const [result] = await db.execute(query, [
-        advertiserData.user_id,
+        advertiserData.id,
         advertiserData.company_name,
         advertiserData.company_address,
         advertiserData.company_phone,
         advertiserData.company_email,
-        advertiserData.industry
+        advertiserData.industry,
       ]);
-      
       return { id: result.insertId, ...advertiserData };
     } catch (error) {
       throw error;
@@ -55,10 +50,10 @@ class Advertiser {
   }
 
   // Find advertiser by user ID
-  static async findByUserId(userId) {
+  static async findByUserId(id) {
     try {
-      const query = 'SELECT * FROM advertisers WHERE user_id = ?';
-      const [rows] = await db.execute(query, [userId]);
+      const query = 'SELECT * FROM advertisers WHERE id = ?';
+      const [rows] = await db.execute(query, [id]);
       
       if (rows.length === 0) return null;
       
@@ -99,7 +94,7 @@ class Advertiser {
       const query = `
         SELECT a.*, u.username, u.email, u.first_name, u.last_name, u.phone, u.status
         FROM advertisers a
-        JOIN users u ON a.user_id = u.id
+        JOIN users u ON a.id = u.id
         WHERE a.id = ?
       `;
       
