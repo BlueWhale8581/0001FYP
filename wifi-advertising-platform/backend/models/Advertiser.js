@@ -1,5 +1,4 @@
-const mysql = require('mysql2/promise');
-const db = require('../config/database');
+const { sql, poolPromise } = require('../config/database');
 
 class Advertiser {
   constructor(advertiserData) {
@@ -16,20 +15,23 @@ class Advertiser {
   // Create a new advertiser
   static async create(advertiserData) {
     try {
-      const query = `
-        INSERT INTO advertisers (id, company_name, company_address, company_phone, company_email, industry)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `;
-      const [result] = await db.execute(query, [
-        advertiserData.id,
-        advertiserData.company_name,
-        advertiserData.company_address,
-        advertiserData.company_phone,
-        advertiserData.company_email,
-        advertiserData.industry,
-      ]);
-      return { id: result.insertId, ...advertiserData };
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('id', sql.Int, advertiserData.id)
+        .input('company_name', sql.NVarChar, advertiserData.company_name)
+        .input('company_address', sql.NVarChar, advertiserData.company_address)
+        .input('company_phone', sql.NVarChar, advertiserData.company_phone)
+        .input('company_email', sql.NVarChar, advertiserData.company_email)
+        .input('industry', sql.NVarChar, advertiserData.industry)
+        .query(`
+          INSERT INTO advertisers (id, company_name, company_address, company_phone, company_email, industry)
+          OUTPUT INSERTED.id
+          VALUES (@id, @company_name, @company_address, @company_phone, @company_email, @industry)
+        `);
+      return { id: result.recordset[0].id, ...advertiserData };
     } catch (error) {
+      console.error('Error creating advertiser:', error);
       throw error;
     }
   }
@@ -37,29 +39,15 @@ class Advertiser {
   // Find advertiser by ID
   static async findById(id) {
     try {
-      const query = 'SELECT * FROM advertisers WHERE id = ?';
-      const [rows] = await db.execute(query, [id]);
-      
-      if (rows.length === 0) return null;
-      
-      const advertiserData = rows[0];
-      return new Advertiser(advertiserData);
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('id', sql.Int, id)
+        .query('SELECT * FROM advertisers WHERE id = @id');
+      if (result.recordset.length === 0) return null;
+      return new Advertiser(result.recordset[0]);
     } catch (error) {
-      throw error;
-    }
-  }
-
-  // Find advertiser by user ID
-  static async findByUserId(id) {
-    try {
-      const query = 'SELECT * FROM advertisers WHERE id = ?';
-      const [rows] = await db.execute(query, [id]);
-      
-      if (rows.length === 0) return null;
-      
-      const advertiserData = rows[0];
-      return new Advertiser(advertiserData);
-    } catch (error) {
+      console.error('Error finding advertiser by ID:', error);
       throw error;
     }
   }
@@ -67,43 +55,24 @@ class Advertiser {
   // Get all advertisers with optional filtering and pagination
   static async findAll(filters = {}, page = 1, limit = 10) {
     try {
+      const pool = await poolPromise;
       let query = 'SELECT * FROM advertisers WHERE 1=1';
-      const params = [];
-      
-      if (filters.industry) {
-        query += ' AND industry = ?';
-        params.push(filters.industry);
-      }
-      
-      // Add pagination
-      const offset = (page - 1) * limit;
-      query += ' LIMIT ? OFFSET ?';
-      params.push(parseInt(limit), parseInt(offset));
-      
-      const [rows] = await db.execute(query, params);
-      
-      return rows.map(row => new Advertiser(row));
-    } catch (error) {
-      throw error;
-    }
-  }
+      const request = pool.request();
 
-  // Get advertiser with user data joined
-  static async findWithUserData(advertiserId) {
-    try {
-      const query = `
-        SELECT a.*, u.username, u.email, u.first_name, u.last_name, u.phone, u.status
-        FROM advertisers a
-        JOIN users u ON a.id = u.id
-        WHERE a.id = ?
-      `;
-      
-      const [rows] = await db.execute(query, [advertiserId]);
-      
-      if (rows.length === 0) return null;
-      
-      return rows[0];
+      if (filters.industry) {
+        query += ' AND industry = @industry';
+        request.input('industry', sql.NVarChar, filters.industry);
+      }
+
+      const offset = (page - 1) * limit;
+      query += ' ORDER BY id OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY';
+      request.input('offset', sql.Int, offset);
+      request.input('limit', sql.Int, limit);
+
+      const result = await request.query(query);
+      return result.recordset.map((row) => new Advertiser(row));
     } catch (error) {
+      console.error('Error finding all advertisers:', error);
       throw error;
     }
   }
@@ -111,97 +80,27 @@ class Advertiser {
   // Update advertiser information
   static async update(id, updates) {
     try {
-      const allowedUpdates = [
-        'company_name', 'company_address', 'company_phone', 
-        'company_email', 'industry'
-      ];
-      
+      const allowedUpdates = ['company_name', 'company_address', 'company_phone', 'company_email', 'industry'];
       const updateFields = [];
-      const updateValues = [];
-      
+      const request = (await poolPromise).request();
+
       for (const [key, value] of Object.entries(updates)) {
         if (allowedUpdates.includes(key) && value !== undefined) {
-          updateFields.push(`${key} = ?`);
-          updateValues.push(value);
+          updateFields.push(`${key} = @${key}`);
+          request.input(key, sql.NVarChar, value);
         }
       }
-      
+
       if (updateFields.length === 0) {
         return false;
       }
-      
-      const query = `UPDATE advertisers SET ${updateFields.join(', ')} WHERE id = ?`;
-      updateValues.push(id);
-      
-      const [result] = await db.execute(query, updateValues);
-      return result.affectedRows > 0;
-    } catch (error) {
-      throw error;
-    }
-  }
 
-  // Get advertiser performance metrics
-  static async getPerformanceMetrics(advertiserId, startDate, endDate) {
-    try {
-      const query = `
-        SELECT 
-          COUNT(DISTINCT c.id) as total_campaigns,
-          SUM(c.budget) as total_budget,
-          SUM(c.spent) as total_spent,
-          COUNT(DISTINCT a.id) as total_ads,
-          COUNT(DISTINCT ai.id) as total_impressions,
-          SUM(CASE WHEN ai.completed = 1 THEN 1 ELSE 0 END) as completed_views
-        FROM advertisers adv
-        LEFT JOIN campaigns c ON adv.id = c.advertiser_id
-        LEFT JOIN ads a ON c.id = a.campaign_id
-        LEFT JOIN ad_impressions ai ON a.id = ai.ad_id
-          AND ai.view_time BETWEEN ? AND ?
-        WHERE adv.id = ?
-        GROUP BY adv.id
-      `;
-      
-      const [rows] = await db.execute(query, [startDate, endDate, advertiserId]);
-      
-      return rows.length > 0 ? rows[0] : null;
+      request.input('id', sql.Int, id);
+      const query = `UPDATE advertisers SET ${updateFields.join(', ')} WHERE id = @id`;
+      const result = await request.query(query);
+      return result.rowsAffected[0] > 0;
     } catch (error) {
-      throw error;
-    }
-  }
-
-  // Get advertiser active campaigns
-  static async getActiveCampaigns(advertiserId) {
-    try {
-      const query = `
-        SELECT * FROM campaigns 
-        WHERE advertiser_id = ? 
-        AND status = 'active' 
-        AND start_date <= CURDATE() 
-        AND end_date >= CURDATE()
-      `;
-      
-      const [rows] = await db.execute(query, [advertiserId]);
-      
-      return rows;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // Get advertiser payment history
-  static async getPaymentHistory(advertiserId, page = 1, limit = 10) {
-    try {
-      const query = `
-        SELECT * FROM transactions
-        WHERE advertiser_id = ? AND type = 'advertiser_payment'
-        ORDER BY created_at DESC
-        LIMIT ? OFFSET ?
-      `;
-      
-      const offset = (page - 1) * limit;
-      const [rows] = await db.execute(query, [advertiserId, parseInt(limit), parseInt(offset)]);
-      
-      return rows;
-    } catch (error) {
+      console.error('Error updating advertiser:', error);
       throw error;
     }
   }
@@ -209,11 +108,14 @@ class Advertiser {
   // Delete an advertiser
   static async delete(id) {
     try {
-      const query = 'DELETE FROM advertisers WHERE id = ?';
-      const [result] = await db.execute(query, [id]);
-      
-      return result.affectedRows > 0;
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('id', sql.Int, id)
+        .query('DELETE FROM advertisers WHERE id = @id');
+      return result.rowsAffected[0] > 0;
     } catch (error) {
+      console.error('Error deleting advertiser:', error);
       throw error;
     }
   }
