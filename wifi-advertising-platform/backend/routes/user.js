@@ -41,7 +41,6 @@ router.use(verifyToken);
  * @access  Private (Any logged in user)
  **/
 router.get('/dashboard', userController.getDashboard);
-
 /**
  * @swagger
  * /api/user/profile:
@@ -72,7 +71,6 @@ router.get('/dashboard', userController.getDashboard);
  * @access  Private (Any logged in user)
  **/
 router.get('/profile', userController.getUserProfile);
-
 /**
  * @swagger
  * /api/user/profile:
@@ -121,7 +119,6 @@ router.get('/profile', userController.getUserProfile);
  * @access  Private (Any logged in user)
  **/
 router.put('/profile', userController.updateUserProfile);
-
 /**
  * @swagger
  * /api/user/password:
@@ -200,7 +197,6 @@ router.put('/password', userController.changePassword);
  * @access  Private (Any logged in user)
  **/
 router.get('/notifications', userController.getUserNotifications);
-
 /**
  * @swagger
  * /api/user/notifications/{id}/read:
@@ -238,35 +234,30 @@ router.get('/notifications', userController.getUserNotifications);
  * @access  Private (Any logged in user)
  **/
 router.put('/notifications/:id/read', userController.markNotificationRead);
-
 /**
  * @route   PUT /api/user/notifications/read-all
  * @desc    Mark all notifications as read
  * @access  Private (Any logged in user)
  */
 router.put('/notifications/read-all', userController.markAllNotificationsRead);
-
 /**
  * @route   DELETE /api/user/notifications/:id
  * @desc    Delete a notification
  * @access  Private (Any logged in user)
  */
 router.delete('/notifications/:id', userController.deleteNotification);
-
 /**
  * @route   PUT /api/user/settings
  * @desc    Update user settings and preferences
  * @access  Private (Any logged in user)
  */
 router.put('/settings', userController.updateUserSettings);
-
 /**
  * @route   POST /api/user/feedback
  * @desc    Submit user feedback
  * @access  Private (Any logged in user)
  */
 router.post('/feedback', userController.submitFeedback);
-
 /**
  * @swagger
  * /api/user/transactions:
@@ -299,7 +290,6 @@ router.post('/feedback', userController.submitFeedback);
  * @access  Private (Any logged in user)
  **/
 router.get('/transactions', userController.getUserTransactions);
-
 /**
  * @swagger
  * /api/user/transactions/{id}:

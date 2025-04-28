@@ -14,6 +14,8 @@ const Ad = require('../models/Ad');
 const WiFiAccess = require('../models/WiFiAccess');
 const User = require('../models/User');
 const SystemSettings = require('../models/SystemSettings');
+const Advertiser = require('../models/Advertiser');
+const Notification = require('../models/Notification');
 
 /**
  * Get admin dashboard data
@@ -22,27 +24,17 @@ const SystemSettings = require('../models/SystemSettings');
  */
 exports.getAdminDashboard = async (req, res) => {
   try {
-    const { timeframe = 'week', startDate, endDate } = req.query;
-    
-    // Get dashboard data using service
     const dashboardData = await DashboardService.getAdminDashboard({
-      timeframe,
-      startDate,
-      endDate
+      timeframe: req.query.timeframe || 'week',
+      startDate: req.query.startDate,
+      endDate: req.query.endDate
     });
-    
-    // Get quick stats
+
     const quickStats = await exports.getQuickStats('admin');
-    
-    // Get recent activity for admin
     const recentActivity = await exports.getRecentActivity(req.user.id, 'admin');
-    
-    // Get system alerts
     const systemAlerts = await exports.getSystemAlerts();
-    
-    // Get notifications
     const notifications = await exports.getNotifications(req.user.id);
-    
+
     res.status(200).json({
       success: true,
       data: {
@@ -126,7 +118,7 @@ exports.getAdvertiserDashboard = async (req, res) => {
     const { timeframe = 'month', startDate, endDate } = req.query;
     
     // Get advertiser details from user record
-    const advertiser = await require('../models/Advertiser').findByUserId(req.user.id);
+    const advertiser = await Advertiser.findByUserId(req.user.id);
     if (!advertiser) {
       return res.status(404).json({
         success: false,
@@ -247,7 +239,7 @@ exports.getRecentActivity = async (userId, role, limit = 10) => {
         break;
       
       case 'advertiser':
-        const advertiser = await require('../models/Advertiser').findByUserId(userId);
+        const advertiser = await Advertiser.findByUserId(userId);
         entityType = 'advertiser';
         entityId = advertiser.id;
         break;
@@ -331,18 +323,23 @@ exports.getSystemAlerts = async (limit = 5) => {
 
 /**
  * Get notifications for a user
- * @param {Number} userId - User ID
- * @param {Number} limit - Maximum number of notifications to return
- * @returns {Promise<Array>} User notifications
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
  */
-exports.getNotifications = async (userId, limit = 10) => {
+exports.getNotifications = async (req, res) => {
   try {
-    // Get unread notifications using service
-    const notifications = await NotificationService.getUnreadNotifications(userId, limit);
-    return notifications;
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ success: false, message: 'Unauthorized access' });
+    }
+
+    const { limit = 10, page = 1 } = req.query;
+    const offset = (page - 1) * limit;
+
+    const notifications = await Notification.getByUserId(req.user.id, { limit, offset });
+    res.status(200).json(notifications);
   } catch (error) {
     console.error('Error getting notifications:', error);
-    return [];
+    res.status(500).json({ message: 'Error retrieving notifications' });
   }
 };
 

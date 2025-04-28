@@ -13,8 +13,8 @@ const RegisterOrLoginPage = () => {
         <h2 className="text-xl font-bold">Welcome to WiFi Portal</h2>
         <p className="text-sm text-gray-500">Please register or log in to continue.</p>
         <div className="flex justify-center space-x-4">
-          <Button text="Register" onClick={() => console.log('Register clicked')} />
-          <Button text="Login" onClick={() => console.log('Login clicked')} />
+          <Button text="Register" onClick={() => window.location.href = '/register'} />
+          <Button text="Login" onClick={() => window.location.href = '/login'} />
         </div>
       </div>
     </DashboardTemplate>

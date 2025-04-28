@@ -27,8 +27,12 @@ authAxios.interceptors.request.use(
  * @returns {Promise<Object>} - Dashboard data
  */
 const getDashboard = async () => {
-  const response = await authAxios.get(`${API_URL}/dashboard`);
-  return response.data;
+  try {
+    const response = await authAxios.get(`${API_URL}/dashboard`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
@@ -40,8 +44,25 @@ const getDashboard = async () => {
  * @returns {Promise<Object>} - User profile
  */
 const getUserProfile = async () => {
-  const response = await authAxios.get(`${API_URL}/profile`);
-  return response.data;
+  try {
+    const response = await authAxios.get(`${API_URL}/profile`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Get authorized user profile
+ * @returns {Promise<Object>} - User auth profile
+ */
+const getAuthUserProfile = async () => {
+  try {
+    const response = await authAxios.get('/api/auth/me');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
@@ -50,8 +71,41 @@ const getUserProfile = async () => {
  * @returns {Promise<Object>} - Updated profile
  */
 const updateUserProfile = async (profileData) => {
-  const response = await authAxios.put(`${API_URL}/profile`, profileData);
-  return response.data;
+  try {
+    const response = await authAxios.put(`${API_URL}/profile`, profileData);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Get role-specific data
+ * @param {string} role - User role
+ * @returns {Promise<Object>} - Role specific data
+ */
+const getRoleSpecificData = async (role) => {
+  try {
+    const response = await authAxios.get(`${API_URL}/${role}-profile`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Update role-specific data
+ * @param {string} role - User role
+ * @param {Object} roleData - Role specific data
+ * @returns {Promise<Object>} - Updated role data
+ */
+const updateRoleSpecificData = async (role, roleData) => {
+  try {
+    const response = await authAxios.put(`${API_URL}/${role}-profile`, roleData);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
@@ -60,8 +114,12 @@ const updateUserProfile = async (profileData) => {
  * @returns {Promise<Object>} - Password change response
  */
 const changePassword = async (passwordData) => {
-  const response = await authAxios.put(`${API_URL}/password`, passwordData);
-  return response.data;
+  try {
+    const response = await authAxios.put(`${API_URL}/password`, passwordData);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
@@ -73,8 +131,12 @@ const changePassword = async (passwordData) => {
  * @returns {Promise<Object>} - Notifications list
  */
 const getUserNotifications = async () => {
-  const response = await authAxios.get(`${API_URL}/notifications`);
-  return response.data;
+  try {
+    const response = await authAxios.get(`${API_URL}/notifications`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
@@ -83,8 +145,12 @@ const getUserNotifications = async () => {
  * @returns {Promise<Object>} - Marked notification response
  */
 const markNotificationRead = async (notificationId) => {
-  const response = await authAxios.put(`${API_URL}/notifications/${notificationId}/read`);
-  return response.data;
+  try {
+    const response = await authAxios.put(`${API_URL}/notifications/${notificationId}/read`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
@@ -92,8 +158,12 @@ const markNotificationRead = async (notificationId) => {
  * @returns {Promise<Object>} - Response after marking all as read
  */
 const markAllNotificationsRead = async () => {
-  const response = await authAxios.put(`${API_URL}/notifications/read-all`);
-  return response.data;
+  try {
+    const response = await authAxios.put(`${API_URL}/notifications/read-all`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
@@ -102,8 +172,12 @@ const markAllNotificationsRead = async () => {
  * @returns {Promise<Object>} - Deletion response
  */
 const deleteNotification = async (notificationId) => {
-  const response = await authAxios.delete(`${API_URL}/notifications/${notificationId}`);
-  return response.data;
+  try {
+    const response = await authAxios.delete(`${API_URL}/notifications/${notificationId}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
@@ -116,8 +190,12 @@ const deleteNotification = async (notificationId) => {
  * @returns {Promise<Object>} - Updated settings
  */
 const updateUserSettings = async (settings) => {
-  const response = await authAxios.put(`${API_URL}/settings`, settings);
-  return response.data;
+  try {
+    const response = await authAxios.put(`${API_URL}/settings`, settings);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
@@ -130,8 +208,12 @@ const updateUserSettings = async (settings) => {
  * @returns {Promise<Object>} - Feedback submission response
  */
 const submitFeedback = async (feedback) => {
-  const response = await authAxios.post(`${API_URL}/feedback`, feedback);
-  return response.data;
+  try {
+    const response = await authAxios.post(`${API_URL}/feedback`, feedback);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
@@ -144,8 +226,12 @@ const submitFeedback = async (feedback) => {
  * @returns {Promise<Object>} - Transaction history
  */
 const getUserTransactions = async (params = {}) => {
-  const response = await authAxios.get(`${API_URL}/transactions`, { params });
-  return response.data;
+  try {
+    const response = await authAxios.get(`${API_URL}/transactions`, { params });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
@@ -154,8 +240,12 @@ const getUserTransactions = async (params = {}) => {
  * @returns {Promise<Object>} - Transaction details
  */
 const getTransactionDetails = async (transactionId) => {
-  const response = await authAxios.get(`${API_URL}/transactions/${transactionId}`);
-  return response.data;
+  try {
+    const response = await authAxios.get(`${API_URL}/transactions/${transactionId}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 const userService = {
@@ -164,7 +254,10 @@ const userService = {
   
   // Profile Services
   getUserProfile,
+  getAuthUserProfile,
   updateUserProfile,
+  getRoleSpecificData,
+  updateRoleSpecificData,
   changePassword,
   
   // Notification Services

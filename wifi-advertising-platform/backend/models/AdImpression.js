@@ -57,29 +57,43 @@ class AdImpression {
   }
 
   // Get impressions by ad ID
-  static async findByAdId(adId, page = 1, limit = 10) {
+  static async findByAdId(adId, options = {}) {
     try {
       const pool = await poolPromise;
-      const offset = (page - 1) * limit;
-      const result = await pool
-        .request()
-        .input('ad_id', sql.Int, adId)
-        .input('limit', sql.Int, limit)
-        .input('offset', sql.Int, offset)
-        .query(`
-          SELECT * FROM ad_impressions
-          WHERE ad_id = @ad_id
-          ORDER BY view_time DESC
-          OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
-        `);
-      return result.recordset.map((row) => {
-        if (row.device_info) {
-          row.device_info = JSON.parse(row.device_info);
-        }
-        return new AdImpression(row);
-      });
+      let query = 'SELECT * FROM ad_impressions WHERE ad_id = @adId';
+      const params = [{ name: 'adId', type: sql.Int, value: adId }];
+
+      if (options.limit) {
+        query += ' ORDER BY view_time DESC OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY';
+        params.push({ name: 'limit', type: sql.Int, value: parseInt(options.limit, 10) });
+        params.push({ name: 'offset', type: sql.Int, value: parseInt(options.offset || 0, 10) });
+      }
+
+      const request = pool.request();
+      params.forEach(param => request.input(param.name, param.type, param.value));
+
+      const result = await request.query(query);
+      return result.recordset;
     } catch (error) {
-      console.error('Error finding impressions by ad ID:', error);
+      console.error('Error in AdImpression.findByAdId:', error);
+      throw error;
+    }
+  }
+
+  // Get daily impressions
+  static async getDailyImpressions() {
+    try {
+      const pool = await poolPromise;
+      const query = `
+        SELECT CAST(view_time AS DATE) AS date, COUNT(*) AS impressions
+        FROM ad_impressions
+        GROUP BY CAST(view_time AS DATE)
+        ORDER BY date DESC
+      `;
+      const result = await pool.request().query(query);
+      return result.recordset;
+    } catch (error) {
+      console.error('Error in AdImpression.getDailyImpressions:', error);
       throw error;
     }
   }

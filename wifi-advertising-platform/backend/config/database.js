@@ -16,10 +16,6 @@ const config = {
 };
 
 async function testConnection() {
-  console.log('DB_SERVER:\t', process.env.DB_SERVER);
-  console.log('DB_NAME:\t', process.env.DB_NAME);
-  console.log('DB_USER:\t', process.env.DB_USER);
-
   try {
     await sql.connect(config);
     console.log('Database is ready!');
@@ -42,7 +38,6 @@ async function testConnection() {
 const poolPromise = new sql.ConnectionPool(config)
   .connect()
   .then((pool) => {
-    console.log('Connected to MSSQL');
     return pool;
   })
   .catch((err) => {

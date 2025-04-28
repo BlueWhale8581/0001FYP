@@ -96,6 +96,27 @@ class Merchant {
     }
   }
 
+  // Find merchants by agent ID
+  static async findByAgentId(agentId) {
+    try {
+      const pool = await poolPromise;
+      const query = `
+        SELECT * 
+        FROM merchants 
+        WHERE agent_id = @agentId
+      `;
+      const result = await pool
+        .request()
+        .input('agentId', sql.Int, agentId)
+        .query(query);
+
+      return result.recordset;
+    } catch (error) {
+      console.error('Error in Merchant.findByAgentId:', error);
+      throw error;
+    }
+  }
+
   // Update merchant information
   static async update(id, updates) {
     try {
@@ -139,6 +160,26 @@ class Merchant {
       return result.rowsAffected[0] > 0;
     } catch (error) {
       console.error('Error deleting merchant:', error);
+      throw error;
+    }
+  }
+
+  // Count merchants by approval status
+  static async countByStatus(status) {
+    try {
+      const pool = await poolPromise;
+      const query = `
+        SELECT COUNT(*) AS count
+        FROM merchants
+        WHERE approval_status = @status
+      `;
+      const result = await pool.request()
+        .input('status', sql.NVarChar, status)
+        .query(query);
+
+      return result.recordset[0].count;
+    } catch (error) {
+      console.error('Error in Merchant.countByStatus:', error);
       throw error;
     }
   }

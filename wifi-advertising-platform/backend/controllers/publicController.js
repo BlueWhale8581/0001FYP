@@ -1,4 +1,4 @@
-// backend/controllers/userController.js
+// backend/controllers/publicController.js
 
 /**
  * Handles functionality for non-logged-in users including Wi-Fi access, ad viewing, 

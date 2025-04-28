@@ -43,7 +43,6 @@ const { verifyToken } = require('../config/auth');
  * @access  Public
  **/
 router.get('/wifi/:qrCodeId', userController.getWiFiDetails);
-
 /**
  * @swagger
  * /api/public/wifi/connect/{merchantId}:
@@ -77,7 +76,6 @@ router.get('/wifi/:qrCodeId', userController.getWiFiDetails);
  * @access  Public
  **/
 router.post('/wifi/connect/:merchantId', userController.connectToWiFi);
-
 /**
  * @swagger
  * /api/public/wifi/ad/start/{sessionId}/{adId}:
@@ -117,7 +115,6 @@ router.post('/wifi/connect/:merchantId', userController.connectToWiFi);
  * @access  Public
  **/
 router.post('/wifi/ad/start/:sessionId/:adId', userController.trackAdView);
-
 /**
  * @swagger
  * /api/public/wifi/ad/complete/{sessionId}/{adId}:
@@ -164,14 +161,12 @@ router.post('/wifi/ad/complete/:sessionId/:adId', userController.completeAdView)
  * @access  Public
  */
 router.get('/wifi/redirect/:sessionId', userController.redirectAfterAds);
-
 /**
  * @route   GET /api/public/ads/:merchantId
  * @desc    Get ads that need to be viewed
  * @access  Public
  */
 router.get('/ads/:merchantId', userController.getAdsToView);
-
 /**
  * @route   POST /api/public/ads/impression/:adId/:merchantId
  * @desc    Record an ad impression without being connected to Wi-Fi
@@ -226,7 +221,6 @@ router.post('/ads/impression/:adId/:merchantId', userController.recordAdImpressi
  * @access  Public
  **/
 router.post('/register/advertiser', userController.registerAsAdvertiser);
-
 /**
  * @swagger
  * /api/public/register/merchant:
@@ -270,7 +264,6 @@ router.post('/register/advertiser', userController.registerAsAdvertiser);
  * @access  Public
  **/
 router.post('/register/merchant', userController.registerAsMerchant);
-
 /**
  * @swagger
  * /api/public/register/agent:

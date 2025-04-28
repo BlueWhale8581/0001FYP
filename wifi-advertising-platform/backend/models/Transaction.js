@@ -59,6 +59,30 @@ class Transaction {
     }
   }
 
+  // Find all transactions with optional pagination
+  static async findAll(options = {}) {
+    try {
+      const pool = await poolPromise;
+      let query = 'SELECT * FROM transactions';
+      const params = [];
+
+      if (options.limit) {
+        query += ' ORDER BY created_at DESC OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY';
+        params.push({ name: 'limit', type: sql.Int, value: parseInt(options.limit, 10) });
+        params.push({ name: 'offset', type: sql.Int, value: parseInt(options.offset || 0, 10) });
+      }
+
+      const request = pool.request();
+      params.forEach(param => request.input(param.name, param.type, param.value));
+
+      const result = await request.query(query);
+      return result.recordset;
+    } catch (error) {
+      console.error('Error in Transaction.findAll:', error);
+      throw error;
+    }
+  }
+
   // Update transaction status
   static async updateStatus(id, status, referenceId = null) {
     try {
@@ -77,6 +101,47 @@ class Transaction {
       return result.rowsAffected[0] > 0;
     } catch (error) {
       console.error('Error updating transaction status:', error);
+      throw error;
+    }
+  }
+
+  // Get revenue summary
+  static async getRevenueSummary() {
+    try {
+      const pool = await poolPromise;
+      const query = `
+        SELECT 
+          SUM(CASE WHEN type = 'advertiser_payment' THEN amount ELSE 0 END) AS totalAdvertiserPayments,
+          SUM(CASE WHEN type = 'merchant_payment' THEN amount ELSE 0 END) AS totalMerchantPayments
+        FROM transactions
+      `;
+      const result = await pool.request().query(query);
+      return result.recordset[0];
+    } catch (error) {
+      console.error('Error in Transaction.getRevenueSummary:', error);
+      throw error;
+    }
+  }
+
+  // Get transaction count with optional filters
+  static async getCount(filters = {}) {
+    try {
+      const pool = await poolPromise;
+      let query = 'SELECT COUNT(*) AS count FROM transactions WHERE 1=1';
+      const params = [];
+
+      if (filters.status) {
+        query += ' AND status = @status';
+        params.push({ name: 'status', type: sql.NVarChar, value: filters.status });
+      }
+
+      const request = pool.request();
+      params.forEach(param => request.input(param.name, param.type, param.value));
+
+      const result = await request.query(query);
+      return result.recordset[0].count;
+    } catch (error) {
+      console.error('Error in Transaction.getCount:', error);
       throw error;
     }
   }

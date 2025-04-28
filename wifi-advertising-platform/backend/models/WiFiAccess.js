@@ -1,5 +1,5 @@
 const mysql = require('mysql2/promise');
-const db = require('../config/database');
+const { sql, poolPromise } = require('../config/database');
 
 class WiFiAccess {
   constructor(accessData) {
@@ -163,6 +163,24 @@ class WiFiAccess {
       
       return rows[0].connection_count > 0;
     } catch (error) {
+      throw error;
+    }
+  }
+
+  // Get daily connection counts
+  static async getDailyConnectionCounts() {
+    try {
+      const pool = await poolPromise;
+      const query = `
+        SELECT CAST(connection_time AS DATE) AS date, COUNT(*) AS connections
+        FROM wifi_access_logs
+        GROUP BY CAST(connection_time AS DATE)
+        ORDER BY date DESC
+      `;
+      const result = await pool.request().query(query);
+      return result.recordset;
+    } catch (error) {
+      console.error('Error in WiFiAccess.getDailyConnectionCounts:', error);
       throw error;
     }
   }

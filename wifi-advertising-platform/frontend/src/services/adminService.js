@@ -50,7 +50,7 @@ const getAllUsers = async (params = {}) => {
 };
 
 const createUser = async (userData) => {
-  const response = await authAxios.post(`${API_URL}/users`, userData);
+  const response = await authAxios.post(`${API_URL}/newusers`, userData);
   return response.data;
 };
 

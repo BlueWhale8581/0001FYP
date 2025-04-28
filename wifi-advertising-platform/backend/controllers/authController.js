@@ -15,7 +15,19 @@ const config = require('../config/auth');
 exports.register = async (req, res) => {
   try {
     const { email, username, password, firstName, lastName, phone, role } = req.body;
-    
+
+    // Validate role is among allowed values
+    const allowedRoles = ['admin', 'agent', 'advertiser', 'merchant'];
+    if (role && !allowedRoles.includes(role)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid role specified' 
+      });
+    }
+
+    // Default role if not specified
+    const userRole = role || 'merchant';
+
     // Check if user already exists
     const existingUser = await UserModel.findByEmail(email) || await UserModel.findByUsername(username);
     if (existingUser) {
@@ -24,30 +36,46 @@ exports.register = async (req, res) => {
         message: 'User with this email or username already exists' 
       });
     }
-    
+
     // Register user using AuthService
     const result = await AuthService.register(
-      { email, username, password, first_name: firstName, last_name: lastName, phone, role },
-      role
+      { email, username, password, first_name: firstName, last_name: lastName, phone },
+      userRole
     );
-    
+
+    // Create role-specific profile
+    let roleSpecificId = null;
+    if (userRole === 'merchant') {
+      // Create merchant profile
+      // Add merchant-specific logic here
+      console.log('Creating merchant profile...');
+    } else if (userRole === 'agent') {
+      // Create agent profile
+      // Add agent-specific logic here
+      console.log('Creating agent profile...');
+    } else if (userRole === 'advertiser') {
+      // Create advertiser profile
+      // Add advertiser-specific logic here
+      console.log('Creating advertiser profile...');
+    }
+
     // Log the registration
     await AuditService.logCreation({
       userId: result.user.id,
       entityType: 'user',
       entityId: result.user.id,
-      values: { username, email, role },
+      values: { username, email, role: userRole },
       ipAddress: req.ip
     });
-    
+
     // Create welcome notification
     await NotificationService.createNotification(
       result.user.id,
       'Welcome to the platform',
-      `Thank you for registering as a ${role}. Complete your profile to get started.`,
+      `Thank you for registering as a ${userRole}. Complete your profile to get started.`,
       'info'
     );
-    
+
     return res.status(201).json({
       success: true,
       message: 'Registration successful. Please verify your email.',

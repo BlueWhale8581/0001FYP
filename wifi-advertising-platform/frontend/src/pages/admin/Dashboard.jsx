@@ -11,8 +11,10 @@ import StatusIndicator from '../../components/common/StatusIndicator';
 
 // Custom hooks
 import { useDashboardStats, useSystemMetrics, useNotifications, useAlerts } from '../../hooks/useAdmin';
+import { useRoleNavigation } from '../../hooks/useRoleNavigation';
 
 const AdminDashboardPage = () => {
+  useRoleNavigation(['admin']);
   // Using custom hooks to fetch data
   const { stats: dashboardStats, loading: statsLoading, error: statsError } = useDashboardStats();
   const { metrics: systemMetrics, loading: metricsLoading } = useSystemMetrics();

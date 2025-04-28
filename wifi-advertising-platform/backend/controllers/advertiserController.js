@@ -951,36 +951,18 @@ exports.getDashboard = async (req, res) => {
 // Notification functions
 exports.getNotifications = async (req, res) => {
   try {
-    const userId = req.user.id;
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ success: false, message: 'Unauthorized access' });
+    }
+
     const { limit = 10, page = 1 } = req.query;
-    
-    // Get notifications
-    const notifications = await NotificationService.getUserNotifications(userId, {
-      limit: parseInt(limit),
-      page: parseInt(page)
-    });
-    
-    // Get unread count
-    const unreadCount = await NotificationService.getUnreadNotificationsCount(userId);
-    
-    return res.status(200).json({
-      success: true,
-      data: {
-        notifications,
-        unreadCount,
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit)
-        }
-      }
-    });
+    const offset = (page - 1) * limit;
+
+    const notifications = await Notification.getByUserId(req.user.id, { limit, offset });
+    res.status(200).json(notifications);
   } catch (error) {
     console.error('Error getting notifications:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to fetch notifications',
-      error: error.message
-    });
+    res.status(500).json({ message: 'Error retrieving notifications' });
   }
 };
 

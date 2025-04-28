@@ -38,10 +38,11 @@ export const useDashboard = () => {
 };
 
 /**
- * Custom hook for user profile management
+ * Custom hook for user profile management with role-specific data
  */
 export const useProfile = () => {
   const [profile, setProfile] = useState(null);
+  const [roleSpecificData, setRoleSpecificData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -50,6 +51,13 @@ export const useProfile = () => {
       setLoading(true);
       const data = await userService.getUserProfile();
       setProfile(data.profile || null);
+      
+      // Fetch role-specific data if profile is loaded
+      if (data.profile && data.profile.role) {
+        const roleData = await userService.getRoleSpecificData(data.profile.role);
+        setRoleSpecificData(roleData || null);
+      }
+      
       setError(null);
       return data;
     } catch (err) {
@@ -79,6 +87,21 @@ export const useProfile = () => {
     }
   };
 
+  const updateRoleSpecificData = async (roleData) => {
+    try {
+      setLoading(true);
+      const result = await userService.updateRoleSpecificData(profile.role, roleData);
+      setRoleSpecificData(result.roleData || null);
+      setError(null);
+      return result;
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update role-specific data');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const changePassword = async (passwordData) => {
     try {
       setLoading(true);
@@ -95,10 +118,12 @@ export const useProfile = () => {
 
   return {
     profile,
+    roleSpecificData,
     loading,
     error,
     fetchProfile,
     updateProfile,
+    updateRoleSpecificData,
     changePassword
   };
 };

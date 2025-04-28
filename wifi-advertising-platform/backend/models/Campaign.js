@@ -104,6 +104,29 @@ class Campaign {
     }
   }
 
+  // Get all campaigns with optional filters
+  static async findAll(filters = {}) {
+    try {
+      const pool = await poolPromise;
+      let query = 'SELECT * FROM campaigns WHERE 1=1';
+      const params = [];
+
+      if (filters.status) {
+        query += ' AND status = @status';
+        params.push({ name: 'status', type: sql.NVarChar, value: filters.status });
+      }
+
+      const request = pool.request();
+      params.forEach(param => request.input(param.name, param.type, param.value));
+
+      const result = await request.query(query);
+      return result.recordset;
+    } catch (error) {
+      console.error('Error in Campaign.findAll:', error);
+      throw error;
+    }
+  }
+
   // Update campaign information
   static async update(id, updates) {
     try {
