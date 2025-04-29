@@ -52,53 +52,37 @@ class AuthService {
   }
 
   /**
-   * Login a user with email/username and password
-   * @param {string} identifier - Email or username
+   * Login a user with email and password
+   * @param {string} email - User's email
    * @param {string} password - User's password
    * @returns {Object} User and token
    */
-  async login(identifier, password) {
+  async login(email, password) {
     try {
-      // Check if identifier is an email or username
-      const user = identifier.includes('@')
-        ? await User.findByEmail(identifier)
-        : await User.findByUsername(identifier);
-
+      // Find user by email
+      const user = await User.findByEmail(email);
       if (!user) {
-        throw new Error('This email or username is not registered');
-      }
-
-      // Check if user is active
-      if (user.status !== 'Active') {
-        throw new Error('Account is not active. Please contact support.');
+        throw new Error('Invalid email or password');
       }
 
       // Verify password
-      const isPasswordValid = await bcrypt.compare(password, user.password);
-      if (!isPasswordValid) {
-        throw new Error('Invalid credentials');
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        throw new Error('Invalid email or password');
       }
 
-      // Update last login
-      await User.update(user.id, { last_login: new Date() });
-
       // Generate JWT token
-      const token = config.generateToken(
-        { id: user.id, role: user.role },
+      const token = jwt.sign(
+        { userId: user.id, role: user.role },
         process.env.JWT_SECRET,
-        '1h'
+        { expiresIn: '1h' }
       );
 
-      // Remove password from response
-      const userResponse = { ...user };
-      delete userResponse.password;
+      // Remove sensitive data before returning
+      delete user.password;
 
-      return {
-        user: userResponse,
-        token,
-      };
+      return { user, token };
     } catch (error) {
-      console.error('Login error:', error);
       throw error;
     }
   }

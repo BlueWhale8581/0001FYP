@@ -10,6 +10,7 @@ import ChartContainer from '../../components/common/ChartContainer';
 import MetricsChart from '../../components/dashboard/MetricsChart';
 import StatusIndicator from '../../components/common/StatusIndicator';
 import ActivityFeed from '../../components/dashboard/ActivityFeed';
+import QuickActions from '../../components/dashboard/QuickActions'; // Adjust the path if necessary
 
 const MerchantDashboardPage = () => {
   const placeholderChart = <div className="h-48 bg-gray-100 rounded flex items-center justify-center">Chart Placeholder</div>;

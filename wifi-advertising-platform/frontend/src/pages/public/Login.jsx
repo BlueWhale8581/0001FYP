@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import DashboardTemplate from '../../templates/DashboardTemplate';
 import Button from '../../components/common/Button';
 import { useLogin } from '../../hooks/useAuth';
@@ -10,7 +10,9 @@ const LoginPage = () => {
     email: '',
     password: ''
   });
-  const { user } = useRoleNavigation(); // Use the hook to handle redirection
+
+  // Automatically handle navigation based on authentication state
+  useRoleNavigation();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -28,16 +30,10 @@ const LoginPage = () => {
     });
   };
 
-  useEffect(() => {
-    if (isAuthenticated && user?.role) {
-      // Redirection is handled by useRoleNavigation
-    }
-  }, [isAuthenticated, user]);
-
   return (
     <DashboardTemplate
       role="user"
-      userName="Vistor"
+      userName="Visitor"
       pageTitle="Login"
     >
       <div className="max-w-7xl mx-auto bg-white p-6 rounded-lg shadow-md" style={{ width: '70%' }}>

@@ -200,13 +200,13 @@ class User {
   }
 
   // Authenticate user
-  static async authenticate(usernameOrEmail, password) {
+  static async authenticate(email, password) {
     try {
       const pool = await poolPromise;
       const result = await pool
         .request()
-        .input('usernameOrEmail', sql.NVarChar, usernameOrEmail)
-        .query('SELECT * FROM users WHERE username = @usernameOrEmail OR email = @usernameOrEmail');
+        .input('email', sql.NVarChar, email)
+        .query('SELECT * FROM users WHERE email = @email');
 
       if (result.recordset.length === 0) return null;
 

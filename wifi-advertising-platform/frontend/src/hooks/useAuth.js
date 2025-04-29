@@ -36,32 +36,24 @@ export const useLogin = () => {
   const [user, setUser] = useState(authService.getStoredUser());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(authService.isAuthenticated());
+  const [isAuthenticated, setIsAuthenticated] = useState(!!authService.getToken());
 
-  const login = async (credentials) => {
+  const login = async ({ email, password }) => {
     try {
       setLoading(true);
       setError(null);
-      const result = await authService.login(credentials);
-      setUser(result.user);
-      setIsAuthenticated(true); // Ensure this is set to true
-      return result;
+      const { user, token } = await authService.login(email, password);
+      setUser(user);
+      authService.storeUser(user, token);
+      setIsAuthenticated(true); // Update authentication state
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid credentials');
-      return null;
+      setError(err.response?.data?.message || err.message || 'Login failed');
     } finally {
       setLoading(false);
     }
   };
 
-  const logout = () => {
-    const result = authService.logout();
-    setUser(null);
-    setIsAuthenticated(false);
-    return result;
-  };
-
-  return { user, loading, error, isAuthenticated, login, logout };
+  return { login, loading, error, user, isAuthenticated };
 };
 
 /**

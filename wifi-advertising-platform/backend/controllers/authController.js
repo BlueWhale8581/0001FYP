@@ -152,7 +152,7 @@ exports.login = async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Input Error: Email/Username and password are required',
+        message: 'Input Error: Email and password are required',
       });
     }
 
