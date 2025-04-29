@@ -8,11 +8,11 @@ const BottomNavigation = ({
   roleColor = 'blue' // Used for text color highlights
 }) => {
   return (
-    <div className="bg-white border-t flex justify-around shadow-lg">
+    <div className="bg-white border-t flex justify-around items-center shadow-lg w-full h-16">
       {navigationItems.map(item => (
         <button
           key={item.id}
-          className={`py-2 px-4 flex flex-col items-center ${
+          className={`py-2 px-4 flex flex-col items-center justify-center h-full ${
             activeTabId === item.id 
               ? `text-${roleColor}-600` 
               : 'text-gray-500'

@@ -9,7 +9,7 @@ const PageContainer = ({
   title = ''
 }) => {
   return (
-    <div className="flex-1 overflow-y-auto p-4">
+    <div className="w-full min-h-full px-4 pb-4">
       {(showBackButton || title) && (
         <div className="flex items-center text-sm text-gray-500 mb-4">
           {showBackButton && (
@@ -24,7 +24,7 @@ const PageContainer = ({
         </div>
       )}
       
-      <div className="grid gap-4">
+      <div className="w-full">
         {children}
       </div>
     </div>

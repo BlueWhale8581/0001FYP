@@ -168,12 +168,8 @@ class AuthService {
         throw new Error('User not found');
       }
 
-      // Hash new password
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(newPassword, salt);
-
       // Update password
-      await User.updatePassword(user.id, hashedPassword);
+      await User.updatePassword(user.id, newPassword);
 
       return true;
     } catch (error) {
@@ -200,13 +196,8 @@ class AuthService {
       if (!isMatch) {
         throw new Error('Current password is incorrect');
       }
-
-      // Hash new password
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(newPassword, salt);
-
       // Update password
-      await User.updatePassword(userId, hashedPassword);
+      await User.updatePassword(userId, newPassword);
 
       return true;
     } catch (error) {

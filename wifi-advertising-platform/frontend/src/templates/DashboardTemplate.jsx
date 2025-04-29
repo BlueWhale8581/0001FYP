@@ -41,7 +41,7 @@ const DashboardTemplate = ({
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100">
+    <div className="flex flex-col h-[100dvh] w-screen overflow-hidden bg-gray-100">
       <Header 
         title={dashboardTitle}
         notificationCount={notifications.filter(n => !n.read).length}
@@ -66,18 +66,19 @@ const DashboardTemplate = ({
         notifications={notifications}
       />
       
-      <PageContainer>
-        <h1 className="text-2xl font-bold text-gray-800 mb-4">{pageTitle}</h1>
-        {children}
-      </PageContainer>
+      <main className="flex-1 overflow-y-auto w-full">
+        <PageContainer>
+          {children}
+        </PageContainer>
+      </main>
       
-      <BottomNavigation 
-        navigationItems={navItems}
-        activeTabId={activeTab}
-        onTabChange={handleTabChange}
-      />
-      
-      <Footer />
+      <div className="sticky bottom-0 w-full">
+        <BottomNavigation 
+          navigationItems={navItems}
+          activeTabId={activeTab}
+          onTabChange={handleTabChange}
+        />
+      </div>
     </div>
   );
 };
