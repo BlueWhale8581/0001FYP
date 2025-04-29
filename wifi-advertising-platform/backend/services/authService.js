@@ -4,6 +4,9 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const config = require('../config/auth');
+const Merchant = require('../models/Merchant');
+const Advertiser = require('../models/Advertiser');
+const Agent = require('../models/Agent');
 
 /**
  * AuthService handles authentication-related business logic
@@ -12,10 +15,9 @@ class AuthService {
   /**
    * Register a new user
    * @param {Object} userData - User registration data
-   * @param {string} role - User role
    * @returns {Promise<Object>} Created user object
    */
-  async register(userData, role) {
+  async register(userData) {
     try {
       // Check if user already exists
       const existingUser = await User.findByEmail(userData.email);
@@ -28,15 +30,15 @@ class AuthService {
         throw new Error('Username is already taken');
       }
 
-      // Hash password
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(userData.password, salt);
-
       // Create the user
       const user = await User.create({
-        ...userData,
-        password: hashedPassword,
-        role
+        username: userData.username,
+        email: userData.email,
+        password: userData.password,
+        phone: userData.phone,
+        first_name: userData.first_name,
+        last_name: userData.last_name,
+        role: userData.role,
       });
 
       // Remove the password from the returned user object
@@ -50,33 +52,30 @@ class AuthService {
   }
 
   /**
-   * Login a user
-   * @param {string} emailOrUsername - User email or username
-   * @param {string} password - User password
-   * @returns {Promise<Object>} User object and JWT token
+   * Login a user with email/username and password
+   * @param {string} identifier - Email or username
+   * @param {string} password - User's password
+   * @returns {Object} User and token
    */
-  async login(emailOrUsername, password) {
+  async login(identifier, password) {
     try {
-      // Find user by email or username
-      let user = null;
-      if (emailOrUsername.includes('@')) {
-        user = await User.findByEmail(emailOrUsername);
-      } else {
-        user = await User.findByUsername(emailOrUsername);
-      }
+      // Check if identifier is an email or username
+      const user = identifier.includes('@')
+        ? await User.findByEmail(identifier)
+        : await User.findByUsername(identifier);
 
       if (!user) {
-        throw new Error('Invalid credentials');
+        throw new Error('This email or username is not registered');
       }
 
       // Check if user is active
-      if (user.status !== 'active') {
+      if (user.status !== 'Active') {
         throw new Error('Account is not active. Please contact support.');
       }
 
-      // Check password
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
+      // Verify password
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
         throw new Error('Invalid credentials');
       }
 
@@ -84,10 +83,11 @@ class AuthService {
       await User.update(user.id, { last_login: new Date() });
 
       // Generate JWT token
-      const token = config.generateToken({
-        id: user.id,
-        role: user.role
-      });
+      const token = config.generateToken(
+        { id: user.id, role: user.role },
+        process.env.JWT_SECRET,
+        '1h'
+      );
 
       // Remove password from response
       const userResponse = { ...user };
@@ -95,9 +95,10 @@ class AuthService {
 
       return {
         user: userResponse,
-        token
+        token,
       };
     } catch (error) {
+      console.error('Login error:', error);
       throw error;
     }
   }
@@ -141,6 +142,7 @@ class AuthService {
       // Generate reset token (expires in 1 hour)
       const resetToken = config.generateToken(
         { id: user.id, action: 'reset_password' },
+        process.env.JWT_SECRET,
         '1h'
       );
 

@@ -38,16 +38,24 @@ class QRCode {
   // Find QR code by ID
   static async findById(id) {
     try {
+      // Debugging: Log the id
+      console.log('Finding QR code by ID:', id);
+
+      // Validate the id
+      if (!id || isNaN(Number(id))) {
+        console.warn(`Invalid 'id' parameter: ${id}`);
+        return null; // Return null if the id is invalid
+      }
+
       const pool = await poolPromise;
       const result = await pool
         .request()
-        .input('id', sql.Int, id)
+        .input('id', sql.Int, Number(id))
         .query('SELECT * FROM qr_codes WHERE id = @id');
-      
-      if (result.recordset.length === 0) return null;
-      
-      const qrCodeData = result.recordset[0];
-      return new QRCode(qrCodeData);
+
+      if (result.recordset.length === 0) return null; // Return null if no record is found
+
+      return new QRCode(result.recordset[0]);
     } catch (error) {
       console.error('Error finding QR code by ID:', error);
       throw error;

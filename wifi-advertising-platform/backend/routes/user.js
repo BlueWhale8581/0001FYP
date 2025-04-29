@@ -1,7 +1,7 @@
 // backend/routes/user.js
 const express = require('express');
 const router = express.Router();
-const userController = require('../controllers/userController');
+const publicController = require('../controllers/publicController');
 const { verifyToken } = require('../config/auth');
 
 // Apply authentication middleware to all user routes
@@ -40,7 +40,7 @@ router.use(verifyToken);
  * @desc    Get user dashboard data
  * @access  Private (Any logged in user)
  **/
-router.get('/dashboard', userController.getDashboard);
+router.get('/dashboard', publicController.getDashboard);
 /**
  * @swagger
  * /api/user/profile:
@@ -70,7 +70,7 @@ router.get('/dashboard', userController.getDashboard);
  * @desc    Get user profile information
  * @access  Private (Any logged in user)
  **/
-router.get('/profile', userController.getUserProfile);
+router.get('/profile', publicController.getUserProfile);
 /**
  * @swagger
  * /api/user/profile:
@@ -92,9 +92,9 @@ router.get('/profile', userController.getUserProfile);
  *               email:
  *                 type: string
  *                 format: email
- *               firstName:
+ *               first_name:
  *                 type: string
- *               lastName:
+ *               last_name:
  *                 type: string
  *     responses:
  *       200:
@@ -118,7 +118,7 @@ router.get('/profile', userController.getUserProfile);
  * @desc    Update user profile information
  * @access  Private (Any logged in user)
  **/
-router.put('/profile', userController.updateUserProfile);
+router.put('/profile', publicController.updateUserProfile);
 /**
  * @swagger
  * /api/user/password:
@@ -159,7 +159,7 @@ router.put('/profile', userController.updateUserProfile);
  * @desc    Change user password
  * @access  Private (Any logged in user)
  **/
-router.put('/password', userController.changePassword);
+router.put('/password', publicController.changePassword);
 
 /**
  * Notification Routes
@@ -196,7 +196,7 @@ router.put('/password', userController.changePassword);
  * @desc    Get user notifications
  * @access  Private (Any logged in user)
  **/
-router.get('/notifications', userController.getUserNotifications);
+router.get('/notifications', publicController.getUserNotifications);
 /**
  * @swagger
  * /api/user/notifications/{id}/read:
@@ -233,31 +233,31 @@ router.get('/notifications', userController.getUserNotifications);
  * @desc    Mark a notification as read
  * @access  Private (Any logged in user)
  **/
-router.put('/notifications/:id/read', userController.markNotificationRead);
+router.put('/notifications/:id/read', publicController.markNotificationRead);
 /**
  * @route   PUT /api/user/notifications/read-all
  * @desc    Mark all notifications as read
  * @access  Private (Any logged in user)
  */
-router.put('/notifications/read-all', userController.markAllNotificationsRead);
+router.put('/notifications/read-all', publicController.markAllNotificationsRead);
 /**
  * @route   DELETE /api/user/notifications/:id
  * @desc    Delete a notification
  * @access  Private (Any logged in user)
  */
-router.delete('/notifications/:id', userController.deleteNotification);
+router.delete('/notifications/:id', publicController.deleteNotification);
 /**
  * @route   PUT /api/user/settings
  * @desc    Update user settings and preferences
  * @access  Private (Any logged in user)
  */
-router.put('/settings', userController.updateUserSettings);
+router.put('/settings', publicController.updateUserSettings);
 /**
  * @route   POST /api/user/feedback
  * @desc    Submit user feedback
  * @access  Private (Any logged in user)
  */
-router.post('/feedback', userController.submitFeedback);
+router.post('/feedback', publicController.submitFeedback);
 /**
  * @swagger
  * /api/user/transactions:
@@ -289,7 +289,7 @@ router.post('/feedback', userController.submitFeedback);
  * @desc    Get user transaction history
  * @access  Private (Any logged in user)
  **/
-router.get('/transactions', userController.getUserTransactions);
+router.get('/transactions', publicController.getUserTransactions);
 /**
  * @swagger
  * /api/user/transactions/{id}:
@@ -328,6 +328,43 @@ router.get('/transactions', userController.getUserTransactions);
  * @desc    Get transaction details by ID
  * @access  Private (Any logged in user)
  **/
-router.get('/transactions/:id', userController.getTransactionDetails);
+router.get('/transactions/:id', publicController.getTransactionDetails);
+
+/**
+ * @route   POST /api/user/check-role
+ * @desc    Check and insert role data
+ * @access  Private (Any logged in user)
+ */
+router.post('/check-role', async (req, res) => {
+  const { userId, role } = req.body;
+
+  try {
+    if (role === 'agent') {
+      const agentExists = await Agent.findById(userId);
+      if (!agentExists) {
+        await Agent.create({
+          user_id: userId,
+          commission_rate: 0.5,
+          territory: 'Malaysia',
+        });
+      }
+    } else if (role === 'advertiser') {
+      const advertiserExists = await Advertiser.findById(userId);
+      if (!advertiserExists) {
+        return res.status(200).json({ success: false, message: 'Advertiser details required' });
+      }
+    } else if (role === 'merchant') {
+      const merchantExists = await Merchant.findById(userId);
+      if (!merchantExists) {
+        return res.status(200).json({ success: false, message: 'Merchant details required' });
+      }
+    }
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Error checking role:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
 
 module.exports = router;

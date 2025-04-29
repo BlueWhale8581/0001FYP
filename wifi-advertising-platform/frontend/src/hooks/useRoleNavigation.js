@@ -21,19 +21,19 @@ export const useRoleNavigation = (allowedRoles = []) => {
       // Redirect based on role
       switch (user?.role) {
         case 'admin':
-          navigate('/admin/dashboard');
+          navigate('/admin');
           break;
         case 'agent':
-          navigate('/agent/dashboard');
+          navigate('/agent');
           break;
         case 'advertiser':
-          navigate('/advertiser/dashboard');
+          navigate('/advertiser'); // Redirect to advertiser details page if missing
           break;
         case 'merchant':
-          navigate('/merchant/dashboard');
+          navigate('/merchant'); // Redirect to merchant details page if missing
           break;
         default:
-          navigate('/unauthorized');
+          navigate('/');
       }
     }
   }, [isAuthenticated, user, loading, navigate, allowedRoles]);

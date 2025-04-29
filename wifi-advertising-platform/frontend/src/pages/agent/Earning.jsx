@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CreditCard, DollarSign, Calendar, Download, Filter, ArrowUpRight, TrendingUp, Users } from 'lucide-react';
 
 // Template
@@ -12,71 +12,43 @@ import StatusIndicator from '../../components/common/StatusIndicator';
 import EmptyState from '../../components/common/EmptyState';
 import LoadingState from '../../components/common/LoadingState';
 
+// Custom hooks
+import useAgent from '../../hooks/useAgent';
+import useAuth from '../../hooks/useAuth';
+
 const EarningsPage = () => {
+  const { user, isAuthenticated, fetchCurrentUser } = useAuth();
   const [filterPeriod, setFilterPeriod] = useState('month');
   const [isLoading, setIsLoading] = useState(false);
-  
-  // Mock data for transactions
-  const transactions = [
-    { 
-      id: 1, 
-      date: '2023-10-15', 
-      merchant: 'Cafe Deluxe', 
-      description: 'QR Code Commission', 
-      amount: 45.75,
-      status: 'Paid',
-    },
-    { 
-      id: 2, 
-      date: '2023-10-10', 
-      merchant: 'Books & More', 
-      description: 'QR Code Commission', 
-      amount: 32.50,
-      status: 'Paid',
-    },
-    { 
-      id: 3, 
-      date: '2023-10-05', 
-      merchant: 'Tech Hub', 
-      description: 'Merchant Signup Bonus', 
-      amount: 100.00,
-      status: 'Paid',
-    },
-    { 
-      id: 4, 
-      date: '2023-09-28', 
-      merchant: 'Cafe Deluxe', 
-      description: 'QR Code Commission', 
-      amount: 38.25,
-      status: 'Paid',
-    },
-    { 
-      id: 5, 
-      date: '2023-09-20', 
-      merchant: 'Books & More', 
-      description: 'QR Code Commission', 
-      amount: 29.75,
-      status: 'Paid',
-    },
-  ];
 
-  const earningsSummary = {
-    currentMonth: 178.25,
-    previousMonth: 154.50,
-    growth: 15.37,
-    projected: 210.00,
-    pending: 45.20,
-    ytd: 1248.75
-  };
+  // Use custom hooks for real data
+  const { useEarnings, useTransactions, useNotifications } = useAgent();
+  const { earnings, loading: earningsLoading, fetchEarnings, params, setParams } = useEarnings();
+  const { transactions, loading: transactionsLoading, fetchTransactions } = useTransactions();
+  const { notifications, loading: notificationsLoading } = useNotifications();
+
+  useEffect(() => {
+    if (isAuthenticated && !user) {
+      fetchCurrentUser();
+    }
+  }, [isAuthenticated, user, fetchCurrentUser]);
 
   // Filter transactions based on selected period
   const handleFilterChange = (period) => {
     setIsLoading(true);
     setFilterPeriod(period);
-    // Simulate loading
-    setTimeout(() => {
+
+    // Update params for data fetching
+    const updatedParams = { period };
+    setParams(updatedParams);
+
+    // Fetch with new params
+    Promise.all([
+      fetchEarnings(updatedParams),
+      fetchTransactions(updatedParams)
+    ]).finally(() => {
       setIsLoading(false);
-    }, 500);
+    });
   };
 
   // Format date for better readability
@@ -85,14 +57,40 @@ const EarningsPage = () => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
+  // Check if any data is loading
+  const dataLoading = earningsLoading || transactionsLoading || notificationsLoading || isLoading;
+
+  if (!isAuthenticated) {
+    return (
+      <DashboardTemplate
+        role="agent"
+        userName="Guest"
+        notifications={[]}
+        pageTitle="Earnings"
+      >
+        <p className="text-center text-gray-500">Please log in to access the earnings page.</p>
+      </DashboardTemplate>
+    );
+  }
+
+  if (dataLoading && (!earnings || !transactions)) {
+    return (
+      <DashboardTemplate
+        role="agent"
+        userName={user?.name || "Agent"}
+        notifications={[]}
+        pageTitle="Earnings"
+      >
+        <LoadingState message="Loading earnings data..." />
+      </DashboardTemplate>
+    );
+  }
+
   return (
     <DashboardTemplate
       role="agent"
-      userName="Agent Smith"
-      notifications={[
-        { id: 1, type: 'info', message: 'New merchant registration pending approval', time: '30m ago', read: false },
-        { id: 2, type: 'success', message: 'Commission payment processed.', time: '1d ago', read: true },
-      ]}
+      userName={user?.name || earnings?.agentName || "Agent"}
+      notifications={notifications || []}
       pageTitle="Earnings"
     >
       <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center">
@@ -118,7 +116,7 @@ const EarningsPage = () => {
             </div>
             <div>
               <p className="text-sm text-gray-500">Current Month</p>
-              <p className="text-2xl font-bold text-orange-600">${earningsSummary.currentMonth.toFixed(2)}</p>
+              <p className="text-2xl font-bold text-orange-600">${earnings?.currentMonth?.toFixed(2) || '0.00'}</p>
             </div>
           </div>
         </Card>
@@ -130,7 +128,7 @@ const EarningsPage = () => {
             </div>
             <div>
               <p className="text-sm text-gray-500">Monthly Growth</p>
-              <p className="text-2xl font-bold text-green-600">+{earningsSummary.growth.toFixed(1)}%</p>
+              <p className="text-2xl font-bold text-green-600">+{earnings?.growth?.toFixed(1) || '0.0'}%</p>
             </div>
           </div>
         </Card>
@@ -142,7 +140,7 @@ const EarningsPage = () => {
             </div>
             <div>
               <p className="text-sm text-gray-500">Projected</p>
-              <p className="text-2xl font-bold text-blue-600">${earningsSummary.projected.toFixed(2)}</p>
+              <p className="text-2xl font-bold text-blue-600">${earnings?.projected?.toFixed(2) || '0.00'}</p>
             </div>
           </div>
         </Card>
@@ -154,7 +152,7 @@ const EarningsPage = () => {
             </div>
             <div>
               <p className="text-sm text-gray-500">Year to Date</p>
-              <p className="text-2xl font-bold text-purple-600">${earningsSummary.ytd.toFixed(2)}</p>
+              <p className="text-2xl font-bold text-purple-600">${earnings?.ytd?.toFixed(2) || '0.00'}</p>
             </div>
           </div>
         </Card>
@@ -191,33 +189,17 @@ const EarningsPage = () => {
 
         <Card title="Merchant Performance">
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="p-2 rounded-full bg-orange-100 mr-2">
-                  <Users size={16} className="text-orange-600" />
+            {earnings?.merchantPerformance?.map((merchant) => (
+              <div key={merchant.name} className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="p-2 rounded-full bg-orange-100 mr-2">
+                    <Users size={16} className="text-orange-600" />
+                  </div>
+                  <span className="text-sm">{merchant.name}</span>
                 </div>
-                <span className="text-sm">Cafe Deluxe</span>
+                <span className="font-semibold">${merchant.amount.toFixed(2)}</span>
               </div>
-              <span className="font-semibold">$84.00</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="p-2 rounded-full bg-orange-100 mr-2">
-                  <Users size={16} className="text-orange-600" />
-                </div>
-                <span className="text-sm">Books & More</span>
-              </div>
-              <span className="font-semibold">$62.25</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="p-2 rounded-full bg-orange-100 mr-2">
-                  <Users size={16} className="text-orange-600" />
-                </div>
-                <span className="text-sm">Tech Hub</span>
-              </div>
-              <span className="font-semibold">$100.00</span>
-            </div>
+            ))}
           </div>
         </Card>
       </div>
@@ -245,9 +227,9 @@ const EarningsPage = () => {
           </button>
         </div>
 
-        {isLoading ? (
+        {transactionsLoading ? (
           <LoadingState message="Loading transactions..." />
-        ) : transactions.length > 0 ? (
+        ) : transactions?.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -287,18 +269,18 @@ const EarningsPage = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
           <div>
             <p className="text-sm text-gray-500">Next Payment Date</p>
-            <p className="font-medium">October 31, 2023</p>
+            <p className="font-medium">{earnings?.nextPaymentDate || 'N/A'}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Payment Method</p>
             <div className="flex items-center">
               <CreditCard size={16} className="mr-2 text-gray-600" />
-              <p className="font-medium">•••• •••• •••• 4567</p>
+              <p className="font-medium">{earnings?.paymentMethod || 'N/A'}</p>
             </div>
           </div>
           <div>
             <p className="text-sm text-gray-500">Pending Amount</p>
-            <p className="font-medium text-orange-600">${earningsSummary.pending.toFixed(2)}</p>
+            <p className="font-medium text-orange-600">${earnings?.pending?.toFixed(2) || '0.00'}</p>
           </div>
           <div className="mt-3 sm:mt-0">
             <Button 

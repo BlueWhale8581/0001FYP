@@ -10,8 +10,8 @@ const RegisterPage = () => {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
-    firstName: '',
-    lastName: '',
+    first_name: '',
+    last_name: '',
     phone: '',
     password: '',
     confirmPassword: '',
@@ -42,7 +42,9 @@ const RegisterPage = () => {
     // Required fields
     if (!formData.username.trim()) errors.username = 'Username is required';
     if (!formData.email.trim()) errors.email = 'Email is required';
-    if (!formData.password) errors.password = 'Password is required';
+    if (!formData.first_name) errors.first_name = 'First Name is required';
+    if (!formData.last_name) errors.last_name = 'Last Name is required';
+    if (!formData.phone) errors.phone = 'Phone is required';
     if (!formData.confirmPassword) errors.confirmPassword = 'Please confirm your password';
     
     // Email validation
@@ -80,24 +82,22 @@ const RegisterPage = () => {
       username: formData.username,
       email: formData.email,
       password: formData.password,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
+      first_name: formData.first_name,
+      last_name: formData.last_name,
       phone: formData.phone,
       role: formData.role
     });
     
-    // Redirect on success after a delay
-    if (result && result.success) {
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
+    // Navigate to role-specific registration page with user ID on success
+    if (result && result.success && result.userId) {
+      navigate(`/register/${formData.role}/${result.userId}`);
     }
   };
 
   return (
     <DashboardTemplate
-      role="guest"
-      userName="Guest"
+    role="user"
+    userName="Visitor"
       pageTitle="Register"
     >
       <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
@@ -105,8 +105,8 @@ const RegisterPage = () => {
         
         {success && (
           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-            Registration successful! Please check your email to verify your account.
-            <p className="text-sm">Redirecting to login page...</p>
+            Account Registration successful!
+            <p className="text-sm">Redirecting to next page...</p>
           </div>
         )}
         
@@ -150,30 +150,36 @@ const RegisterPage = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-gray-700">First Name</label>
+              <label className="block text-sm text-gray-700">First Name*</label>
               <input
                 type="text"
-                name="firstName"
-                value={formData.firstName}
+                name="first_name"
+                value={formData.first_name}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
               />
+              {formErrors.first_name && (
+                <p className="text-red-500 text-xs mt-1">{formErrors.first_name}</p>
+              )}
             </div>
             
             <div>
-              <label className="block text-sm text-gray-700">Last Name</label>
+              <label className="block text-sm text-gray-700">Last Name*</label>
               <input
                 type="text"
-                name="lastName"
-                value={formData.lastName}
+                name="last_name"
+                value={formData.last_name}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
               />
+              {formErrors.label && (
+                <p className="text-red-500 text-xs mt-1">{formErrors.last_name}</p>
+              )}
             </div>
           </div>
           
           <div>
-            <label className="block text-sm text-gray-700">Phone Number</label>
+            <label className="block text-sm text-gray-700">Phone Number*</label>
             <input
               type="tel"
               name="phone"
@@ -181,6 +187,9 @@ const RegisterPage = () => {
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md"
             />
+            {formErrors.phone && (
+                <p className="text-red-500 text-xs mt-1">{formErrors.phone}</p>
+              )}
           </div>
           
           <div>
@@ -236,11 +245,10 @@ const RegisterPage = () => {
             disabled={loading}
             className="w-full"
           />
-          
-          <div className="text-center text-sm">
-            Already have an account? <Link to="/login" className="text-blue-600 hover:text-blue-800">Log In</Link>
-          </div>
         </form>
+        <div className="text-center text-sm">
+          Already have an account? <Link to="/login" className="text-blue-600 hover:text-blue-800">Log In</Link>
+        </div>
       </div>
     </DashboardTemplate>
   );

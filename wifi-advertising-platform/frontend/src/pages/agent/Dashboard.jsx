@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Home, Users, CreditCard, FileText, User } from 'lucide-react';
 
 // Template
@@ -10,29 +10,59 @@ import StatusIndicator from '../../components/common/StatusIndicator';
 import MetricsChart from '../../components/dashboard/MetricsChart';
 import QuickActions from '../../components/dashboard/QuickActions';
 import ActivityFeed from '../../components/dashboard/ActivityFeed';
+import LoadingState from '../../components/common/LoadingState';
+
+// Custom hooks
+import useAgent from '../../hooks/useAgent';
+import useAuth from '../../hooks/useAuth';
 
 const AgentDashboardPage = () => {
-  // Mock data for agent dashboard
-  const recentActivities = [
-    { icon: <Users size={16} />, title: 'New merchant registered', time: '2 hours ago' },
-    { icon: <CreditCard size={16} />, title: 'Commission received', time: '1 day ago' },
-    { icon: <FileText size={16} />, title: 'QR code generated', time: '2 days ago' },
-  ];
+  const { user, isAuthenticated, fetchCurrentUser } = useAuth();
+  const { useDashboardStats, useNotifications, useMerchants, useQRCodes } = useAgent();
+  const { stats, loading: statsLoading, error: statsError } = useDashboardStats();
+  const { notifications, loading: notifLoading } = useNotifications();
+  const { merchants, loading: merchantsLoading } = useMerchants();
+  const { qrCodes, loading: qrLoading } = useQRCodes();
 
-  const quickActionItems = [
-    { label: 'Add New Merchant', onClick: () => console.log('Add merchant clicked') },
-    { label: 'Generate QR Code', onClick: () => console.log('Generate QR clicked') },
-    { label: 'View Earnings', onClick: () => console.log('View earnings clicked') },
-  ];
+  useEffect(() => {
+    if (isAuthenticated && !user) {
+      fetchCurrentUser();
+    }
+  }, [isAuthenticated, user, fetchCurrentUser]);
+
+  const isLoading = statsLoading || notifLoading || merchantsLoading || qrLoading || !user;
+
+  if (!isAuthenticated) {
+    return (
+      <DashboardTemplate
+        role="agent"
+        userName="Guest"
+        notifications={[]}
+        pageTitle="Agent Dashboard"
+      >
+        <p className="text-center text-gray-500">Please log in to access the dashboard.</p>
+      </DashboardTemplate>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <DashboardTemplate
+        role="agent"
+        userName={user?.name || "Agent"}
+        notifications={[]}
+        pageTitle="Agent Dashboard"
+      >
+        <LoadingState message="Loading dashboard data..." />
+      </DashboardTemplate>
+    );
+  }
 
   return (
     <DashboardTemplate
       role="agent"
-      userName="Agent Smith"
-      notifications={[
-        { id: 1, type: 'info', message: 'New merchant registration pending approval', time: '30m ago', read: false },
-        { id: 2, type: 'success', message: 'Commission payment processed.', time: '1d ago', read: true },
-      ]}
+      userName={user?.name || stats?.agentName || "Agent"}
+      notifications={notifications || []}
       pageTitle="Agent Dashboard"
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -41,21 +71,21 @@ const AgentDashboardPage = () => {
           <div className="flex items-center justify-between mb-3">
             <div>
               <p className="text-sm text-gray-500">Total Merchants</p>
-              <p className="text-xl font-bold text-orange-500">24</p>
+              <p className="text-xl font-bold text-orange-500">{stats?.totalMerchants || 0}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Active Merchants</p>
-              <p className="text-xl font-bold text-green-500">18</p>
+              <p className="text-xl font-bold text-green-500">{stats?.activeMerchants || 0}</p>
             </div>
           </div>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">Pending Approval</p>
-              <p className="text-xl font-bold text-yellow-500">3</p>
+              <p className="text-xl font-bold text-yellow-500">{stats?.pendingMerchants || 0}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Inactive</p>
-              <p className="text-xl font-bold text-red-500">3</p>
+              <p className="text-xl font-bold text-red-500">{stats?.inactiveMerchants || 0}</p>
             </div>
           </div>
         </Card>
@@ -65,21 +95,21 @@ const AgentDashboardPage = () => {
           <div className="flex items-center justify-between mb-3">
             <div>
               <p className="text-sm text-gray-500">Total Generated</p>
-              <p className="text-xl font-bold text-orange-500">87</p>
+              <p className="text-xl font-bold text-orange-500">{stats?.totalQRCodes || 0}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Active QR Codes</p>
-              <p className="text-xl font-bold text-green-500">72</p>
+              <p className="text-xl font-bold text-green-500">{stats?.activeQRCodes || 0}</p>
             </div>
           </div>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">Scanned Today</p>
-              <p className="text-xl font-bold text-blue-500">15</p>
+              <p className="text-xl font-bold text-blue-500">{stats?.scannedToday || 0}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Conversion Rate</p>
-              <p className="text-xl font-bold text-purple-500">68%</p>
+              <p className="text-xl font-bold text-purple-500">{stats?.conversionRate || 0}%</p>
             </div>
           </div>
         </Card>
@@ -91,15 +121,15 @@ const AgentDashboardPage = () => {
           <div className="flex items-center justify-between mb-3">
             <div>
               <p className="text-sm text-gray-500">This Month</p>
-              <p className="text-xl font-bold text-green-500">$1,248.50</p>
+              <p className="text-xl font-bold text-green-500">${stats?.earningsThisMonth || 0}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Last Month</p>
-              <p className="text-xl font-bold text-gray-500">$1,082.75</p>
+              <p className="text-xl font-bold text-gray-500">${stats?.earningsLastMonth || 0}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Growth</p>
-              <p className="text-xl font-bold text-blue-500">+15.3%</p>
+              <p className="text-xl font-bold text-blue-500">{stats?.growth || 0}%</p>
             </div>
           </div>
           <div className="h-40 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -110,7 +140,7 @@ const AgentDashboardPage = () => {
         {/* Quick Actions */}
         <Card title="Quick Actions">
           <div className="space-y-2">
-            {quickActionItems.map((action, index) => (
+            {stats?.quickActions?.map((action, index) => (
               <button
                 key={index}
                 className="w-full p-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
@@ -130,23 +160,23 @@ const AgentDashboardPage = () => {
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium">Merchant Acquisition</p>
               <div className="w-32 h-4 bg-gray-200 rounded-full overflow-hidden">
-                <div className="h-full bg-orange-500" style={{ width: '75%' }}></div>
+                <div className="h-full bg-orange-500" style={{ width: `${stats?.merchantAcquisition || 0}%` }}></div>
               </div>
-              <p className="text-sm font-medium">75%</p>
+              <p className="text-sm font-medium">{stats?.merchantAcquisition || 0}%</p>
             </div>
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium">QR Code Generation</p>
               <div className="w-32 h-4 bg-gray-200 rounded-full overflow-hidden">
-                <div className="h-full bg-orange-500" style={{ width: '82%' }}></div>
+                <div className="h-full bg-orange-500" style={{ width: `${stats?.qrCodeGeneration || 0}%` }}></div>
               </div>
-              <p className="text-sm font-medium">82%</p>
+              <p className="text-sm font-medium">{stats?.qrCodeGeneration || 0}%</p>
             </div>
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium">Commission Rate</p>
               <div className="w-32 h-4 bg-gray-200 rounded-full overflow-hidden">
-                <div className="h-full bg-orange-500" style={{ width: '68%' }}></div>
+                <div className="h-full bg-orange-500" style={{ width: `${stats?.commissionRate || 0}%` }}></div>
               </div>
-              <p className="text-sm font-medium">68%</p>
+              <p className="text-sm font-medium">{stats?.commissionRate || 0}%</p>
             </div>
           </div>
         </Card>
@@ -154,7 +184,7 @@ const AgentDashboardPage = () => {
         {/* Recent Activity */}
         <Card title="Recent Activity">
           <div className="space-y-3">
-            {recentActivities.map((activity, index) => (
+            {notifications?.map((activity, index) => (
               <div key={index} className="flex items-start">
                 <div className="flex-shrink-0 w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center">
                   {activity.icon}

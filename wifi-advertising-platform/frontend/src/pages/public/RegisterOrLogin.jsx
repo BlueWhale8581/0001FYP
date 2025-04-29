@@ -6,7 +6,7 @@ const RegisterOrLoginPage = () => {
   return (
     <DashboardTemplate
       role="user"
-      userName="Guest"
+      userName="Visitor"
       pageTitle="Register or Login"
     >
       <div className="text-center space-y-4">

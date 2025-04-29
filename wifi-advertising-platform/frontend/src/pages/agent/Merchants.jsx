@@ -11,74 +11,73 @@ import SearchBar from '../../components/common/SearchBar';
 import Button from '../../components/common/Button';
 import EmptyState from '../../components/common/EmptyState';
 
+// Hooks
+import useAuth from '../../hooks/useAuth';
+import { useMerchants } from '../../hooks/useAgent';
+import { useNotifications } from '../../hooks/useAgent';
+
 const MerchantsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // Mock data for merchants
-  const merchants = [
-    { 
-      id: 1, 
-      name: 'Cafe Deluxe', 
-      address: '123 Main Street', 
-      contact: 'John Smith', 
-      phone: '+1-234-567-8901', 
-      email: 'john@cafedeluxe.com', 
-      status: 'Active',
-      statusColor: 'green',
-      qrCodes: 3
-    },
-    { 
-      id: 2, 
-      name: 'Books & More', 
-      address: '456 Oak Avenue', 
-      contact: 'Sarah Johnson', 
-      phone: '+1-345-678-9012', 
-      email: 'sarah@booksandmore.com', 
-      status: 'Active',
-      statusColor: 'green',
-      qrCodes: 2
-    },
-    { 
-      id: 3, 
-      name: 'Tech Hub', 
-      address: '789 Pine Road', 
-      contact: 'Michael Lee', 
-      phone: '+1-456-789-0123', 
-      email: 'michael@techhub.com', 
-      status: 'Pending',
-      statusColor: 'yellow',
-      qrCodes: 0
-    },
-    { 
-      id: 4, 
-      name: 'Fitness Center', 
-      address: '101 Elm Boulevard', 
-      contact: 'Lisa Rodriguez', 
-      phone: '+1-567-890-1234', 
-      email: 'lisa@fitnesscenter.com', 
-      status: 'Inactive',
-      statusColor: 'red',
-      qrCodes: 1
-    },
-  ];
+  const { user } = useAuth();
+  const { merchants, loading, error, fetchMerchants, registerMerchant } = useMerchants();
+  const { notifications } = useNotifications();
 
   // Filter merchants based on search query
   const filteredMerchants = merchants.filter(merchant => 
-    merchant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    merchant.contact.toLowerCase().includes(searchQuery.toLowerCase())
+    merchant.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    merchant.contactPerson?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Calculate merchant counts by status
+  const activeMerchants = merchants.filter(m => m.status === 'Active').length;
+  const pendingMerchants = merchants.filter(m => m.status === 'Pending').length;
+  const inactiveMerchants = merchants.filter(m => m.status === 'Inactive').length;
 
   const handleSearch = () => {
     console.log('Searching for:', searchQuery);
+    // You could also trigger a more specific API search here if needed
   };
+
+  const handleAddMerchant = () => {
+    // You would implement navigation to registration form or modal here
+    console.log('Add merchant clicked');
+  };
+
+  if (loading) {
+    return (
+      <DashboardTemplate
+        role={user?.role}
+        userName={user?.name}
+        notifications={notifications}
+        pageTitle="Manage Merchants"
+      >
+        <div className="flex justify-center items-center h-64">
+          <p>Loading merchants...</p>
+        </div>
+      </DashboardTemplate>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardTemplate
+        role={user?.role}
+        userName={user?.name}
+        notifications={notifications}
+        pageTitle="Manage Merchants"
+      >
+        <div className="flex justify-center items-center h-64">
+          <p className="text-red-500">Error loading merchants: {error}</p>
+        </div>
+      </DashboardTemplate>
+    );
+  }
 
   return (
     <DashboardTemplate
-      role="agent"
-      userName="Agent Smith"
-      notifications={[
-        { id: 1, type: 'info', message: 'New merchant registration pending approval', time: '30m ago', read: false },
-      ]}
+      role={user?.role}
+      userName={user?.name}
+      notifications={notifications}
       pageTitle="Manage Merchants"
     >
       <div className="mb-4 flex flex-col md:flex-row md:justify-between md:items-center">
@@ -94,7 +93,7 @@ const MerchantsPage = () => {
           <Button 
             text="Add New Merchant" 
             className="bg-orange-500 hover:bg-orange-600 flex items-center"
-            onClick={() => console.log('Add merchant clicked')}
+            onClick={handleAddMerchant}
           />
         </div>
       </div>
@@ -107,7 +106,7 @@ const MerchantsPage = () => {
             </div>
             <div>
               <p className="text-lg font-semibold">Active Merchants</p>
-              <p className="text-2xl font-bold text-green-600">2</p>
+              <p className="text-2xl font-bold text-green-600">{activeMerchants}</p>
             </div>
           </div>
         </Card>
@@ -119,7 +118,7 @@ const MerchantsPage = () => {
             </div>
             <div>
               <p className="text-lg font-semibold">Pending Merchants</p>
-              <p className="text-2xl font-bold text-yellow-600">1</p>
+              <p className="text-2xl font-bold text-yellow-600">{pendingMerchants}</p>
             </div>
           </div>
         </Card>
@@ -131,7 +130,7 @@ const MerchantsPage = () => {
             </div>
             <div>
               <p className="text-lg font-semibold">Inactive Merchants</p>
-              <p className="text-2xl font-bold text-red-600">1</p>
+              <p className="text-2xl font-bold text-red-600">{inactiveMerchants}</p>
             </div>
           </div>
         </Card>
@@ -155,7 +154,7 @@ const MerchantsPage = () => {
                 </div>
                 
                 <div className="mt-3 md:mt-0 md:w-2/5">
-                  <p className="text-sm font-medium">{merchant.contact}</p>
+                  <p className="text-sm font-medium">{merchant.contactPerson}</p>
                   <p className="text-sm text-gray-500 flex items-center">
                     <Phone size={14} className="mr-1" /> {merchant.phone}
                   </p>
@@ -166,11 +165,17 @@ const MerchantsPage = () => {
                 
                 <div className="mt-3 md:mt-0 flex items-center justify-between md:w-1/5">
                   <div>
-                    <StatusIndicator status={merchant.status} color={merchant.statusColor} />
-                    <p className="text-sm text-gray-500 mt-1">QR Codes: {merchant.qrCodes}</p>
+                    <StatusIndicator status={merchant.status} color={
+                      merchant.status === 'Active' ? 'green' : 
+                      merchant.status === 'Pending' ? 'yellow' : 'red'
+                    } />
+                    <p className="text-sm text-gray-500 mt-1">QR Codes: {merchant.qrCodeCount || 0}</p>
                   </div>
                   <div>
-                    <button className="p-2 rounded-lg text-orange-500 hover:bg-orange-50">
+                    <button 
+                      className="p-2 rounded-lg text-orange-500 hover:bg-orange-50"
+                      onClick={() => console.log('Add QR for merchant:', merchant.id)}
+                    >
                       <Plus size={20} />
                     </button>
                   </div>
@@ -184,7 +189,7 @@ const MerchantsPage = () => {
           title="No merchants found"
           description="Try adjusting your search terms or add a new merchant"
           actionText="Add New Merchant"
-          onActionClick={() => console.log('Add merchant clicked')}
+          onActionClick={handleAddMerchant}
         />
       )}
     </DashboardTemplate>

@@ -18,7 +18,7 @@ export const useRegister = () => {
       setSuccess(true);
       return result;
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
+      setError(err.response?.data?.message || err.message || 'Registration failed');
       setSuccess(false);
       return null;
     } finally {
@@ -44,7 +44,7 @@ export const useLogin = () => {
       setError(null);
       const result = await authService.login(credentials);
       setUser(result.user);
-      setIsAuthenticated(true);
+      setIsAuthenticated(true); // Ensure this is set to true
       return result;
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid credentials');
@@ -61,14 +61,7 @@ export const useLogin = () => {
     return result;
   };
 
-  return { 
-    user, 
-    loading, 
-    error, 
-    isAuthenticated, 
-    login, 
-    logout 
-  };
+  return { user, loading, error, isAuthenticated, login, logout };
 };
 
 /**

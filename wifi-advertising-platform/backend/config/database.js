@@ -18,7 +18,6 @@ const config = {
 async function testConnection() {
   try {
     await sql.connect(config);
-    console.log('Database is ready!');
     return true;
   } catch (error) {
     console.error('Database connection failed:', error.message);

@@ -9,11 +9,7 @@ const WiFiAccessModel = require('../models/WiFiAccess');
 const WiFiSettingsModel = require('../models/WiFiSettings');
 const AdModel = require('../models/Ad');
 const AdImpressionModel = require('../models/AdImpression');
-const MerchantModel = require('../models/Merchant');
-const QRCodeModel = require('../models/QRCode');
 const UserModel = require('../models/User');
-const AdvertiserModel = require('../models/Advertiser');
-const AgentModel = require('../models/Agent');
 const NotificationService = require('../services/notificationService');
 const TransactionService = require('../services/transactionService');
 
@@ -25,39 +21,38 @@ const notificationService = require('../services/notificationService');
 const auditService = require('../services/auditService');
 
 /**
- * Get Wi-Fi details based on merchant QR code
+ * Get Wi-Fi details directly from the user's device
  */
 exports.getWiFiDetails = async (req, res) => {
   try {
-    const { qrCodeId } = req.params;
-    
-    // Validate QR code and get merchant information
-    const qrCode = await QRCodeModel.findById(qrCodeId);
-    if (!qrCode || qrCode.activation_status !== 'active') {
-      return res.status(404).json({ success: false, message: 'Invalid QR code' });
-    }
-    
-    // Get merchant and WiFi settings
-    const merchant = await MerchantModel.findWithWiFiSettings(qrCode.merchant_id);
-    if (!merchant) {
-      return res.status(404).json({ success: false, message: 'Merchant not found' });
-    }
-    
-    // Return Wi-Fi details excluding sensitive information like password
+    // Extract device information from the request
+    const userAgent = req.headers['user-agent']; // User-Agent header
+    const ipAddress = req.ip; // IP address of the user
+
+    // Simulate Wi-Fi details (SSID and network speed)
+    const wifiDetails = {
+      ssid: `UserDeviceWiFi-${ipAddress}`, // Example SSID based on IP
+      networkSpeed: `${Math.floor(Math.random() * 100) + 10} Mbps`, // Simulated network speed
+    };
+
+    // Return the Wi-Fi details
     return res.status(200).json({
       success: true,
       data: {
-        merchantId: merchant.id,
-        businessName: merchant.business_name,
-        ssid: merchant.wifi_settings.ssid,
-        requiresAds: merchant.wifi_settings.ads_before_access,
-        termsAndConditions: merchant.wifi_settings.terms_and_conditions,
-        sessionDuration: merchant.wifi_settings.session_duration
-      }
+        wifiDetails,
+        deviceInfo: {
+          userAgent,
+          ipAddress,
+        },
+      },
     });
   } catch (error) {
     console.error('Error getting Wi-Fi details:', error);
-    return res.status(500).json({ success: false, message: 'Server error' });
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to get Wi-Fi details',
+      error: error.message,
+    });
   }
 };
 
@@ -312,271 +307,6 @@ exports.recordAdImpression = async (req, res) => {
 };
 
 /**
- * Register as an advertiser
- */
-exports.registerAsAdvertiser = async (req, res) => {
-  try {
-    const { 
-      username, email, password, firstName, lastName, phone,
-      companyName, companyAddress, companyPhone, companyEmail, industry
-    } = req.body;
-    
-    // Validate required fields
-    if (!username || !email || !password || !companyName) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Missing required information' 
-      });
-    }
-    
-    // Register user
-    const userData = {
-      username,
-      email,
-      password,
-      role: 'advertiser',
-      first_name: firstName,
-      last_name: lastName,
-      phone,
-      status: 'pending' // Requires admin approval
-    };
-    
-    const newUser = await authService.register(userData, 'advertiser');
-    
-    // Create advertiser profile
-    const advertiserData = {
-      user_id: newUser.id,
-      company_name: companyName,
-      company_address: companyAddress,
-      company_phone: companyPhone || phone,
-      company_email: companyEmail || email,
-      industry
-    };
-    
-    await AdvertiserModel.create(advertiserData);
-    
-    // Notify admins
-    await notificationService.notifyUsersByRole('admin', 
-      'New Advertiser Registration', 
-      `${companyName} has registered as an advertiser`
-    );
-    
-    // Send welcome email
-    await emailService.sendWelcomeEmail(newUser);
-    
-    // Log the registration
-    await auditService.logActivity({
-      action: 'user_registration',
-      entityType: 'user',
-      entityId: newUser.id,
-      values: { role: 'advertiser' },
-      ipAddress: req.ip
-    });
-    
-    return res.status(201).json({
-      success: true,
-      message: 'Advertiser registration successful',
-      userId: newUser.id
-    });
-  } catch (error) {
-    console.error('Error registering advertiser:', error);
-    if (error.code === 'DUPLICATE_ENTRY') {
-      return res.status(409).json({ 
-        success: false, 
-        message: 'Username or email already exists' 
-      });
-    }
-    return res.status(500).json({ success: false, message: 'Server error' });
-  }
-};
-
-/**
- * Register as a merchant
- */
-exports.registerAsMerchant = async (req, res) => {
-  try {
-    const { 
-      username, email, password, firstName, lastName, phone,
-      businessName, businessAddress, businessPhone, businessEmail, 
-      businessCategory, taxId, agentId
-    } = req.body;
-    
-    // Validate required fields
-    if (!username || !email || !password || !businessName || !businessAddress) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Missing required information' 
-      });
-    }
-    
-    // Validate agent if provided
-    if (agentId) {
-      const agent = await AgentModel.findByUserId(agentId);
-      if (!agent) {
-        return res.status(404).json({ success: false, message: 'Invalid agent ID' });
-      }
-    }
-    
-    // Register user
-    const userData = {
-      username,
-      email,
-      password,
-      role: 'merchant',
-      first_name: firstName,
-      last_name: lastName,
-      phone,
-      status: 'pending' // Requires approval
-    };
-    
-    const newUser = await authService.register(userData, 'merchant');
-    
-    // Create merchant profile
-    const merchantData = {
-      user_id: newUser.id,
-      business_name: businessName,
-      business_address: businessAddress,
-      business_phone: businessPhone || phone,
-      business_email: businessEmail || email,
-      business_category: businessCategory,
-      tax_id: taxId,
-      agent_id: agentId,
-      approval_status: 'pending'
-    };
-    
-    const merchant = await MerchantModel.create(merchantData);
-    
-    // Initialize default WiFi settings
-    await wifiService.initializeWiFiSettings(merchant.id, {
-      ssid: `${businessName.replace(/\s+/g, '-')}-WiFi`, // Create default SSID
-      password: Math.random().toString(36).substring(2, 10), // Random password
-      connection_limit: 50,
-      session_duration: 60,
-      ads_before_access: true
-    });
-    
-    // Notify admins and agent
-    await notificationService.notifyUsersByRole('admin', 
-      'New Merchant Registration', 
-      `${businessName} has registered as a merchant`
-    );
-    
-    if (agentId) {
-      await notificationService.createNotification(
-        agentId,
-        'New Merchant Registration',
-        `${businessName} has registered as a merchant under your agency`,
-        'info'
-      );
-    }
-    
-    // Send welcome email
-    await emailService.sendWelcomeEmail(newUser);
-    
-    // Log the registration
-    await auditService.logActivity({
-      action: 'user_registration',
-      entityType: 'user',
-      entityId: newUser.id,
-      values: { role: 'merchant' },
-      ipAddress: req.ip
-    });
-    
-    return res.status(201).json({
-      success: true,
-      message: 'Merchant registration successful. Your account is pending approval.',
-      userId: newUser.id,
-      merchantId: merchant.id
-    });
-  } catch (error) {
-    console.error('Error registering merchant:', error);
-    if (error.code === 'DUPLICATE_ENTRY') {
-      return res.status(409).json({ 
-        success: false, 
-        message: 'Username or email already exists' 
-      });
-    }
-    return res.status(500).json({ success: false, message: 'Server error' });
-  }
-};
-
-/**
- * Register as an agent
- */
-exports.registerAsAgent = async (req, res) => {
-  try {
-    const { 
-      username, email, password, firstName, lastName, phone,
-      territory
-    } = req.body;
-    
-    // Validate required fields
-    if (!username || !email || !password) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Missing required information' 
-      });
-    }
-    
-    // Register user
-    const userData = {
-      username,
-      email,
-      password,
-      role: 'agent',
-      first_name: firstName,
-      last_name: lastName,
-      phone,
-      status: 'pending' // Requires admin approval
-    };
-    
-    const newUser = await authService.register(userData, 'agent');
-    
-    // Create agent profile
-    const agentData = {
-      user_id: newUser.id,
-      commission_rate: 0.00, // Default commission rate, will be set by admin
-      territory: territory
-    };
-    
-    await AgentModel.create(agentData);
-    
-    // Notify admins
-    await notificationService.notifyUsersByRole('admin', 
-      'New Agent Registration', 
-      `${firstName} ${lastName} has registered as an agent`
-    );
-    
-    // Send welcome email
-    await emailService.sendWelcomeEmail(newUser);
-    
-    // Log the registration
-    await auditService.logActivity({
-      action: 'user_registration',
-      entityType: 'user',
-      entityId: newUser.id,
-      values: { role: 'agent' },
-      ipAddress: req.ip
-    });
-    
-    return res.status(201).json({
-      success: true,
-      message: 'Agent registration successful. Your account is pending approval.',
-      userId: newUser.id
-    });
-  } catch (error) {
-    console.error('Error registering agent:', error);
-    if (error.code === 'DUPLICATE_ENTRY') {
-      return res.status(409).json({ 
-        success: false, 
-        message: 'Username or email already exists' 
-      });
-    }
-    return res.status(500).json({ success: false, message: 'Server error' });
-  }
-};
-
-/**
  * @desc    Get user dashboard data
  * @route   GET /api/user/dashboard
  * @access  Private (Any logged-in user)
@@ -622,8 +352,8 @@ exports.getUserProfile = async (req, res) => {
         id: user.id,
         username: user.username,
         email: user.email,
-        firstName: user.first_name,
-        lastName: user.last_name,
+        first_name: user.first_name,
+        last_name: user.last_name,
         role: user.role,
       },
     });

@@ -41,11 +41,11 @@ class UserProfileService {
   async updateUserProfile(userId, role, profileData) {
     try {
       // Update base user data
-      const { firstName, lastName, phone, email, ...roleSpecificData } = profileData;
+      const { first_name, last_name, phone, email, ...roleSpecificData } = profileData;
 
       const baseUpdate = {};
-      if (firstName) baseUpdate.first_name = firstName;
-      if (lastName) baseUpdate.last_name = lastName;
+      if (first_name) baseUpdate.first_name = first_name;
+      if (last_name) baseUpdate.last_name = last_name;
       if (phone) baseUpdate.phone = phone;
       if (email) baseUpdate.email = email;
 

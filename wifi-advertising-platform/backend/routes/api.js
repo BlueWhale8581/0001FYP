@@ -2,16 +2,18 @@ const express = require('express');
 const router = express.Router();
 
 // Import route handlers
-const authRoutes = require('./authRoutes');
-const adminRoutes = require('./adminRoutes');
-const advertiserRoutes = require('./advertiserRoutes');
-const agentRoutes = require('./agentRoutes');
-const merchantRoutes = require('./merchantRoutes');
-const publicRoutes = require('./publicRoutes');
-const userRoutes = require('./userRoutes');
+const authRoutes = require('./auth');
+const adminRoutes = require('./admin');
+const advertiserRoutes = require('./advertiser');
+const agentRoutes = require('./agent');
+const merchantRoutes = require('./merchant');
+const publicRoutes = require('./public');
+const userRoutes = require('./user');
+const roleRegisterRoutes = require('./roleRegister');
 
 // Authentication Routes
 router.use('/auth', authRoutes);
+router.use('/register', roleRegisterRoutes);
 
 // Admin Routes
 router.use('/admin', adminRoutes);

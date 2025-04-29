@@ -144,7 +144,7 @@ exports.getUserById = async (req, res) => {
 
 exports.createUser = async (req, res) => {
   try {
-    const { username, email, password, role, firstName, lastName, phone, status } = req.body;
+    const { username, email, password, role, first_name, last_name, phone, status } = req.body;
     
     // Check if username or email already exists
     const existingUser = await User.findByEmail(email) || await User.findByUsername(username);
@@ -158,8 +158,8 @@ exports.createUser = async (req, res) => {
       email,
       password,
       role,
-      first_name: firstName,
-      last_name: lastName,
+      first_name: first_name,
+      last_name: last_name,
       phone,
       status: status || 'active'
     };
@@ -191,7 +191,7 @@ exports.createUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { username, email, firstName, lastName, phone, status } = req.body;
+    const { username, email, first_name, last_name, phone, status } = req.body;
     
     // Get existing user data for audit log
     const existingUser = await User.findById(id);
@@ -203,8 +203,8 @@ exports.updateUser = async (req, res) => {
     const userData = {
       username,
       email,
-      first_name: firstName,
-      last_name: lastName,
+      first_name: first_name,
+      last_name: last_name,
       phone,
       status
     };
@@ -797,8 +797,8 @@ exports.getMerchants = async (req, res) => {
         user: userData ? {
           id: userData.id,
           email: userData.email,
-          firstName: userData.first_name,
-          lastName: userData.last_name,
+          first_name: userData.first_name,
+          last_name: userData.last_name,
           status: userData.status
         } : null
       };
@@ -848,8 +848,8 @@ exports.getAdvertisers = async (req, res) => {
         user: userData ? {
           id: userData.id,
           email: userData.email,
-          firstName: userData.first_name,
-          lastName: userData.last_name,
+          first_name: userData.first_name,
+          last_name: userData.last_name,
           status: userData.status
         } : null
       };
@@ -899,8 +899,8 @@ exports.getAgents = async (req, res) => {
         user: userData ? {
           id: userData.id,
           email: userData.email,
-          firstName: userData.first_name,
-          lastName: userData.last_name,
+          first_name: userData.first_name,
+          last_name: userData.last_name,
           status: userData.status
         } : null
       };

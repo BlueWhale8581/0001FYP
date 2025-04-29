@@ -19,21 +19,11 @@ class DashboardService {
    */
   async getAdminDashboard(filters = {}) {
     try {
-      console.log('Fetching user metrics...');
       const userMetrics = await User.countByRole();
-
-      console.log('Fetching merchant metrics...');
       const merchantMetrics = await Merchant.findAll({ count: true });
-
-      console.log('Fetching pending merchants...');
       const pendingMerchants = await Merchant.findAll({ filters: { approval_status: 'pending' }, count: true });
-
-      console.log('Fetching recent transactions...');
       const recentTransactions = await Transaction.findAll({ limit: 10 }) || [];
-
-      console.log('Fetching total impressions...');
       const totalImpressions = await AdImpression.findByAdId(null, { count: true });
-
       return {
         userMetrics,
         merchantMetrics,

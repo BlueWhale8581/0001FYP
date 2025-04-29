@@ -44,37 +44,12 @@ const swaggerOptions = {
   apis,
 };
 
-console.log("Swagger is scanning these files:");
-apis.forEach(pattern => {
-  const directory = path.dirname(pattern);
-  const filePattern = path.basename(pattern);
-  if (filePattern === '*.js') {
-     try {
-          const files = fs.readdirSync(directory).filter(file => file.endsWith('.js'));
-          files.forEach(file => console.log(`- ${directory}/${file}`));
-        } catch (err) {
-          console.log(`Could not read directory ${directory}: ${err.message}`);
-        }
-  } else {
-     try {
-          if (fs.existsSync(pattern)) {
-            console.log(`- ${pattern}`);
-          } else {
-            console.log(`File not found: ${pattern}`);
-          }
-        } catch (err) {
-          console.log(`Error checking file ${pattern}: ${err.message}`);
-        }
-  }
-});
-
 // Initialize swagger-jsdoc
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
 
 // Setup Swagger middleware
 const setupSwagger = (app) => {
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-  console.log(`📚 API Documentation available at http://localhost:${process.env.PORT || 3001}/api-docs`);
 };
 
 module.exports = setupSwagger;

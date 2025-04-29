@@ -4,23 +4,18 @@ import { Home, Users, CreditCard, Settings, Wifi, PieChart, Award, BarChart, Use
 // Role-specific colors
 export const roleColors = {
   admin: {
-    bgColor: 'bg-blue-600',
     textColor: 'blue'
   },
   merchant: {
-    bgColor: 'bg-green-600',
     textColor: 'green'
   },
   agent: {
-    bgColor: 'bg-orange-500',
     textColor: 'orange'
   },
   advertiser: {
-    bgColor: 'bg-purple-600',
     textColor: 'purple'
   },
   user: {
-    bgColor: 'bg-teal-500',
     textColor: 'teal'
   },
 };

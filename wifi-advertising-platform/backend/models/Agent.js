@@ -3,6 +3,7 @@ const { sql, poolPromise } = require('../config/database');
 class Agent {
   constructor(agentData) {
     this.id = agentData.id;
+    this.user_id = agentData.user_id;
     this.commission_rate = agentData.commission_rate;
     this.territory = agentData.territory;
     this.created_at = agentData.created_at;
@@ -15,13 +16,13 @@ class Agent {
       const pool = await poolPromise;
       const result = await pool
         .request()
-        .input('id', sql.Int, agentData.id)
-        .input('commission_rate', sql.Decimal(10, 2), agentData.commission_rate || 0.0)
+        .input('user_id', sql.Int, agentData.user_id)
+        .input('commission_rate', sql.Decimal(5, 2), agentData.commission_rate)
         .input('territory', sql.NVarChar, agentData.territory)
         .query(`
-          INSERT INTO agents (id, commission_rate, territory)
+          INSERT INTO agents (user_id, commission_rate, territory)
           OUTPUT INSERTED.id
-          VALUES (@id, @commission_rate, @territory)
+          VALUES (@user_id, @commission_rate, @territory)
         `);
       return { id: result.recordset[0].id, ...agentData };
     } catch (error) {

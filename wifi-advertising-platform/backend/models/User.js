@@ -1,5 +1,5 @@
 const { sql, poolPromise } = require('../config/database');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 class User {
   constructor(userData) {
@@ -14,7 +14,7 @@ class User {
     this.created_at = userData.created_at;
     this.updated_at = userData.updated_at;
     this.last_login = userData.last_login;
-    this.status = userData.status || 'pending';
+    this.status = userData.status || 'Active';
   }
 
   // Create a new user
@@ -33,7 +33,7 @@ class User {
         .input('first_name', sql.NVarChar, userData.first_name)
         .input('last_name', sql.NVarChar, userData.last_name)
         .input('phone', sql.NVarChar, userData.phone)
-        .input('status', sql.NVarChar, userData.status || 'pending')
+        .input('status', sql.NVarChar, userData.status || 'Active')
         .query(`
           INSERT INTO users (username, email, password, role, first_name, last_name, phone, status)
           OUTPUT INSERTED.id

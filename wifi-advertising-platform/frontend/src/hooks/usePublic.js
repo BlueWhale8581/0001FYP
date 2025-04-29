@@ -216,88 +216,10 @@ export const useAdvertiserRegistration = () => {
   };
 };
 
-/**
- * Custom hook for merchant registration
- */
-export const useMerchantRegistration = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
-
-  const register = useCallback(async (merchantData) => {
-    try {
-      setLoading(true);
-      const result = await publicService.registerAsMerchant(merchantData);
-      setSuccess(true);
-      setError(null);
-      return result;
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to register as merchant');
-      setSuccess(false);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const resetState = () => {
-    setError(null);
-    setSuccess(false);
-  };
-
-  return {
-    loading,
-    error,
-    success,
-    register,
-    resetState
-  };
-};
-
-/**
- * Custom hook for agent registration
- */
-export const useAgentRegistration = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
-
-  const register = useCallback(async (agentData) => {
-    try {
-      setLoading(true);
-      const result = await publicService.registerAsAgent(agentData);
-      setSuccess(true);
-      setError(null);
-      return result;
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to register as agent');
-      setSuccess(false);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const resetState = () => {
-    setError(null);
-    setSuccess(false);
-  };
-
-  return {
-    loading,
-    error,
-    success,
-    register,
-    resetState
-  };
-};
-
 export default {
   useWiFiDetails,
   useWiFiConnection,
   useAdViews,
   useAds,
-  useAdvertiserRegistration,
-  useMerchantRegistration,
-  useAgentRegistration
+  useAdvertiserRegistration
 };

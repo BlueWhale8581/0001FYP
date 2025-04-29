@@ -11,7 +11,7 @@ import Footer from '../components/layout/Footer';
 import PageContainer from '../components/layout/PageContainer';
 
 // Role configurations
-import { roleColors, dashboardTitles, navigationItems, navigationSideBarItems } from '../utils/roleConfig';
+import { dashboardTitles, navigationItems } from '../utils/roleConfig';
 
 const DashboardTemplate = ({ 
   role = 'user',
@@ -26,7 +26,6 @@ const DashboardTemplate = ({
   const navigate = useNavigate();
 
   // Get role-specific configurations
-  const { bgColor, textColor } = roleColors[role];
   const dashboardTitle = dashboardTitles[role];
   const navItems = navigationItems[role];
 
@@ -46,7 +45,6 @@ const DashboardTemplate = ({
       <Header 
         title={dashboardTitle}
         notificationCount={notifications.filter(n => !n.read).length}
-        roleColor={bgColor}
         onMenuClick={() => setSidebarOpen(true)}
         onNotificationClick={() => setNotificationsOpen(true)}
         onProfileClick={() => console.log('Profile clicked')}
@@ -57,12 +55,9 @@ const DashboardTemplate = ({
         onClose={() => setSidebarOpen(false)}
         userName={userName}
         userRole={role}
-        roleColor={bgColor}
-        navigationItems={navigationSideBarItems}
+        navigationItems={navItems}
         activeTabId={activeTab}
         onTabChange={handleTabChange}
-        onSettingsClick={() => console.log('Settings clicked')}
-        onLogoutClick={() => console.log('Logout clicked')}
       />
       
       <NotificationPanel 
@@ -71,7 +66,8 @@ const DashboardTemplate = ({
         notifications={notifications}
       />
       
-      <PageContainer title={pageTitle}>
+      <PageContainer>
+        <h1 className="text-2xl font-bold text-gray-800 mb-4">{pageTitle}</h1>
         {children}
       </PageContainer>
       
@@ -79,13 +75,9 @@ const DashboardTemplate = ({
         navigationItems={navItems}
         activeTabId={activeTab}
         onTabChange={handleTabChange}
-        roleColor={textColor}
       />
       
-      <Footer 
-        version="1.0.2"
-        appName="WiFi Service Portal"
-      />
+      <Footer />
     </div>
   );
 };

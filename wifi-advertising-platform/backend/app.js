@@ -1,4 +1,5 @@
 // backend/app.js
+const dotenv = require('dotenv')
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
@@ -8,7 +9,7 @@ const db = require('./config/database');
 const setupSwagger = require('./swagger');
 
 const app = express();
-
+dotenv.config();
 // ======= 🧼 Middleware =======
 // Allow requests from the frontend
 app.use(cors({
@@ -18,6 +19,7 @@ app.use(cors({
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(express.json());
 
 // ======= 📘 Swagger UI =======
 setupSwagger(app);

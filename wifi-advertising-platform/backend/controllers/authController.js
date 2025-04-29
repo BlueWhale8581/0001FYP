@@ -6,6 +6,9 @@ const NotificationService = require('../services/notificationService');
 const AuditService = require('../services/auditService');
 const jwt = require('jsonwebtoken');
 const config = require('../config/auth');
+const Merchant = require('../models/Merchant');
+const Advertiser = require('../models/Advertiser');
+const Agent = require('../models/Agent');
 
 /**
  * User registration controller
@@ -14,80 +17,124 @@ const config = require('../config/auth');
  */
 exports.register = async (req, res) => {
   try {
-    const { email, username, password, firstName, lastName, phone, role } = req.body;
+    const { username, password, email, first_name, last_name, phone, role } = req.body;
 
-    // Validate role is among allowed values
-    const allowedRoles = ['admin', 'agent', 'advertiser', 'merchant'];
-    if (role && !allowedRoles.includes(role)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Invalid role specified' 
+    // Validate input
+    if (!username) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username is required',
       });
     }
-
-    // Default role if not specified
-    const userRole = role || 'merchant';
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password is required',
+      });
+    }
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required',
+      });
+    }
+    if (!first_name) {
+      return res.status(400).json({
+        success: false,
+        message: 'First name is required',
+      });
+    }
+    if (!last_name) {
+      return res.status(400).json({
+        success: false,
+        message: 'Last name is required',
+      });
+    }
+    if (!phone) {
+      return res.status(400).json({
+        success: false,
+        message: 'Phone number is required',
+      });
+    }
+    if (!role) {
+      return res.status(400).json({
+        success: false,
+        message: 'Role is required',
+      });
+    }
 
     // Check if user already exists
     const existingUser = await UserModel.findByEmail(email) || await UserModel.findByUsername(username);
     if (existingUser) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'User with this email or username already exists' 
+      return res.status(400).json({
+        success: false,
+        message: 'User with this email or username already exists',
       });
     }
 
     // Register user using AuthService
-    const result = await AuthService.register(
-      { email, username, password, first_name: firstName, last_name: lastName, phone },
-      userRole
-    );
-
-    // Create role-specific profile
-    let roleSpecificId = null;
-    if (userRole === 'merchant') {
-      // Create merchant profile
-      // Add merchant-specific logic here
-      console.log('Creating merchant profile...');
-    } else if (userRole === 'agent') {
-      // Create agent profile
-      // Add agent-specific logic here
-      console.log('Creating agent profile...');
-    } else if (userRole === 'advertiser') {
-      // Create advertiser profile
-      // Add advertiser-specific logic here
-      console.log('Creating advertiser profile...');
-    }
-
-    // Log the registration
-    await AuditService.logCreation({
-      userId: result.user.id,
-      entityType: 'user',
-      entityId: result.user.id,
-      values: { username, email, role: userRole },
-      ipAddress: req.ip
-    });
-
-    // Create welcome notification
-    await NotificationService.createNotification(
-      result.user.id,
-      'Welcome to the platform',
-      `Thank you for registering as a ${userRole}. Complete your profile to get started.`,
-      'info'
-    );
+    const user = await AuthService.register({ username, password, email, phone, first_name, last_name, role });
 
     return res.status(201).json({
       success: true,
-      message: 'Registration successful. Please verify your email.',
-      userId: result.user.id,
-      token: result.token
+      message: 'Registration successful',
+      userId: user.id,
     });
   } catch (error) {
     console.error('Registration error:', error);
-    return res.status(500).json({ 
-      success: false, 
+    return res.status(500).json({
+      success: false,
       message: 'Registration failed',
-      error: error.message 
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Register user to a specific role table
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ */
+exports.registerRole = async (req, res) => {
+  try {
+    const { role, userId, roleData } = req.body;
+
+    if (!role || !userId || !roleData) {
+      return res.status(400).json({
+        success: false,
+        message: 'Role, userId, and roleData are required',
+      });
+    }
+
+    let result;
+    switch (role) {
+      case 'merchant':
+        result = await Merchant.create({ id: userId, ...roleData });
+        break;
+      case 'advertiser':
+        result = await Advertiser.create({ id: userId, ...roleData });
+        break;
+      case 'agent':
+        result = await Agent.create({ id: userId, ...roleData });
+        break;
+      default:
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid role',
+        });
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: `${role} registration successful`,
+      data: result,
+    });
+  } catch (error) {
+    console.error('Role registration error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Role registration failed',
+      error: error.message,
     });
   }
 };
@@ -99,62 +146,30 @@ exports.register = async (req, res) => {
  */
 exports.login = async (req, res) => {
   try {
-    const { emailOrUsername, password } = req.body;
-    
-    // Authenticate user
-    const result = await AuthService.login(emailOrUsername, password);
-    
-    if (!result.success) {
-      // Log failed login attempt
-      await AuditService.logLoginAttempt({
-        username: emailOrUsername,
+    const { email, password } = req.body;
+
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({
         success: false,
-        ipAddress: req.ip
-      });
-      
-      return res.status(401).json({ 
-        success: false, 
-        message: result.message || 'Invalid credentials' 
+        message: 'Input Error: Email/Username and password are required',
       });
     }
-    
-    // Update last login timestamp
-    await UserModel.update(result.user.id, { last_login: new Date() });
-    
-    // Log successful login
-    await AuditService.logLoginAttempt({
-      userId: result.user.id,
-      username: emailOrUsername,
-      success: true,
-      ipAddress: req.ip
-    });
-    
-    // Set refresh token in HTTP-only cookie
-    res.cookie('refreshToken', result.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    });
-    
+
+    // Call the login service
+    const { user, token } = await AuthService.login(email, password);
+
+    // Return success response
     return res.status(200).json({
       success: true,
       message: 'Login successful',
-      token: result.token,
-      user: {
-        id: result.user.id,
-        username: result.user.username,
-        email: result.user.email,
-        role: result.user.role,
-        firstName: result.user.first_name,
-        lastName: result.user.last_name
-      }
+      data: { user, token },
     });
   } catch (error) {
     console.error('Login error:', error);
-    return res.status(500).json({ 
-      success: false, 
-      message: 'Login failed',
-      error: error.message 
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Login failed',
     });
   }
 };
@@ -414,9 +429,10 @@ exports.refreshToken = async (req, res) => {
         id: user.id,
         username: user.username,
         email: user.email,
-        role: user.role,
-        firstName: user.first_name,
-        lastName: user.last_name
+        phone: user.phone,
+        role: user.role.toLowerCase(),
+        first_name: user.first_name,
+        last_name: user.last_name
       }
     });
   } catch (error) {
@@ -518,7 +534,7 @@ exports.getProfile = async (req, res) => {
 exports.updateProfile = async (req, res) => {
   try {
     const userId = req.user.id; // From auth middleware
-    const { firstName, lastName, phone } = req.body;
+    const { first_name, last_name, phone } = req.body;
     
     // Get current user data for audit log
     const currentUser = await UserModel.findById(userId);
@@ -532,8 +548,8 @@ exports.updateProfile = async (req, res) => {
     
     // Prepare update data
     const updateData = {
-      first_name: firstName,
-      last_name: lastName,
+      first_name: first_name,
+      last_name: last_name,
       phone: phone
     };
     
@@ -612,9 +628,10 @@ exports.getCurrentUser = async (req, res) => {
         id: user.id,
         username: user.username,
         email: user.email,
-        role: user.role,
-        firstName: user.first_name,
-        lastName: user.last_name,
+        role: user.role.toLowerCase(),
+        phone: user.phone,
+        first_name: user.first_name,
+        last_name: user.last_name,
       },
     });
   } catch (error) {
