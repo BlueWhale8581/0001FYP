@@ -22,8 +22,8 @@ const MerchantsPage = () => {
   if (!isAuthenticated) {
     return (
       <DashboardTemplate
-        role="guest"
-        userName="Guest"
+        role="user"
+        userName="Visitor"
         pageTitle="Manage Merchants"
       >
         <p className="text-center text-gray-500">Please log in to manage merchants.</p>

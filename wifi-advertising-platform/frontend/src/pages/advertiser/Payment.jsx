@@ -24,8 +24,8 @@ const AdvertiserPaymentsPage = () => {
   if (!isAuthenticated) {
     return (
       <DashboardTemplate
-        role="guest"
-        userName="Guest"
+        role="user"
+        userName="Visitor"
         pageTitle="Payments"
       >
         <p className="text-center text-gray-500">Please log in to access payment details.</p>

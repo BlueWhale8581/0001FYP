@@ -12,8 +12,8 @@ const UsersEditPage = () => {
   if (!isAuthenticated) {
     return (
       <DashboardTemplate
-        role="guest"
-        userName="Guest"
+        role="user"
+        userName="Visitor"
         pageTitle="Edit User"
       >
         <p className="text-center text-gray-500">Please log in to edit user details.</p>

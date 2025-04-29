@@ -4,7 +4,7 @@ import axios from 'axios'; // Import axios for API calls
 
 const AboutUsPage = () => {
   const [userRole, setUserRole] = useState('user'); // Default role is "public"
-  const [userName, setUserName] = useState('Visitor'); // Default username is "Guest"
+  const [userName, setUserName] = useState('Visitor'); // Default username is "Visitor"
 
   // Fetch user data based on token
   const fetchUserData = async () => {

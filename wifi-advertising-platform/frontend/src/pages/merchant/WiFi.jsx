@@ -17,8 +17,8 @@ const MerchantWiFiPage = () => {
   if (!isAuthenticated) {
     return (
       <DashboardTemplate
-        role="guest"
-        userName="Guest"
+        role="user"
+        userName="Visitor"
         pageTitle="WiFi"
       >
         <p className="text-center text-gray-500">Please log in to access the WiFi page.</p>
@@ -136,7 +136,7 @@ const MerchantWiFiPage = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <Settings size={18} className="text-green-600 mr-2" />
-                <p className="text-sm">Guest Portal</p>
+                <p className="text-sm">Visitor Portal</p>
               </div>
               <div className="w-12 h-6 bg-green-600 rounded-full flex items-center px-1">
                 <div className="w-4 h-4 bg-white rounded-full ml-auto"></div>

@@ -36,8 +36,8 @@ const EarningsPage = () => {
   if (!isAuthenticated) {
     return (
       <DashboardTemplate
-        role="guest"
-        userName="Guest"
+        role="user"
+        userName="Visitor"
         pageTitle="Earnings"
       >
         <p className="text-center text-gray-500">Please log in to view earnings.</p>

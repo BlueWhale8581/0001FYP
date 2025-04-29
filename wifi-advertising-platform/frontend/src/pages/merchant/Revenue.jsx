@@ -16,8 +16,8 @@ const MerchantRevenuePage = () => {
   if (!isAuthenticated) {
     return (
       <DashboardTemplate
-        role="guest"
-        userName="Guest"
+        role="user"
+        userName="Visitor"
         pageTitle="Revenue"
       >
         <p className="text-center text-gray-500">Please log in to access the revenue page.</p>

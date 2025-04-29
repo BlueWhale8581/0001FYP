@@ -10,7 +10,7 @@ const ScanQRCodePage = () => {
   const [hasPermission, setHasPermission] = useState(null);
   const [result, setResult] = useState(null);
   const [userRole, setUserRole] = useState('user'); // Default role is "public"
-  const [userName, setUserName] = useState('Visitor'); // Default username is "Guest"
+  const [userName, setUserName] = useState('Visitor'); // Default username is "Visitor"
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);

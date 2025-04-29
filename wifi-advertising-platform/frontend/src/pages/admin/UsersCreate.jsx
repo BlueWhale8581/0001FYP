@@ -11,8 +11,8 @@ const UsersCreatePage = () => {
   if (!isAuthenticated) {
     return (
       <DashboardTemplate
-        role="guest"
-        userName="Guest"
+        role="user"
+        userName="Visitor"
         pageTitle="Create User"
       >
         <p className="text-center text-gray-500">Please log in to create a user.</p>

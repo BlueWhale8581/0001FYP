@@ -8,8 +8,8 @@ const QRCodePrintPage = () => {
   if (!isAuthenticated) {
     return (
       <DashboardTemplate
-        role="guest"
-        userName="Guest"
+        role="user"
+        userName="Visitor"
         pageTitle="Print QR Code"
       >
         <p className="text-center text-gray-500">Please log in to print a QR code.</p>

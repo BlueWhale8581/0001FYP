@@ -21,8 +21,8 @@ const TransactionsPage = () => {
   if (!isAuthenticated) {
     return (
       <DashboardTemplate
-        role="guest"
-        userName="Guest"
+        role="user"
+        userName="Visitor"
         pageTitle="Transaction Management"
       >
         <p className="text-center text-gray-500">Please log in to manage transactions.</p>

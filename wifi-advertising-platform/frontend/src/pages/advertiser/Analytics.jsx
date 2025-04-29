@@ -19,8 +19,8 @@ const AdvertiserAnalyticsPage = () => {
   if (!isAuthenticated) {
     return (
       <DashboardTemplate
-        role="guest"
-        userName="Guest"
+        role="user"
+        userName="Visitor"
         pageTitle="Analytics"
       >
         <p className="text-center text-gray-500">Please log in to view analytics.</p>

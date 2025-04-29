@@ -21,8 +21,8 @@ const UsersPage = () => {
   if (!isAuthenticated) {
     return (
       <DashboardTemplate
-        role="guest"
-        userName="Guest"
+        role="user"
+        userName="Visitor"
         pageTitle="Users Management"
       >
         <p className="text-center text-gray-500">Please log in to manage users.</p>

@@ -8,8 +8,8 @@ const QRCodeCreatePage = () => {
   if (!isAuthenticated) {
     return (
       <DashboardTemplate
-        role="guest"
-        userName="Guest"
+        role="user"
+        userName="Visitor"
         pageTitle="Create QR Code"
       >
         <p className="text-center text-gray-500">Please log in to create a QR code.</p>

@@ -22,8 +22,8 @@ const CampaignsPage = () => {
   if (!isAuthenticated) {
     return (
       <DashboardTemplate
-        role="guest"
-        userName="Guest"
+        role="user"
+        userName="Visitor"
         pageTitle="Campaigns"
       >
         <p className="text-center text-gray-500">Please log in to view campaigns.</p>

@@ -13,8 +13,8 @@ const MerchantsEditPage = () => {
   if (!isAuthenticated) {
     return (
       <DashboardTemplate
-        role="guest"
-        userName="Guest"
+        role="user"
+        userName="Visitor"
         pageTitle="Edit Merchant"
       >
         <p className="text-center text-gray-500">Please log in to edit merchant details.</p>

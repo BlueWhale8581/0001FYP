@@ -44,8 +44,8 @@ const MerchantDetailsPage = () => {
   if (!isAuthenticated) {
     return (
       <DashboardTemplate
-        role="guest"
-        userName="Guest"
+        role="user"
+        userName="Visitor"
         pageTitle="Details"
       >
         <p className="text-center text-gray-500">Please log in to access the details page.</p>

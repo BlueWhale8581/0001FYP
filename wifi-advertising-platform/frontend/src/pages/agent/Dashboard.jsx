@@ -36,7 +36,7 @@ const AgentDashboardPage = () => {
     return (
       <DashboardTemplate
         role="agent"
-        userName="Guest"
+        userName="Visitor"
         notifications={[]}
         pageTitle="Agent Dashboard"
       >
