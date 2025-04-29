@@ -40,8 +40,12 @@ class AuthService {
    * Logout user (client-side)
    */
   logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    try {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+    } catch (error) {
+      console.error('Failed to clear user data:', error);
+    }
     return { success: true, message: 'Logout successful' };
   }
 
@@ -92,28 +96,55 @@ class AuthService {
     const response = await this.authAxios.get('/api/auth/me');
     return response.data;
   }
-
-  // Get user from localStorage
-  getStoredUser() {
-    const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
-  }
-
-  // Check if user is authenticated
-  isAuthenticated() {
-    return localStorage.getItem('token') !== null;
-  }
-
-  // Store user and token in localStorage
-  storeUser(user, token) {
-    localStorage.setItem('user', JSON.stringify(user));
-    localStorage.setItem('token', token);
-  }
-
-  // Get token from localStorage
-  getToken() {
-    return localStorage.getItem('token');
-  }
 }
 
-export default new AuthService();
+const storeUser = (user, token) => {
+  try {
+    localStorage.setItem('user', JSON.stringify(user));
+    localStorage.setItem('token', token);
+  } catch (error) {
+    console.error('Failed to store user data:', error);
+  }
+};
+
+const getStoredUser = () => {
+  try {
+    const user = localStorage.getItem('user');
+    return user ? JSON.parse(user) : null; // Return null if user is not found
+  } catch (error) {
+    console.error('Failed to parse stored user:', error);
+    return null; // Return null if parsing fails
+  }
+};
+
+const getToken = () => {
+  try {
+    return localStorage.getItem('token') || null; // Return null if token is not found
+  } catch (error) {
+    console.error('Failed to retrieve token:', error);
+    return null;
+  }
+};
+
+const login = async (email, password) => {
+  const response = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Login failed');
+  }
+
+  const { data } = await response.json();
+  const { user, token } = data;
+  return { user, token };
+};
+
+export default {
+  storeUser,
+  getStoredUser,
+  getToken,
+  login,
+};

@@ -2,17 +2,13 @@ import React, { useState } from 'react';
 import DashboardTemplate from '../../templates/DashboardTemplate';
 import Button from '../../components/common/Button';
 import { useLogin } from '../../hooks/useAuth';
-import { useRoleNavigation } from '../../hooks/useRoleNavigation';
 
 const LoginPage = () => {
-  const { login, loading, error, isAuthenticated } = useLogin();
+  const { login, loading, error } = useLogin();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
-
-  // Automatically handle navigation based on authentication state
-  useRoleNavigation();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -28,6 +24,7 @@ const LoginPage = () => {
       email: formData.email,
       password: formData.password
     });
+    console.log('Login attempt:', formData);
   };
 
   return (
@@ -38,7 +35,6 @@ const LoginPage = () => {
     >
       <div className="max-w-7xl mx-auto bg-white p-6 rounded-lg shadow-md" style={{ width: '70%' }}>
         <h2 className="text-xl font-bold text-center mb-4">Log In</h2>
-        {isAuthenticated && <p className="text-green-600 text-center">Login successful! Redirecting...</p>}
         {error && <p className="text-red-600 text-center">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

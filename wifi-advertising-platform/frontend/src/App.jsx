@@ -10,16 +10,16 @@ import AboutUsPage from './pages/user/AboutUs';
 import AdminDashboardPage from './pages/admin/Dashboard';
 import AdminSettingsPage from './pages/admin/Settings';
 import AdminUsersPage from './pages/admin/Users';
-import AdminCreateUserPage from './pages/admin/CreateUser';
-import AdminEditUserPage from './pages/admin/EditUser';
+import AdminCreateUserPage from './pages/admin/UsersCreate';
+import AdminEditUserPage from './pages/admin/UsersEdit';
 import AdminTransactionsPage from './pages/admin/Transactions';
 import AdminProfilePage from './pages/admin/Profile';
 
 // Agent Pages
 import AgentDashboardPage from './pages/agent/Dashboard';
 import AgentMerchantsPage from './pages/agent/Merchants';
-import AgentCreateMerchantPage from './pages/agent/CreateMerchant';
-import AgentEditMerchantPage from './pages/agent/EditMerchant';
+import AgentCreateMerchantPage from './pages/agent/MerchantsCreate';
+import AgentEditMerchantPage from './pages/agent/MerchantsEdit';
 import AgentQRCodePage from './pages/agent/QRCode';
 import AgentEarningsPage from './pages/agent/Earning';
 import AgentProfilePage from './pages/agent/Profile';
@@ -44,7 +44,6 @@ import MerchantDetailsPage from './pages/merchant/Details';
 
 // Public Pages
 import UserDashboardPage from './pages/public/Dashboard';
-import RegisterOrLoginPage from './pages/public/RegisterOrLogin';
 import RegisterPage from './pages/public/RegisterAccount';
 import LoginPage from './pages/public/Login';
 
@@ -94,7 +93,6 @@ const App = () => {
 
         {/* Public Routes */}
         <Route path="/" element={<UserDashboardPage />} />
-        <Route path="/register-or-login" element={<RegisterOrLoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
       </Routes>

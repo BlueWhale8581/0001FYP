@@ -41,6 +41,15 @@ class AuthService {
         role: userData.role,
       });
 
+      // If the role is agent, create an Agent entry
+      if (userData.role === 'agent') {
+        await Agent.create({
+          user_id: user.id,
+          commission_rate: 0.5,
+          territory: 'Malaysia',
+        });
+      }
+
       // Remove the password from the returned user object
       const userResponse = { ...user };
       delete userResponse.password;

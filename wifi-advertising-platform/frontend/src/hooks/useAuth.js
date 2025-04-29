@@ -43,8 +43,8 @@ export const useLogin = () => {
       setLoading(true);
       setError(null);
       const { user, token } = await authService.login(email, password);
+      authService.storeUser(user, token); // Store user and token
       setUser(user);
-      authService.storeUser(user, token);
       setIsAuthenticated(true); // Update authentication state
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Login failed');
@@ -53,7 +53,13 @@ export const useLogin = () => {
     }
   };
 
-  return { login, loading, error, user, isAuthenticated };
+  const logout = () => {
+    authService.logout();
+    setUser(null);
+    setIsAuthenticated(false);
+  };
+
+  return { login, logout, loading, error, user, isAuthenticated };
 };
 
 /**
@@ -209,69 +215,35 @@ export const useAuthVerification = () => {
  * Main auth hook that combines all the individual auth hooks
  */
 export const useAuth = () => {
-  const { register, loading: registerLoading, error: registerError, success: registerSuccess } = useRegister();
   const { 
-    user, 
+    user: loginUser, 
     loading: loginLoading, 
     error: loginError, 
     isAuthenticated, 
     login, 
     logout 
   } = useLogin();
-  const { 
-    forgotPassword, 
-    resetPassword, 
-    loading: passwordResetLoading, 
-    error: passwordResetError,
-    success: passwordResetSuccess 
-  } = usePasswordReset();
   const {
     user: userProfile,
     loading: userProfileLoading,
     error: userProfileError,
-    fetchCurrentUser,
-    changePassword
+    fetchCurrentUser
   } = useUserProfile();
-  const {
-    verified,
-    loading: verificationLoading,
-    error: verificationError,
-    verifyAuth
-  } = useAuthVerification();
+
+  // Use the user from login if available, otherwise fallback to the user profile
+  const user = loginUser || userProfile;
 
   // Derive overall loading state
-  const loading = registerLoading || loginLoading || passwordResetLoading || userProfileLoading || verificationLoading;
+  const loading = loginLoading || userProfileLoading;
 
   return {
-    // Registration
-    register,
-    registerError,
-    registerSuccess,
-    
-    // Login/Logout
     login,
     logout,
     loginError,
     isAuthenticated,
-    
-    // Password management
-    forgotPassword,
-    resetPassword,
-    passwordResetError,
-    passwordResetSuccess,
-    changePassword,
-    
-    // User data
-    user: user || userProfile,
+    user,
     fetchCurrentUser,
     userProfileError,
-    
-    // Verification
-    verified,
-    verifyAuth,
-    verificationError,
-    
-    // Overall state
     loading
   };
 };
