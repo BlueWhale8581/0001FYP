@@ -1,4 +1,5 @@
 import React from 'react';
+import { useAuth } from '../../hooks/useAuth';
 import { CreditCard, DollarSign, TrendingUp, Calendar, Download, Filter, ArrowUp, ArrowDown } from 'lucide-react';
 
 // Template
@@ -10,12 +11,26 @@ import Button from '../../components/common/Button';
 import ChartContainer from '../../components/common/ChartContainer';
 
 const MerchantRevenuePage = () => {
+  const { isAuthenticated, user } = useAuth();
+
+  if (!isAuthenticated) {
+    return (
+      <DashboardTemplate
+        role="guest"
+        userName="Guest"
+        pageTitle="Revenue"
+      >
+        <p className="text-center text-gray-500">Please log in to access the revenue page.</p>
+      </DashboardTemplate>
+    );
+  }
+
   const placeholderChart = <div className="h-48 bg-gray-100 rounded flex items-center justify-center">Revenue Chart Placeholder</div>;
 
   return (
     <DashboardTemplate
       role="merchant"
-      userName="Coffee Shop Owner"
+      userName={user?.name || "Merchant"}
       notifications={[
         { id: 1, type: 'success', message: 'Payment received: $126.50', time: '30m ago', read: false },
         { id: 2, type: 'info', message: 'Monthly revenue report available', time: '2d ago', read: true },

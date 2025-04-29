@@ -17,7 +17,7 @@ import useAgent from '../../hooks/useAgent';
 import useAuth from '../../hooks/useAuth';
 
 const EarningsPage = () => {
-  const { user, isAuthenticated, fetchCurrentUser } = useAuth();
+  const { isAuthenticated, user, fetchCurrentUser } = useAuth();
   const [filterPeriod, setFilterPeriod] = useState('month');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -32,6 +32,18 @@ const EarningsPage = () => {
       fetchCurrentUser();
     }
   }, [isAuthenticated, user, fetchCurrentUser]);
+
+  if (!isAuthenticated) {
+    return (
+      <DashboardTemplate
+        role="guest"
+        userName="Guest"
+        pageTitle="Earnings"
+      >
+        <p className="text-center text-gray-500">Please log in to view earnings.</p>
+      </DashboardTemplate>
+    );
+  }
 
   // Filter transactions based on selected period
   const handleFilterChange = (period) => {
@@ -59,19 +71,6 @@ const EarningsPage = () => {
 
   // Check if any data is loading
   const dataLoading = earningsLoading || transactionsLoading || notificationsLoading || isLoading;
-
-  if (!isAuthenticated) {
-    return (
-      <DashboardTemplate
-        role="agent"
-        userName="Guest"
-        notifications={[]}
-        pageTitle="Earnings"
-      >
-        <p className="text-center text-gray-500">Please log in to access the earnings page.</p>
-      </DashboardTemplate>
-    );
-  }
 
   if (dataLoading && (!earnings || !transactions)) {
     return (

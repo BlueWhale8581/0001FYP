@@ -1,9 +1,24 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import useAuth from '../../hooks/useAuth';
 import DashboardTemplate from '../../templates/DashboardTemplate';
 import Button from '../../components/common/Button';
 
 const AdvertiserDetailsPage = () => {
+  const { isAuthenticated, user } = useAuth();
+
+  if (!isAuthenticated) {
+    return (
+      <DashboardTemplate
+        role="guest"
+        userName="Guest"
+        pageTitle="Complete Your Profile"
+      >
+        <p className="text-center text-gray-500">Please log in to complete your profile.</p>
+      </DashboardTemplate>
+    );
+  }
+
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     companyName: '',

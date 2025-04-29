@@ -14,7 +14,7 @@ import { useProfile } from '../../hooks/useAgent';
 import { useNotifications } from '../../hooks/useAgent';
 
 const ProfilePage = () => {
-  const { user: authUser, changePassword } = useAuth();
+  const { isAuthenticated, user: authUser, changePassword } = useAuth();
   const { profile, loading: profileLoading, error: profileError, updateProfile } = useProfile();
   const { notifications } = useNotifications();
   
@@ -27,6 +27,18 @@ const ProfilePage = () => {
   });
   const [passwordError, setPasswordError] = useState(null);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+  if (!isAuthenticated) {
+    return (
+      <DashboardTemplate
+        role="guest"
+        userName="Guest"
+        pageTitle="My Profile"
+      >
+        <p className="text-center text-gray-500">Please log in to access your profile.</p>
+      </DashboardTemplate>
+    );
+  }
 
   // Initialize updatedProfile when profile data loads
   useEffect(() => {

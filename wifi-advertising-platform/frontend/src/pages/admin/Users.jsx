@@ -13,8 +13,23 @@ import EmptyState from '../../components/common/EmptyState';
 
 // Hooks
 import { useUsers, useDashboardStats } from '../../hooks/useAdmin';
+import useAuth from '../../hooks/useAuth';
 
 const UsersPage = () => {
+  const { isAuthenticated, user } = useAuth();
+
+  if (!isAuthenticated) {
+    return (
+      <DashboardTemplate
+        role="guest"
+        userName="Guest"
+        pageTitle="Users Management"
+      >
+        <p className="text-center text-gray-500">Please log in to manage users.</p>
+      </DashboardTemplate>
+    );
+  }
+
   const [searchTerm, setSearchTerm] = useState('');
   
   // Fetch users using the hook
@@ -52,11 +67,13 @@ const UsersPage = () => {
   const handleAddUser = () => {
     // Implementation for adding a new user
     console.log('Add user clicked');
+    navigate('/admin/user/create');
   };
 
   const handleEditUser = (userId) => {
     // Implementation for editing a user
     console.log('Edit user', userId);
+    navigate(`/admin/user/edit/${userId}`);
   };
 
   const handleDeleteUser = async (userId) => {

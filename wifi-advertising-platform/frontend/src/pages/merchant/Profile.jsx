@@ -10,8 +10,10 @@ import Button from '../../components/common/Button';
 
 // Hooks
 import { useProfile } from '../../hooks/useUser';
+import { useAuth } from '../../hooks/useAuth';
 
 const ProfilePage = () => {
+  const { isAuthenticated, user } = useAuth();
   const { profile, loading, error, fetchProfile, updateProfile, changePassword } = useProfile();
   const [editMode, setEditMode] = useState(false);
   const [updatedProfile, setUpdatedProfile] = useState({});
@@ -69,6 +71,18 @@ const ProfilePage = () => {
     }
     setEditMode(!editMode);
   };
+
+  if (!isAuthenticated) {
+    return (
+      <DashboardTemplate
+        role="guest"
+        userName="Guest"
+        pageTitle="Profile"
+      >
+        <p className="text-center text-gray-500">Please log in to access your profile.</p>
+      </DashboardTemplate>
+    );
+  }
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error}</p>;

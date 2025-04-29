@@ -13,8 +13,23 @@ import Button from '../../components/common/Button';
 
 // Hooks
 import { useTransactions, useRevenueOverview } from '../../hooks/useAdmin';
+import useAuth from '../../hooks/useAuth';
 
 const TransactionsPage = () => {
+  const { isAuthenticated, user } = useAuth();
+
+  if (!isAuthenticated) {
+    return (
+      <DashboardTemplate
+        role="guest"
+        userName="Guest"
+        pageTitle="Transaction Management"
+      >
+        <p className="text-center text-gray-500">Please log in to manage transactions.</p>
+      </DashboardTemplate>
+    );
+  }
+
   const [searchTerm, setSearchTerm] = useState('');
   const [queryParams, setQueryParams] = useState({});
   

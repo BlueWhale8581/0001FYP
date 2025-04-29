@@ -1,5 +1,6 @@
 import React from 'react';
 import { Wifi, CreditCard, Store, Users } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
 
 // Template
 import DashboardTemplate from '../../templates/DashboardTemplate';
@@ -13,6 +14,20 @@ import ActivityFeed from '../../components/dashboard/ActivityFeed';
 import QuickActions from '../../components/dashboard/QuickActions'; // Adjust the path if necessary
 
 const MerchantDashboardPage = () => {
+  const { isAuthenticated, user } = useAuth();
+
+  if (!isAuthenticated) {
+    return (
+      <DashboardTemplate
+        role="guest"
+        userName="Guest"
+        pageTitle="Merchant Dashboard"
+      >
+        <p className="text-center text-gray-500">Please log in to access the dashboard.</p>
+      </DashboardTemplate>
+    );
+  }
+
   const placeholderChart = <div className="h-48 bg-gray-100 rounded flex items-center justify-center">Chart Placeholder</div>;
   
   const quickActions = [
@@ -24,7 +39,7 @@ const MerchantDashboardPage = () => {
   return (
     <DashboardTemplate
       role="merchant"
-      userName="Coffee Shop Owner"
+      userName={user?.name || "Merchant"}
       notifications={[
         { id: 1, type: 'info', message: 'New ad campaign available!', time: '15m ago', read: false },
         { id: 2, type: 'success', message: 'WiFi usage increased by 15%.', time: '3h ago', read: true },

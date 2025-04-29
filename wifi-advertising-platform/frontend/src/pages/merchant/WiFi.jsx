@@ -1,5 +1,6 @@
 import React from 'react';
 import { Wifi, WifiOff, Settings, Users, Clock } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
 
 // Template
 import DashboardTemplate from '../../templates/DashboardTemplate';
@@ -11,12 +12,26 @@ import Button from '../../components/common/Button';
 import ChartContainer from '../../components/common/ChartContainer';
 
 const MerchantWiFiPage = () => {
+  const { isAuthenticated, user } = useAuth();
+
+  if (!isAuthenticated) {
+    return (
+      <DashboardTemplate
+        role="guest"
+        userName="Guest"
+        pageTitle="WiFi"
+      >
+        <p className="text-center text-gray-500">Please log in to access the WiFi page.</p>
+      </DashboardTemplate>
+    );
+  }
+
   const placeholderChart = <div className="h-48 bg-gray-100 rounded flex items-center justify-center">Usage Chart Placeholder</div>;
 
   return (
     <DashboardTemplate
       role="merchant"
-      userName="Coffee Shop Owner"
+      userName={user?.name || "Merchant"}
       notifications={[
         { id: 1, type: 'warning', message: 'WiFi usage approaching limit', time: '15m ago', read: false },
         { id: 2, type: 'info', message: 'New WiFi features available', time: '1d ago', read: true },

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 import DashboardTemplate from '../../templates/DashboardTemplate';
 import Button from '../../components/common/Button';
 
 const MerchantDetailsPage = () => {
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     business_name: '',
@@ -39,8 +41,20 @@ const MerchantDetailsPage = () => {
     }
   };
 
+  if (!isAuthenticated) {
+    return (
+      <DashboardTemplate
+        role="guest"
+        userName="Guest"
+        pageTitle="Details"
+      >
+        <p className="text-center text-gray-500">Please log in to access the details page.</p>
+      </DashboardTemplate>
+    );
+  }
+
   return (
-    <DashboardTemplate role="merchant" userName="Merchant" pageTitle="Complete Your Profile">
+    <DashboardTemplate role="merchant" userName={user?.name || "Merchant"} pageTitle="Complete Your Profile">
       <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
         <h2 className="text-xl font-bold text-center mb-4">Merchant Details</h2>
         {error && <p className="text-red-600 text-center">{error}</p>}

@@ -16,11 +16,23 @@ import useAuth from '../../hooks/useAuth';
 import { useQRCodes, useNotifications } from '../../hooks/useAgent';
 
 const QRCodesPage = () => {
+  const { isAuthenticated, user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const { user } = useAuth();
   const { qrCodes, loading, error, fetchAllQRCodes, downloadQRCode } = useQRCodes();
   const { notifications } = useNotifications();
   
+  if (!isAuthenticated) {
+    return (
+      <DashboardTemplate
+        role="guest"
+        userName="Guest"
+        pageTitle="QR Codes"
+      >
+        <p className="text-center text-gray-500">Please log in to manage QR codes.</p>
+      </DashboardTemplate>
+    );
+  }
+
   // Filter QR codes based on search query
   const filteredQRCodes = qrCodes.filter(qrCode => 
     qrCode.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -50,10 +62,6 @@ const QRCodesPage = () => {
 
   const handlePrint = (qrCodeId) => {
     console.log('Print QR code:', qrCodeId);
-  };
-
-  const handleShare = (qrCodeId) => {
-    console.log('Share QR code:', qrCodeId);
   };
 
   if (loading) {

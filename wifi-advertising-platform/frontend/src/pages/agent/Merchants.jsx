@@ -17,8 +17,21 @@ import { useMerchants } from '../../hooks/useAgent';
 import { useNotifications } from '../../hooks/useAgent';
 
 const MerchantsPage = () => {
+  const { isAuthenticated, user } = useAuth();
+
+  if (!isAuthenticated) {
+    return (
+      <DashboardTemplate
+        role="guest"
+        userName="Guest"
+        pageTitle="Manage Merchants"
+      >
+        <p className="text-center text-gray-500">Please log in to manage merchants.</p>
+      </DashboardTemplate>
+    );
+  }
+
   const [searchQuery, setSearchQuery] = useState('');
-  const { user } = useAuth();
   const { merchants, loading, error, fetchMerchants, registerMerchant } = useMerchants();
   const { notifications } = useNotifications();
 

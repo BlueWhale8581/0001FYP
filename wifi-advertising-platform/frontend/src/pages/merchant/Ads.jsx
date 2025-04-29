@@ -1,5 +1,6 @@
 import React from 'react';
 import { PieChart, Award, Target, Zap, PlayCircle, Image, CheckCircle, AlertCircle } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
 
 // Template
 import DashboardTemplate from '../../templates/DashboardTemplate';
@@ -11,12 +12,26 @@ import Button from '../../components/common/Button';
 import ChartContainer from '../../components/common/ChartContainer';
 
 const MerchantAdsPage = () => {
+  const { isAuthenticated, user } = useAuth();
+
+  if (!isAuthenticated) {
+    return (
+      <DashboardTemplate
+        role="guest"
+        userName="Guest"
+        pageTitle="Ads"
+      >
+        <p className="text-center text-gray-500">Please log in to access the ads page.</p>
+      </DashboardTemplate>
+    );
+  }
+
   const placeholderChart = <div className="h-48 bg-gray-100 rounded flex items-center justify-center">Performance Chart Placeholder</div>;
 
   return (
     <DashboardTemplate
       role="merchant"
-      userName="Coffee Shop Owner"
+      userName={user?.name || "Merchant"}
       notifications={[
         { id: 1, type: 'success', message: 'New ad campaign created!', time: '2h ago', read: false },
         { id: 2, type: 'info', message: 'Your monthly ad report is ready', time: '1d ago', read: true },

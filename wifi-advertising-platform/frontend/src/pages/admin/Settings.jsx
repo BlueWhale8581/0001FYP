@@ -10,8 +10,23 @@ import Button from '../../components/common/Button';
 
 // Custom hooks
 import { useSystemSettings, useNotifications } from '../../hooks/useAdmin';
+import useAuth from '../../hooks/useAuth';
 
 const SettingsPage = () => {
+  const { isAuthenticated, user } = useAuth();
+
+  if (!isAuthenticated) {
+    return (
+      <DashboardTemplate
+        role="guest"
+        userName="Guest"
+        pageTitle="System Settings"
+      >
+        <p className="text-center text-gray-500">Please log in to access system settings.</p>
+      </DashboardTemplate>
+    );
+  }
+
   // Form states
   const [serverSettings, setServerSettings] = useState({
     maintenanceMode: false,

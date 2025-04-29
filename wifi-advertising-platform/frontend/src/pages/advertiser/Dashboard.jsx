@@ -1,4 +1,5 @@
 import React from 'react';
+import { useAuth } from '../../hooks/useAuth';
 import { Award, PieChart, CreditCard, BarChart } from 'lucide-react';
 
 // Template
@@ -10,10 +11,24 @@ import StatusIndicator from '../../components/common/StatusIndicator';
 import ChartContainer from '../../components/common/ChartContainer';
 
 const AdvertiserDashboardPage = () => {
+  const { isAuthenticated, user } = useAuth();
+
+  if (!isAuthenticated) {
+    return (
+      <DashboardTemplate
+        role="guest"
+        userName="Guest"
+        pageTitle="Advertiser Dashboard"
+      >
+        <p className="text-center text-gray-500">Please log in to access the dashboard.</p>
+      </DashboardTemplate>
+    );
+  }
+
   return (
     <DashboardTemplate
       role="advertiser"
-      userName="Mark Johnson"
+      userName={user?.name || "Advertiser"}
       notifications={[
         { id: 1, type: 'info', message: 'New campaign performance report available', time: '2h ago', read: false },
         { id: 2, type: 'success', message: 'Payment processed successfully', time: '1d ago', read: true },
