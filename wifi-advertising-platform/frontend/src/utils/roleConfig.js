@@ -47,10 +47,10 @@ export const navigationItems = {
   ],
   agent: [
     { id: 'dashboard', icon: <Home size={20} />, label: 'Dashboard' , route:"/agent"},
-    { id: 'merchants', icon: <Users size={20} />, label: 'Merchants' , route:"/merchant/merchants"},
-    { id: 'qrcodes', icon: <FileText size={20} />, label: 'QR Codes' , route:"/merchant/QRcode"},
-    { id: 'earnings', icon: <CreditCard size={20} />, label: 'Earnings' , route:"/merchant/earning"},
-    { id: 'profile', icon: <User size={20} />, label: 'Profile' , route:"/merchant/profile"},
+    { id: 'merchants', icon: <Users size={20} />, label: 'Merchants' , route:"/agent/merchants"},
+    { id: 'qrcodes', icon: <FileText size={20} />, label: 'QR Codes' , route:"/agent/QRcode"},
+    { id: 'earnings', icon: <CreditCard size={20} />, label: 'Earnings' , route:"/agent/earning"},
+    { id: 'profile', icon: <User size={20} />, label: 'Profile' , route:"/agent/profile"},
   ],
   advertiser: [
     { id: 'dashboard', icon: <Home size={20} />, label: 'Dashboard' , route:"/advertiser"},
