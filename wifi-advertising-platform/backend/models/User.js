@@ -167,6 +167,21 @@ class User {
     }
   }
 
+  // Update user last login
+  static async updateLogin(id) {
+    try {
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('id', sql.Int, id)
+        .query('UPDATE users SET last_login = GETDATE() WHERE id = @id');
+      return result.rowsAffected[0] > 0;
+    } catch (error) {
+      console.error('Error in User.updateLogin:', error);
+      throw error;
+    }
+  }
+
   // Update password
   static async updatePassword(id, newPassword) {
     try {

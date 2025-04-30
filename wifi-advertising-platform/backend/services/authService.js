@@ -70,15 +70,10 @@ class AuthService {
     try {
       // Find user by email
       const user = await User.findByEmail(email);
-      if (!user) {
-        throw new Error('Invalid email or password');
-      }
-
+      if (!user) {throw new Error('Invalid email or password');}
       // Verify password
       const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-        throw new Error('Invalid email or password');
-      }
+      if (!isMatch) {throw new Error('Invalid email or password');}
 
       // Generate JWT token
       const token = jwt.sign(
@@ -89,7 +84,6 @@ class AuthService {
 
       // Remove sensitive data before returning
       delete user.password;
-
       return { user, token };
     } catch (error) {
       throw error;
@@ -206,4 +200,24 @@ class AuthService {
   }
 }
 
-module.exports = new AuthService();
+// Change the export to expose all methods directly
+module.exports = {
+  register: async (userData) => {
+    return await new AuthService().register(userData);
+  },
+  login: async (email, password) => {
+    return await new AuthService().login(email, password);
+  },
+  verifyToken: async (token) => {
+    return await new AuthService().verifyToken(token);
+  },
+  requestPasswordReset: async (email) => {
+    return await new AuthService().requestPasswordReset(email);
+  },
+  resetPassword: async (token, newPassword) => {
+    return await new AuthService().resetPassword(token, newPassword);
+  },
+  changePassword: async (userId, currentPassword, newPassword) => {
+    return await new AuthService().changePassword(userId, currentPassword, newPassword);
+  }
+};

@@ -7,19 +7,34 @@ export const useRoleNavigation = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log('useRoleNavigation:', { user, isAuthenticated, loading });
+    console.log('Role Navigation State:', {
+      user,
+      isAuthenticated,
+      loading,
+      currentPath: window.location.pathname
+    });
 
-    if (loading) return; // Wait until auth is checked
+    if (loading) {
+      console.log('Loading auth state...');
+      return;
+    }
 
     if (!isAuthenticated) {
-      navigate('/login', { replace: true }); // Redirect to login if not authenticated
+      console.log('Not authenticated, redirecting to login');
+      if (window.location.pathname !== '/login') {
+        navigate('/login', { replace: true });
+      }
       return;
     }
 
     if (user?.role) {
       const rolePath = `/${user.role.toLowerCase()}`;
-      console.log('Navigating to:', rolePath);
-      navigate(rolePath, { replace: true }); // Redirect to role-specific dashboard
+      console.log('User authenticated, navigating to:', rolePath);
+      if (window.location.pathname !== rolePath) {
+        navigate(rolePath, { replace: true });
+      }
+    } else {
+      console.log('No role found for user:', user);
     }
   }, [isAuthenticated, user, loading, navigate]);
 

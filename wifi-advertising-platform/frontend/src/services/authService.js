@@ -3,16 +3,42 @@ import axios from 'axios';
 
 class AuthService {
   async login(email, password) {
-    console.log('Sending login request:', { email, password });
-    const response = await axios.post('/api/auth/login', { email, password });
-    console.log('Login response:', response.data);
-    return response.data.data;
+    try {
+      const response = await axios.post('/api/auth/login', { email, password });
+      const { data } = response.data;
+      
+      if (data.user && data.token) {
+        // Store in localStorage
+        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('token', data.token);
+        
+        // Set default auth header for future requests
+        axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
+        
+        return data;
+      }
+      throw new Error('Invalid response format');
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
+  }
+
+  isAuthenticated() {
+    const token = this.getToken();
+    const user = this.getStoredUser();
+    return !!(token && user);
   }
 
   // Create axios instance for auth requests
   authAxios = axios.create();
 
   constructor() {
+    const token = this.getToken();
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    }
+    
     // Add auth token to requests
     this.authAxios.interceptors.request.use(
       (config) => {
@@ -24,16 +50,6 @@ class AuthService {
       },
       (error) => Promise.reject(error)
     );
-  }
-
-  /**
-   * Register a new user
-   * @param {Object} userData - User registration data
-   * @returns {Promise<Object>} - Registration response
-   */
-  async register(userData) {
-    const response = await axios.post('/api/auth/register', userData);
-    return response.data;
   }
 
   /**
@@ -96,55 +112,35 @@ class AuthService {
     const response = await this.authAxios.get('/api/auth/me');
     return response.data;
   }
+
+  /**
+   * Update user profile
+   * @param {Object} profileData - Profile data to update
+   * @returns {Promise<Object>} - Profile update response
+   */
+  async updateProfile(profileData) {
+    try {
+      const response = await this.authAxios.put('/api/auth/profile', profileData);
+      return response.data;
+    } catch (error) {
+      console.error('Update profile error:', error);
+      throw error;
+    }
+  }
+
+  getStoredUser() {
+    try {
+      return JSON.parse(localStorage.getItem('user'));
+    } catch (error) {
+      return null;
+    }
+  }
+
+  getToken() {
+    return localStorage.getItem('token');
+  }
 }
 
-const storeUser = (user, token) => {
-  try {
-    localStorage.setItem('user', JSON.stringify(user));
-    localStorage.setItem('token', token);
-  } catch (error) {
-    console.error('Failed to store user data:', error);
-  }
-};
-
-const getStoredUser = () => {
-  try {
-    const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null; // Return null if user is not found
-  } catch (error) {
-    console.error('Failed to parse stored user:', error);
-    return null; // Return null if parsing fails
-  }
-};
-
-const getToken = () => {
-  try {
-    return localStorage.getItem('token') || null; // Return null if token is not found
-  } catch (error) {
-    console.error('Failed to retrieve token:', error);
-    return null;
-  }
-};
-
-const login = async (email, password) => {
-  const response = await fetch('/api/auth/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  });
-
-  if (!response.ok) {
-    throw new Error('Login failed');
-  }
-
-  const { data } = await response.json();
-  const { user, token } = data;
-  return { user, token };
-};
-
-export default {
-  storeUser,
-  getStoredUser,
-  getToken,
-  login,
-};
+// Export a single instance
+const authService = new AuthService();
+export default authService;

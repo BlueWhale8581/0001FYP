@@ -67,17 +67,18 @@ const UsersPage = () => {
   const handleAddUser = () => {
     // Implementation for adding a new user
     console.log('Add user clicked');
-    navigate('/admin/user/create');
+    navigate('/admin/createuser');
   };
 
   const handleEditUser = (userId) => {
     // Implementation for editing a user
     console.log('Edit user', userId);
-    navigate(`/admin/user/edit/${userId}`);
+    navigate(`/admin/edituser/${userId}`);
   };
 
   const handleDeleteUser = async (userId) => {
     await deleteUser(userId);
+    navigate('/admin/users');
   };
 
   const handleChangeStatus = async (userId, newStatus) => {

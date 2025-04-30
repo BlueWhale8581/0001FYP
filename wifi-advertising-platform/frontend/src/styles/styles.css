@@ -3,6 +3,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Set default text color */
+@layer base {
+  html {
+    @apply text-black;
+  }
+}
+
 /* Main container styles */
 .app-container {
   @apply min-h-screen flex flex-col w-full bg-gray-100;
@@ -257,7 +264,7 @@
 
 /* Card styles */
 .card {
-  @apply bg-white rounded-lg shadow-sm p-4;
+  @apply bg-white rounded-lg shadow-sm p-4 text-black;
 }
 
 .card-header {
@@ -265,7 +272,7 @@
 }
 
 .card-title {
-  @apply font-medium text-gray-700;
+  @apply font-medium text-gray-800;
 }
 
 .card-action {

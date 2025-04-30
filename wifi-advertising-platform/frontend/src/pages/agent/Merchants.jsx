@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Users, Store, Map, Phone, Mail, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 // Template
 import DashboardTemplate from '../../templates/DashboardTemplate';
@@ -18,6 +19,7 @@ import { useNotifications } from '../../hooks/useAgent';
 
 const MerchantsPage = () => {
   const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
 
   if (!isAuthenticated) {
     return (
@@ -47,13 +49,17 @@ const MerchantsPage = () => {
   const inactiveMerchants = merchants.filter(m => m.status === 'Inactive').length;
 
   const handleSearch = () => {
-    console.log('Searching for:', searchQuery);
-    // You could also trigger a more specific API search here if needed
+    fetchMerchants({
+      search: searchQuery
+    });
   };
 
   const handleAddMerchant = () => {
-    // You would implement navigation to registration form or modal here
-    console.log('Add merchant clicked');
+    navigate('/agent/createmerchant');
+  };
+
+  const handleEditMerchant = (merchantId) => {
+    navigate(`/agent/editmerchant/${merchantId}`);
   };
 
   if (loading) {
@@ -155,7 +161,8 @@ const MerchantsPage = () => {
             <Card key={merchant.id} className="hover:shadow-md transition-shadow">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                 <div className="flex items-start md:w-2/5">
-                  <div className="p-3 rounded-full bg-orange-100 mr-3">
+                  <div className="p-3 rounded-full bg-orange-100 mr-3 cursor-pointer"
+                       onClick={() => handleEditMerchant(merchant.id)}>
                     <Store size={24} className="text-orange-600" />
                   </div>
                   <div>

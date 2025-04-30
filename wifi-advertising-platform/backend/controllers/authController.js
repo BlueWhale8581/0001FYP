@@ -159,6 +159,9 @@ exports.login = async (req, res) => {
     // Call the login service
     const { user, token } = await AuthService.login(email, password);
 
+    // Update last login time
+    await UserModel.updateLogin(user.id);
+
     // Return success response
     return res.status(200).json({
       success: true,

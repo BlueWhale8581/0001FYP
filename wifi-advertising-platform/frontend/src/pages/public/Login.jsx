@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardTemplate from '../../templates/DashboardTemplate';
 import Button from '../../components/common/Button';
 import { useLogin } from '../../hooks/useAuth';
 
 const LoginPage = () => {
   const { login, loading, error } = useLogin();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -20,11 +22,21 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await login({
+    const result = await login({
       email: formData.email,
       password: formData.password
     });
-    console.log('Login attempt:', formData);
+
+    if (result.success) {
+      console.log('Login successful, navigating...');
+      // Navigate to the appropriate dashboard based on user role
+      const user = result.user;
+      if (user && user.role) {
+        navigate(`/${user.role.toLowerCase()}`, { replace: true });
+      }
+    } else {
+      console.error('Login failed:', result.error);
+    }
   };
 
   return (

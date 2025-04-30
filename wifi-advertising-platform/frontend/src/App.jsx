@@ -63,8 +63,8 @@ const App = () => {
         {/* Agent Routes */}
         <Route path="/agent" element={<AgentDashboardPage />} />
         <Route path="/agent/merchants" element={<AgentMerchantsPage />} />
-        <Route path="/agent/create-merchant" element={<AgentCreateMerchantPage />} />
-        <Route path="/agent/edit-merchant/:id" element={<AgentEditMerchantPage />} />
+        <Route path="/agent/createmerchant" element={<AgentCreateMerchantPage />} />
+        <Route path="/agent/editmerchant/:id" element={<AgentEditMerchantPage />} />
         <Route path="/agent/qrcode" element={<AgentQRCodePage />} />
         <Route path="/agent/earnings" element={<AgentEarningsPage />} />
         <Route path="/agent/profile" element={<AgentProfilePage />} />

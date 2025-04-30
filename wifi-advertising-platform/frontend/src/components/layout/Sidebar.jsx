@@ -1,6 +1,7 @@
 // components/layout/Sidebar.jsx
 import React from 'react';
 import { User, Settings, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Sidebar = ({ 
   isOpen, 
@@ -11,9 +12,18 @@ const Sidebar = ({
   navigationItems = [],
   activeTabId = '',
   onTabChange,
-  onSettingsClick,
   onLogoutClick
 }) => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.clear();
+    if (onLogoutClick) {
+      onLogoutClick();
+    }
+    navigate('/');
+  };
+
   if (!isOpen) return null;
   
   return (
@@ -51,15 +61,8 @@ const Sidebar = ({
           
           <h4 className="text-xs uppercase text-gray-500 font-bold mb-2">Account</h4>
           <button 
-            className="flex items-center w-full px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg mb-1"
-            onClick={onSettingsClick}
-          >
-            <Settings size={20} />
-            <span className="ml-3">Settings</span>
-          </button>
-          <button 
             className="flex items-center w-full px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg"
-            onClick={onLogoutClick}
+            onClick={handleLogout}
           >
             <LogOut size={20} />
             <span className="ml-3">Logout</span>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import DashboardTemplate from '../../templates/DashboardTemplate';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
@@ -8,6 +8,7 @@ import { useUsers } from '../../hooks/useAdmin';
 import useAuth from '../../hooks/useAuth';
 
 const MerchantsEditPage = () => {
+  const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
 
   if (!isAuthenticated) {
@@ -30,16 +31,29 @@ const MerchantsEditPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
 
   useEffect(() => {
-    const merchant = merchants.find((m) => m.id === parseInt(id, 10));
-    const user = users.find((u) => u.id === parseInt(id, 10));
-    if (merchant) {
-      setMerchantFormData(merchant);
-    }
-    if (user) {
-      setUserFormData(user);
-    }
+    const loadData = async () => {
+      try {
+        const merchant = merchants.find((m) => m.id === parseInt(id, 10));
+        const user = users.find((u) => u.id === parseInt(id, 10));
+
+        if (!merchant || !user) {
+          throw new Error('Merchant or user not found');
+        }
+
+        setMerchantFormData(merchant);
+        setUserFormData(user);
+      } catch (err) {
+        setLoadError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
   }, [id, merchants, users]);
 
   const handleMerchantChange = (e) => {
@@ -54,6 +68,10 @@ const MerchantsEditPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!window.confirm('Are you sure you want to update this merchant?')) {
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setSuccess(false);
@@ -66,6 +84,9 @@ const MerchantsEditPage = () => {
       await updateMerchant(id, merchantFormData);
 
       setSuccess(true);
+      setTimeout(() => {
+        navigate('/merchants');
+      }, 1500);
     } catch (err) {
       setError(err.message || 'Failed to update merchant');
     } finally {
@@ -73,8 +94,28 @@ const MerchantsEditPage = () => {
     }
   };
 
-  if (!merchantFormData || !userFormData) {
-    return <p>Loading merchant and user data...</p>;
+  if (isLoading) {
+    return (
+      <DashboardTemplate role="agent" userName={user?.name || "Agent"} pageTitle="Edit Merchant">
+        <Card>
+          <div className="flex justify-center items-center h-64">
+            <p className="text-gray-500">Loading merchant data...</p>
+          </div>
+        </Card>
+      </DashboardTemplate>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <DashboardTemplate role="agent" userName={user?.name || "Agent"} pageTitle="Edit Merchant">
+        <Card>
+          <div className="flex justify-center items-center h-64">
+            <p className="text-red-500">{loadError}</p>
+          </div>
+        </Card>
+      </DashboardTemplate>
+    );
   }
 
   return (

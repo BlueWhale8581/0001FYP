@@ -18,9 +18,8 @@ export const useRegister = () => {
       setSuccess(true);
       return result;
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Registration failed');
-      setSuccess(false);
-      return null;
+      setError(err.message || 'Registration failed');
+      return { success: false, error: err.message };
     } finally {
       setLoading(false);
     }
@@ -33,21 +32,24 @@ export const useRegister = () => {
  * Custom hook for handling user login
  */
 export const useLogin = () => {
-  const [user, setUser] = useState(authService.getStoredUser());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(!!authService.getToken());
+  const [user, setUser] = useState(authService.getStoredUser());
+  const [isAuthenticated, setIsAuthenticated] = useState(authService.isAuthenticated());
 
   const login = async ({ email, password }) => {
     try {
       setLoading(true);
       setError(null);
       const { user, token } = await authService.login(email, password);
-      authService.storeUser(user, token); // Store user and token
+      
       setUser(user);
-      setIsAuthenticated(true); // Update authentication state
+      setIsAuthenticated(true);
+      
+      return { success: true, user };
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Login failed');
+      return { success: false, error: err.message };
     } finally {
       setLoading(false);
     }
@@ -58,6 +60,19 @@ export const useLogin = () => {
     setUser(null);
     setIsAuthenticated(false);
   };
+
+  useEffect(() => {
+    const checkAuth = () => {
+      const isAuth = authService.isAuthenticated();
+      setIsAuthenticated(isAuth);
+      if (isAuth) {
+        setUser(authService.getStoredUser());
+      }
+    };
+
+    window.addEventListener('storage', checkAuth);
+    return () => window.removeEventListener('storage', checkAuth);
+  }, []);
 
   return { login, logout, loading, error, user, isAuthenticated };
 };

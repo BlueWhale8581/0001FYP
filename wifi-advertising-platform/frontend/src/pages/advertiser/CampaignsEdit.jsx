@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import DashboardTemplate from '../../templates/DashboardTemplate';
 import Card from '../../components/common/Card';
@@ -9,17 +9,30 @@ import { useCampaigns } from '../../hooks/useAdvertiser';
 const CampaignsEditPage = () => {
   const { isAuthenticated, user } = useAuth();
   const { id } = useParams();
+  const navigate = useNavigate();
   const { campaigns, updateCampaign } = useCampaigns();
   const [formData, setFormData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
 
   useEffect(() => {
-    const campaign = campaigns.find((c) => c.id === parseInt(id, 10));
-    if (campaign) {
-      setFormData(campaign);
-    }
+    const loadData = async () => {
+      try {
+        const campaign = campaigns.find((c) => c.id === parseInt(id, 10));
+        if (!campaign) {
+          throw new Error('Campaign not found');
+        }
+        setFormData(campaign);
+      } catch (err) {
+        setLoadError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadData();
   }, [id, campaigns]);
 
   const handleChange = (e) => {
@@ -29,6 +42,10 @@ const CampaignsEditPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!window.confirm('Are you sure you want to update this campaign?')) {
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setSuccess(false);
@@ -36,6 +53,9 @@ const CampaignsEditPage = () => {
     try {
       await updateCampaign(id, formData);
       setSuccess(true);
+      setTimeout(() => {
+        navigate('/campaigns');
+      }, 1500);
     } catch (err) {
       setError(err.message || 'Failed to update campaign');
     } finally {
@@ -51,6 +71,30 @@ const CampaignsEditPage = () => {
         pageTitle="Edit Campaign"
       >
         <p className="text-center text-gray-500">Please log in to edit a campaign.</p>
+      </DashboardTemplate>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <DashboardTemplate role="advertiser" userName={user?.name || "Advertiser"} pageTitle="Edit Campaign">
+        <Card>
+          <div className="flex justify-center items-center h-64">
+            <p className="text-gray-500">Loading campaign data...</p>
+          </div>
+        </Card>
+      </DashboardTemplate>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <DashboardTemplate role="advertiser" userName={user?.name || "Advertiser"} pageTitle="Edit Campaign">
+        <Card>
+          <div className="flex justify-center items-center h-64">
+            <p className="text-red-500">{loadError}</p>
+          </div>
+        </Card>
       </DashboardTemplate>
     );
   }

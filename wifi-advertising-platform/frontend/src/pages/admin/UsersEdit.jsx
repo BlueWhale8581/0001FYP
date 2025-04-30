@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import DashboardTemplate from '../../templates/DashboardTemplate';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
@@ -8,6 +8,7 @@ import useAuth from '../../hooks/useAuth';
 
 const UsersEditPage = () => {
   const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
 
   if (!isAuthenticated) {
     return (
@@ -27,12 +28,24 @@ const UsersEditPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
 
   useEffect(() => {
-    const user = users.find((u) => u.id === parseInt(id, 10));
-    if (user) {
-      setFormData(user);
-    }
+    const loadData = async () => {
+      try {
+        const user = users.find((u) => u.id === parseInt(id, 10));
+        if (!user) {
+          throw new Error('User not found');
+        }
+        setFormData(user);
+      } catch (err) {
+        setLoadError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadData();
   }, [id, users]);
 
   const handleChange = (e) => {
@@ -42,6 +55,10 @@ const UsersEditPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!window.confirm('Are you sure you want to update this user?')) {
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setSuccess(false);
@@ -49,6 +66,9 @@ const UsersEditPage = () => {
     try {
       await updateUser(id, formData);
       setSuccess(true);
+      setTimeout(() => {
+        navigate('/users');
+      }, 1500);
     } catch (err) {
       setError(err.message || 'Failed to update user');
     } finally {
@@ -56,8 +76,28 @@ const UsersEditPage = () => {
     }
   };
 
-  if (!formData) {
-    return <p>Loading user data...</p>;
+  if (isLoading) {
+    return (
+      <DashboardTemplate role="admin" userName={user?.name || "Admin"} pageTitle="Edit User">
+        <Card>
+          <div className="flex justify-center items-center h-64">
+            <p className="text-gray-500">Loading user data...</p>
+          </div>
+        </Card>
+      </DashboardTemplate>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <DashboardTemplate role="admin" userName={user?.name || "Admin"} pageTitle="Edit User">
+        <Card>
+          <div className="flex justify-center items-center h-64">
+            <p className="text-red-500">{loadError}</p>
+          </div>
+        </Card>
+      </DashboardTemplate>
+    );
   }
 
   return (
