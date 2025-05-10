@@ -55,9 +55,13 @@ exports.getSystemMetrics = async (req, res) => {
 
 exports.getNotifications = async (req, res) => {
   try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ success: false, message: 'Unauthorized access' });
+    }
+
     const { limit = 10, page = 1 } = req.query;
     const offset = (page - 1) * limit;
-    
+
     const notifications = await Notification.getByUserId(req.user.id, { limit, offset });
     res.status(200).json(notifications);
   } catch (error) {
@@ -126,25 +130,12 @@ exports.getUserById = async (req, res) => {
   try {
     const { id } = req.params;
     const user = await User.findById(id);
-    
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
-    // Get role-specific data
-    let roleData = null;
-    if (user.role === 'merchant') {
-      roleData = await Merchant.findByUserId(id);
-    } else if (user.role === 'agent') {
-      roleData = await Agent.findByUserId(id);
-    } else if (user.role === 'advertiser') {
-      roleData = await Advertiser.findByUserId(id);
-    }
-    
-    res.status(200).json({
-      user: user,
-      roleData
-    });
+
+    res.status(200).json({ user });
   } catch (error) {
     console.error('Error getting user by ID:', error);
     res.status(500).json({ message: 'Error retrieving user details' });
@@ -153,7 +144,7 @@ exports.getUserById = async (req, res) => {
 
 exports.createUser = async (req, res) => {
   try {
-    const { username, email, password, role, firstName, lastName, phone, status } = req.body;
+    const { username, email, password, role, first_name, last_name, phone, status } = req.body;
     
     // Check if username or email already exists
     const existingUser = await User.findByEmail(email) || await User.findByUsername(username);
@@ -167,8 +158,8 @@ exports.createUser = async (req, res) => {
       email,
       password,
       role,
-      first_name: firstName,
-      last_name: lastName,
+      first_name: first_name,
+      last_name: last_name,
       phone,
       status: status || 'active'
     };
@@ -200,7 +191,7 @@ exports.createUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { username, email, firstName, lastName, phone, status } = req.body;
+    const { username, email, first_name, last_name, phone, status } = req.body;
     
     // Get existing user data for audit log
     const existingUser = await User.findById(id);
@@ -212,8 +203,8 @@ exports.updateUser = async (req, res) => {
     const userData = {
       username,
       email,
-      first_name: firstName,
-      last_name: lastName,
+      first_name: first_name,
+      last_name: last_name,
       phone,
       status
     };
@@ -806,8 +797,8 @@ exports.getMerchants = async (req, res) => {
         user: userData ? {
           id: userData.id,
           email: userData.email,
-          firstName: userData.first_name,
-          lastName: userData.last_name,
+          first_name: userData.first_name,
+          last_name: userData.last_name,
           status: userData.status
         } : null
       };
@@ -857,8 +848,8 @@ exports.getAdvertisers = async (req, res) => {
         user: userData ? {
           id: userData.id,
           email: userData.email,
-          firstName: userData.first_name,
-          lastName: userData.last_name,
+          first_name: userData.first_name,
+          last_name: userData.last_name,
           status: userData.status
         } : null
       };
@@ -908,8 +899,8 @@ exports.getAgents = async (req, res) => {
         user: userData ? {
           id: userData.id,
           email: userData.email,
-          firstName: userData.first_name,
-          lastName: userData.last_name,
+          first_name: userData.first_name,
+          last_name: userData.last_name,
           status: userData.status
         } : null
       };

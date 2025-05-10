@@ -36,6 +36,23 @@ exports.getDashboardStats = async (req, res) => {
   }
 };
 
+exports.getNotifications = async (req, res) => {
+    try {
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ success: false, message: 'Unauthorized access' });
+        }
+
+        const { limit = 10, page = 1 } = req.query;
+        const offset = (page - 1) * limit;
+
+        const notifications = await Notification.getByUserId(req.user.id, { limit, offset });
+        res.status(200).json(notifications);
+    } catch (error) {
+        console.error('Error getting notifications:', error);
+        res.status(500).json({ message: 'Error retrieving notifications' });
+    }
+};
+
 /**
  * Get merchants onboarded by agent
  */
@@ -238,7 +255,7 @@ exports.registerMerchant = async (req, res) => {
       first_name: merchantData.first_name,
       last_name: merchantData.last_name,
       phone: merchantData.phone,
-      status: 'pending'
+      status: 'Active'
     };
     
     // Create user
@@ -669,40 +686,23 @@ exports.downloadQRCode = async (req, res) => {
  */
 exports.getQRCodesByMerchant = async (req, res) => {
   try {
-    const agentId = req.user.id;
     const { merchantId } = req.params;
-    
-    // Verify the merchant belongs to this agent
-    const merchant = await Merchant.findById(merchantId);
-    
-    if (!merchant) {
-      return res.status(404).json({
-        success: false,
-        message: 'Merchant not found'
-      });
+
+    // Debugging: Log the merchantId
+    console.log('Received merchantId:', merchantId);
+
+    // Validate the merchantId
+    if (!merchantId || isNaN(Number(merchantId))) {
+      console.error('Invalid merchantId:', merchantId);
+      return res.status(400).json({ error: "Invalid 'merchantId' parameter. It must be a valid number." });
     }
-    
-    if (merchant.agent_id !== agentId) {
-      return res.status(403).json({
-        success: false,
-        message: 'You are not authorized to view QR codes for this merchant'
-      });
-    }
-    
-    // Get QR codes for the merchant
-    const qrCodes = await QRCode.findByMerchantId(merchantId);
-    
-    return res.status(200).json({
-      success: true,
-      data: qrCodes
-    });
+
+    // Proceed with fetching QR codes
+    const qrCodes = await QRCode.findByMerchantId(Number(merchantId));
+    return res.status(200).json({ success: true, data: qrCodes });
   } catch (error) {
     console.error('Error fetching QR codes:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to fetch QR codes',
-      error: error.message
-    });
+    return res.status(500).json({ error: 'Failed to fetch QR codes' });
   }
 };
 

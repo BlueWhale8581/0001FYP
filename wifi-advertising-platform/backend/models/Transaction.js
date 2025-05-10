@@ -1,11 +1,10 @@
-const mysql = require('mysql2/promise');
-const db = require('../config/database');
+const { sql, poolPromise } = require('../config/database');
 
 class Transaction {
   constructor(transactionData) {
     this.id = transactionData.id;
     this.type = transactionData.type;
-    this.amount = parseFloat(transactionData.amount);
+    this.amount = transactionData.amount;
     this.status = transactionData.status || 'pending';
     this.reference_id = transactionData.reference_id;
     this.merchant_id = transactionData.merchant_id;
@@ -20,27 +19,26 @@ class Transaction {
   // Create a new transaction
   static async create(transactionData) {
     try {
-      const query = `
-        INSERT INTO transactions (
-          type, amount, status, reference_id, merchant_id,
-          advertiser_id, agent_id, campaign_id, description
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `;
-      
-      const [result] = await db.execute(query, [
-        transactionData.type,
-        transactionData.amount,
-        transactionData.status || 'pending',
-        transactionData.reference_id,
-        transactionData.merchant_id || null,
-        transactionData.advertiser_id || null,
-        transactionData.agent_id || null,
-        transactionData.campaign_id || null,
-        transactionData.description
-      ]);
-      
-      return { id: result.insertId, ...transactionData };
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('type', sql.NVarChar, transactionData.type)
+        .input('amount', sql.Decimal(10, 2), transactionData.amount)
+        .input('status', sql.NVarChar, transactionData.status || 'pending')
+        .input('reference_id', sql.NVarChar, transactionData.reference_id)
+        .input('merchant_id', sql.Int, transactionData.merchant_id)
+        .input('advertiser_id', sql.Int, transactionData.advertiser_id)
+        .input('agent_id', sql.Int, transactionData.agent_id)
+        .input('campaign_id', sql.Int, transactionData.campaign_id)
+        .input('description', sql.NVarChar, transactionData.description)
+        .query(`
+          INSERT INTO transactions (type, amount, status, reference_id, merchant_id, advertiser_id, agent_id, campaign_id, description)
+          OUTPUT INSERTED.id
+          VALUES (@type, @amount, @status, @reference_id, @merchant_id, @advertiser_id, @agent_id, @campaign_id, @description)
+        `);
+      return { id: result.recordset[0].id, ...transactionData };
     } catch (error) {
+      console.error('Error creating transaction:', error);
       throw error;
     }
   }
@@ -48,118 +46,39 @@ class Transaction {
   // Find transaction by ID
   static async findById(id) {
     try {
-      const query = 'SELECT * FROM transactions WHERE id = ?';
-      const [rows] = await db.execute(query, [id]);
-      
-      if (rows.length === 0) return null;
-      
-      const transactionData = rows[0];
-      return new Transaction(transactionData);
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('id', sql.Int, id)
+        .query('SELECT * FROM transactions WHERE id = @id');
+      if (result.recordset.length === 0) return null;
+      return new Transaction(result.recordset[0]);
     } catch (error) {
+      console.error('Error finding transaction by ID:', error);
       throw error;
     }
   }
 
-  // Find transaction by reference ID
-  static async findByReferenceId(referenceId) {
+  // Find all transactions with optional pagination
+  static async findAll(options = {}) {
     try {
-      const query = 'SELECT * FROM transactions WHERE reference_id = ?';
-      const [rows] = await db.execute(query, [referenceId]);
-      
-      if (rows.length === 0) return null;
-      
-      const transactionData = rows[0];
-      return new Transaction(transactionData);
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // Get all transactions with optional filtering and pagination
-  static async findAll(filters = {}, page = 1, limit = 10) {
-    try {
-      let query = 'SELECT * FROM transactions WHERE 1=1';
+      const pool = await poolPromise;
+      let query = 'SELECT * FROM transactions';
       const params = [];
-      
-      if (filters.type) {
-        query += ' AND type = ?';
-        params.push(filters.type);
-      }
-      
-      if (filters.status) {
-        query += ' AND status = ?';
-        params.push(filters.status);
-      }
-      
-      if (filters.merchant_id) {
-        query += ' AND merchant_id = ?';
-        params.push(filters.merchant_id);
-      }
-      
-      if (filters.advertiser_id) {
-        query += ' AND advertiser_id = ?';
-        params.push(filters.advertiser_id);
-      }
-      
-      if (filters.agent_id) {
-        query += ' AND agent_id = ?';
-        params.push(filters.agent_id);
-      }
-      
-      if (filters.campaign_id) {
-        query += ' AND campaign_id = ?';
-        params.push(filters.campaign_id);
-      }
-      
-      if (filters.start_date && filters.end_date) {
-        query += ' AND created_at BETWEEN ? AND ?';
-        params.push(filters.start_date, filters.end_date);
-      }
-      
-      // Add sorting
-      query += ' ORDER BY created_at DESC';
-      
-      // Add pagination
-      const offset = (page - 1) * limit;
-      query += ' LIMIT ? OFFSET ?';
-      params.push(parseInt(limit), parseInt(offset));
-      
-      const [rows] = await db.execute(query, params);
-      
-      return rows.map(row => new Transaction(row));
-    } catch (error) {
-      throw error;
-    }
-  }
 
-  // Get transaction with detailed information
-  static async findWithDetails(transactionId) {
-    try {
-      const query = `
-        SELECT t.*, 
-          m.business_name, 
-          a.company_name, 
-          u1.username as merchant_username,
-          u2.username as advertiser_username,
-          u3.username as agent_username,
-          c.name as campaign_name
-        FROM transactions t
-        LEFT JOIN merchants m ON t.merchant_id = m.id
-        LEFT JOIN advertisers a ON t.advertiser_id = a.id
-        LEFT JOIN agents ag ON t.agent_id = ag.id
-        LEFT JOIN users u1 ON m.user_id = u1.id
-        LEFT JOIN users u2 ON a.user_id = u2.id
-        LEFT JOIN users u3 ON ag.user_id = u3.id
-        LEFT JOIN campaigns c ON t.campaign_id = c.id
-        WHERE t.id = ?
-      `;
-      
-      const [rows] = await db.execute(query, [transactionId]);
-      
-      if (rows.length === 0) return null;
-      
-      return rows[0];
+      if (options.limit) {
+        query += ' ORDER BY created_at DESC OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY';
+        params.push({ name: 'limit', type: sql.Int, value: parseInt(options.limit, 10) });
+        params.push({ name: 'offset', type: sql.Int, value: parseInt(options.offset || 0, 10) });
+      }
+
+      const request = pool.request();
+      params.forEach(param => request.input(param.name, param.type, param.value));
+
+      const result = await request.query(query);
+      return result.recordset;
     } catch (error) {
+      console.error('Error in Transaction.findAll:', error);
       throw error;
     }
   }
@@ -167,146 +86,62 @@ class Transaction {
   // Update transaction status
   static async updateStatus(id, status, referenceId = null) {
     try {
-      let query = 'UPDATE transactions SET status = ?';
-      const params = [status];
-      
+      const pool = await poolPromise;
+      const request = pool.request();
+      request.input('id', sql.Int, id).input('status', sql.NVarChar, status);
       if (referenceId) {
-        query += ', reference_id = ?';
-        params.push(referenceId);
+        request.input('reference_id', sql.NVarChar, referenceId);
       }
-      
-      query += ' WHERE id = ?';
-      params.push(id);
-      
-      const [result] = await db.execute(query, params);
-      return result.affectedRows > 0;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // Get transactions by merchant ID
-  static async findByMerchantId(merchantId, startDate, endDate, page = 1, limit = 10) {
-    try {
       const query = `
-        SELECT * FROM transactions 
-        WHERE merchant_id = ? 
-        AND created_at BETWEEN ? AND ?
-        ORDER BY created_at DESC
-        LIMIT ? OFFSET ?
+        UPDATE transactions
+        SET status = @status ${referenceId ? ', reference_id = @reference_id' : ''}
+        WHERE id = @id
       `;
-      
-      const offset = (page - 1) * limit;
-      const [rows] = await db.execute(query, [
-        merchantId, 
-        startDate, 
-        endDate, 
-        parseInt(limit), 
-        parseInt(offset)
-      ]);
-      
-      return rows.map(row => new Transaction(row));
+      const result = await request.query(query);
+      return result.rowsAffected[0] > 0;
     } catch (error) {
-      throw error;
-    }
-  }
-
-  // Get transactions by agent ID
-  static async findByAgentId(agentId, startDate, endDate, page = 1, limit = 10) {
-    try {
-      const query = `
-        SELECT t.*, m.business_name
-        FROM transactions t
-        LEFT JOIN merchants m ON t.merchant_id = m.id
-        WHERE t.agent_id = ? 
-        AND t.created_at BETWEEN ? AND ?
-        ORDER BY t.created_at DESC
-        LIMIT ? OFFSET ?
-      `;
-      
-      const offset = (page - 1) * limit;
-      const [rows] = await db.execute(query, [
-        agentId, 
-        startDate, 
-        endDate, 
-        parseInt(limit), 
-        parseInt(offset)
-      ]);
-      
-      return rows;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // Get transactions by advertiser ID
-  static async findByAdvertiserId(advertiserId, startDate, endDate, page = 1, limit = 10) {
-    try {
-      const query = `
-        SELECT t.*, c.name as campaign_name
-        FROM transactions t
-        LEFT JOIN campaigns c ON t.campaign_id = c.id
-        WHERE t.advertiser_id = ? 
-        AND t.created_at BETWEEN ? AND ?
-        ORDER BY t.created_at DESC
-        LIMIT ? OFFSET ?
-      `;
-      
-      const offset = (page - 1) * limit;
-      const [rows] = await db.execute(query, [
-        advertiserId, 
-        startDate, 
-        endDate, 
-        parseInt(limit), 
-        parseInt(offset)
-      ]);
-      
-      return rows;
-    } catch (error) {
+      console.error('Error updating transaction status:', error);
       throw error;
     }
   }
 
   // Get revenue summary
-  static async getRevenueSummary(startDate, endDate, groupBy = 'day') {
+  static async getRevenueSummary() {
     try {
-      let timeFormat;
-      
-      switch (groupBy) {
-        case 'day':
-          timeFormat = '%Y-%m-%d';
-          break;
-        case 'week':
-          timeFormat = '%x-W%v'; // Year-Week format
-          break;
-        case 'month':
-          timeFormat = '%Y-%m';
-          break;
-        case 'year':
-          timeFormat = '%Y';
-          break;
-        default:
-          timeFormat = '%Y-%m-%d';
-      }
-      
+      const pool = await poolPromise;
       const query = `
         SELECT 
-          DATE_FORMAT(created_at, ?) as time_period,
-          SUM(CASE WHEN type = 'ad_revenue' THEN amount ELSE 0 END) as ad_revenue,
-          SUM(CASE WHEN type = 'merchant_payment' THEN amount ELSE 0 END) as merchant_payment,
-          SUM(CASE WHEN type = 'agent_commission' THEN amount ELSE 0 END) as agent_commission,
-          SUM(CASE WHEN type = 'advertiser_payment' THEN amount ELSE 0 END) as advertiser_payment
+          SUM(CASE WHEN type = 'advertiser_payment' THEN amount ELSE 0 END) AS totalAdvertiserPayments,
+          SUM(CASE WHEN type = 'merchant_payment' THEN amount ELSE 0 END) AS totalMerchantPayments
         FROM transactions
-        WHERE created_at BETWEEN ? AND ?
-        AND status = 'completed'
-        GROUP BY time_period
-        ORDER BY MIN(created_at)
       `;
-      
-      const [rows] = await db.execute(query, [timeFormat, startDate, endDate]);
-      
-      return rows;
+      const result = await pool.request().query(query);
+      return result.recordset[0];
     } catch (error) {
+      console.error('Error in Transaction.getRevenueSummary:', error);
+      throw error;
+    }
+  }
+
+  // Get transaction count with optional filters
+  static async getCount(filters = {}) {
+    try {
+      const pool = await poolPromise;
+      let query = 'SELECT COUNT(*) AS count FROM transactions WHERE 1=1';
+      const params = [];
+
+      if (filters.status) {
+        query += ' AND status = @status';
+        params.push({ name: 'status', type: sql.NVarChar, value: filters.status });
+      }
+
+      const request = pool.request();
+      params.forEach(param => request.input(param.name, param.type, param.value));
+
+      const result = await request.query(query);
+      return result.recordset[0].count;
+    } catch (error) {
+      console.error('Error in Transaction.getCount:', error);
       throw error;
     }
   }

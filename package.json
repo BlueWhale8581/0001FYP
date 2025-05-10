@@ -8,7 +8,6 @@
     "server": "node wifi-advertising-platform/backend/server.js",
     "dev": "nodemon wifi-advertising-platform/backend/app.js",
     "frontend": "nodemon wifi-advertising-platform/frontend/App.jsx",
-    
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

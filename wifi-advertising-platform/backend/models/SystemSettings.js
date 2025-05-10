@@ -1,33 +1,28 @@
-const db = require('../config/database');
+const { sql, poolPromise } = require('../config/database');
 
 class SystemSettings {
-  // Get a specific setting by key
   static async getByKey(key) {
     try {
-      const query = `
-        SELECT * FROM system_settings
-        WHERE setting_key = ?
-      `;
-      const [settings] = await db.execute(query, [key]);
-      return settings.length ? settings[0] : null;
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('key', sql.NVarChar, key)
+        .query('SELECT * FROM system_settings WHERE setting_key = @key');
+      return result.recordset.length ? result.recordset[0] : null;
     } catch (error) {
       console.error('Error fetching system setting:', error);
       throw error;
     }
   }
 
-  // Get multiple settings by keys
   static async getMultiple(keys) {
     try {
-      const placeholders = keys.map(() => '?').join(',');
-      const query = `
-        SELECT * FROM system_settings
-        WHERE setting_key IN (${placeholders})
-      `;
-      const [settings] = await db.execute(query, keys);
-      
-      // Convert array to object with key-value pairs
-      return settings.reduce((acc, setting) => {
+      const pool = await poolPromise;
+      const placeholders = keys.map((_, i) => `@key${i}`).join(',');
+      const request = pool.request();
+      keys.forEach((key, i) => request.input(`key${i}`, sql.NVarChar, key));
+      const result = await request.query(`SELECT * FROM system_settings WHERE setting_key IN (${placeholders})`);
+      return result.recordset.reduce((acc, setting) => {
         acc[setting.setting_key] = setting.setting_value;
         return acc;
       }, {});
@@ -37,44 +32,47 @@ class SystemSettings {
     }
   }
 
-  // Get all system settings
   static async getAll() {
     try {
-      const query = `
-        SELECT * FROM system_settings
-        ORDER BY setting_key
-      `;
-      const [settings] = await db.execute(query);
-      return settings;
+      const pool = await poolPromise;
+      const result = await pool.request().query('SELECT * FROM system_settings ORDER BY setting_key');
+      return result.recordset;
     } catch (error) {
       console.error('Error fetching all system settings:', error);
       throw error;
     }
   }
 
-  // Update or create a setting
   static async upsert(key, value, description, updatedBy) {
     try {
-      // Check if setting exists
       const existingSetting = await this.getByKey(key);
-      
+      const pool = await poolPromise;
       if (existingSetting) {
-        // Update existing setting
-        const query = `
-          UPDATE system_settings
-          SET setting_value = ?, description = ?, updated_by = ?
-          WHERE setting_key = ?
-        `;
-        const [result] = await db.execute(query, [value, description, updatedBy, key]);
-        return { updated: true, id: existingSetting.id, affectedRows: result.affectedRows };
+        const result = await pool
+          .request()
+          .input('key', sql.NVarChar, key)
+          .input('value', sql.NVarChar, value)
+          .input('description', sql.NVarChar, description)
+          .input('updatedBy', sql.NVarChar, updatedBy)
+          .query(`
+            UPDATE system_settings
+            SET setting_value = @value, description = @description, updated_by = @updatedBy
+            WHERE setting_key = @key
+          `);
+        return { updated: true, id: existingSetting.id, affectedRows: result.rowsAffected[0] };
       } else {
-        // Create new setting
-        const query = `
-          INSERT INTO system_settings (setting_key, setting_value, description, updated_by)
-          VALUES (?, ?, ?, ?)
-        `;
-        const [result] = await db.execute(query, [key, value, description, updatedBy]);
-        return { updated: false, id: result.insertId, affectedRows: result.affectedRows };
+        const result = await pool
+          .request()
+          .input('key', sql.NVarChar, key)
+          .input('value', sql.NVarChar, value)
+          .input('description', sql.NVarChar, description)
+          .input('updatedBy', sql.NVarChar, updatedBy)
+          .query(`
+            INSERT INTO system_settings (setting_key, setting_value, description, updated_by)
+            OUTPUT INSERTED.id
+            VALUES (@key, @value, @description, @updatedBy)
+          `);
+        return { updated: false, id: result.recordset[0].id, affectedRows: result.rowsAffected[0] };
       }
     } catch (error) {
       console.error('Error upserting system setting:', error);
@@ -82,44 +80,17 @@ class SystemSettings {
     }
   }
 
-  // Delete a setting
   static async delete(key) {
     try {
-      const query = `
-        DELETE FROM system_settings
-        WHERE setting_key = ?
-      `;
-      const [result] = await db.execute(query, [key]);
-      return result.affectedRows > 0;
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('key', sql.NVarChar, key)
+        .query('DELETE FROM system_settings WHERE setting_key = @key');
+      return result.rowsAffected[0] > 0;
     } catch (error) {
       console.error('Error deleting system setting:', error);
       throw error;
-    }
-  }
-
-  // Bulk update settings
-  static async bulkUpdate(settings, updatedBy) {
-    const connection = await db.getConnection();
-    
-    try {
-      await connection.beginTransaction();
-      
-      const results = [];
-      
-      for (const setting of settings) {
-        const { key, value, description } = setting;
-        const result = await this.upsert(key, value, description, updatedBy);
-        results.push({ key, result });
-      }
-      
-      await connection.commit();
-      return results;
-    } catch (error) {
-      await connection.rollback();
-      console.error('Error in bulk update of system settings:', error);
-      throw error;
-    } finally {
-      connection.release();
     }
   }
 }

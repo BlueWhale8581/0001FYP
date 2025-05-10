@@ -1,5 +1,6 @@
 // templates/DashboardTemplate.jsx
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // Layout components
 import Header from '../components/layout/Header';
@@ -10,7 +11,7 @@ import Footer from '../components/layout/Footer';
 import PageContainer from '../components/layout/PageContainer';
 
 // Role configurations
-import { roleColors, dashboardTitles, navigationItems } from '../utils/roleConfig';
+import { dashboardTitles, navigationItems } from '../utils/roleConfig';
 
 const DashboardTemplate = ({ 
   role = 'user',
@@ -22,23 +23,28 @@ const DashboardTemplate = ({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
-  
+  const navigate = useNavigate();
+
   // Get role-specific configurations
-  const { bgColor, textColor } = roleColors[role];
   const dashboardTitle = dashboardTitles[role];
   const navItems = navigationItems[role];
-  
+
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
     setSidebarOpen(false);
+
+    // Find the route for the selected tab and navigate
+    const selectedTab = navItems.find((item) => item.id === tabId);
+    if (selectedTab && selectedTab.route) {
+      navigate(selectedTab.route);
+    }
   };
-  
+
   return (
     <div className="flex flex-col h-screen bg-gray-100">
       <Header 
         title={dashboardTitle}
         notificationCount={notifications.filter(n => !n.read).length}
-        roleColor={bgColor}
         onMenuClick={() => setSidebarOpen(true)}
         onNotificationClick={() => setNotificationsOpen(true)}
         onProfileClick={() => console.log('Profile clicked')}
@@ -49,12 +55,9 @@ const DashboardTemplate = ({
         onClose={() => setSidebarOpen(false)}
         userName={userName}
         userRole={role}
-        roleColor={bgColor}
         navigationItems={navItems}
         activeTabId={activeTab}
         onTabChange={handleTabChange}
-        onSettingsClick={() => console.log('Settings clicked')}
-        onLogoutClick={() => console.log('Logout clicked')}
       />
       
       <NotificationPanel 
@@ -63,7 +66,8 @@ const DashboardTemplate = ({
         notifications={notifications}
       />
       
-      <PageContainer title={pageTitle}>
+      <PageContainer>
+        <h1 className="text-2xl font-bold text-gray-800 mb-4">{pageTitle}</h1>
         {children}
       </PageContainer>
       
@@ -71,13 +75,9 @@ const DashboardTemplate = ({
         navigationItems={navItems}
         activeTabId={activeTab}
         onTabChange={handleTabChange}
-        roleColor={textColor}
       />
       
-      <Footer 
-        version="1.0.2"
-        appName="WiFi Service Portal"
-      />
+      <Footer />
     </div>
   );
 };

@@ -12,13 +12,6 @@ const Header = ({
 }) => {
   return (
     <>
-      {/* Status Bar */}
-      <div className="bg-gray-900 text-white text-xs p-1 flex justify-between">
-        <span>5G</span>
-        <span>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-        <span>85%</span>
-      </div>
-      
       {/* App Bar */}
       <div className={`flex items-center justify-between px-4 py-3 shadow-sm ${roleColor} text-white`}>
         <button onClick={onMenuClick} className="focus:outline-none">

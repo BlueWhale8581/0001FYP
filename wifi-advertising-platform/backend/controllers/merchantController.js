@@ -32,6 +32,23 @@ exports.getDashboardStats = async (req, res) => {
   }
 };
 
+exports.getNotifications = async (req, res) => {
+    try {
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ success: false, message: 'Unauthorized access' });
+        }
+
+        const { limit = 10, page = 1 } = req.query;
+        const offset = (page - 1) * limit;
+
+        const notifications = await Notification.getByUserId(req.user.id, { limit, offset });
+        res.status(200).json(notifications);
+    } catch (error) {
+        console.error('Error getting notifications:', error);
+        res.status(500).json({ message: 'Error retrieving notifications' });
+    }
+};
+
 exports.getWiFiUsageStats = async (req, res) => {
   try {
     const merchantId = req.params.merchantId || req.merchant.id;

@@ -18,20 +18,23 @@ const { verifyToken } = require('../config/auth');
  *           schema:
  *             type: object
  *             required:
+ *               - username
  *               - email
  *               - password
- *               - firstName
- *               - lastName
+ *               - first_name
+ *               - last_name
  *             properties:
+ *               username:
+ *                 type: string
  *               email:
  *                 type: string
  *                 format: email
  *               password:
  *                 type: string
  *                 format: password
- *               firstName:
+ *               first_name:
  *                 type: string
- *               lastName:
+ *               last_name:
  *                 type: string
  *               role:
  *                 type: string
@@ -150,5 +153,14 @@ router.get('/logout', (req, res) => {
  * @access  Private
  */
 router.get('/me', verifyToken, authController.getCurrentUser);
+
+// Email verification
+router.get('/verify-email/:token', authController.verifyEmail);
+
+// Refresh token
+router.post('/refresh-token', authController.refreshToken);
+
+// Register role
+router.post('/register-role', authController.registerRole);
 
 module.exports = router;

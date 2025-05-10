@@ -1,5 +1,4 @@
-const mysql = require('mysql2/promise');
-const db = require('../config/database');
+const { sql, poolPromise } = require('../config/database');
 
 class QRCode {
   constructor(qrCodeData) {
@@ -15,21 +14,23 @@ class QRCode {
   // Create a new QR code
   static async create(qrCodeData) {
     try {
-      const query = `
-        INSERT INTO qr_codes (
-          merchant_id, code_image_url, activation_status, created_by
-        ) VALUES (?, ?, ?, ?)
-      `;
-      
-      const [result] = await db.execute(query, [
-        qrCodeData.merchant_id,
-        qrCodeData.code_image_url,
-        qrCodeData.activation_status || 'active',
-        qrCodeData.created_by
-      ]);
-      
-      return { id: result.insertId, ...qrCodeData };
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('merchant_id', sql.Int, qrCodeData.merchant_id)
+        .input('code_image_url', sql.NVarChar, qrCodeData.code_image_url)
+        .input('activation_status', sql.NVarChar, qrCodeData.activation_status || 'active')
+        .input('created_by', sql.Int, qrCodeData.created_by)
+        .query(`
+          INSERT INTO qr_codes (
+            merchant_id, code_image_url, activation_status, created_by
+          )
+          OUTPUT INSERTED.id
+          VALUES (@merchant_id, @code_image_url, @activation_status, @created_by)
+        `);
+      return { id: result.recordset[0].id, ...qrCodeData };
     } catch (error) {
+      console.error('Error creating QR code:', error);
       throw error;
     }
   }
@@ -37,14 +38,26 @@ class QRCode {
   // Find QR code by ID
   static async findById(id) {
     try {
-      const query = 'SELECT * FROM qr_codes WHERE id = ?';
-      const [rows] = await db.execute(query, [id]);
-      
-      if (rows.length === 0) return null;
-      
-      const qrCodeData = rows[0];
-      return new QRCode(qrCodeData);
+      // Debugging: Log the id
+      console.log('Finding QR code by ID:', id);
+
+      // Validate the id
+      if (!id || isNaN(Number(id))) {
+        console.warn(`Invalid 'id' parameter: ${id}`);
+        return null; // Return null if the id is invalid
+      }
+
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('id', sql.Int, Number(id))
+        .query('SELECT * FROM qr_codes WHERE id = @id');
+
+      if (result.recordset.length === 0) return null; // Return null if no record is found
+
+      return new QRCode(result.recordset[0]);
     } catch (error) {
+      console.error('Error finding QR code by ID:', error);
       throw error;
     }
   }
@@ -52,11 +65,15 @@ class QRCode {
   // Get all QR codes for a merchant
   static async findByMerchantId(merchantId) {
     try {
-      const query = 'SELECT * FROM qr_codes WHERE merchant_id = ?';
-      const [rows] = await db.execute(query, [merchantId]);
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('merchant_id', sql.Int, merchantId)
+        .query('SELECT * FROM qr_codes WHERE merchant_id = @merchant_id');
       
-      return rows.map(row => new QRCode(row));
+      return result.recordset.map(row => new QRCode(row));
     } catch (error) {
+      console.error('Error finding QR codes by merchant ID:', error);
       throw error;
     }
   }
@@ -64,11 +81,15 @@ class QRCode {
   // Get all QR codes created by an agent
   static async findByAgentId(agentId) {
     try {
-      const query = 'SELECT * FROM qr_codes WHERE created_by = ?';
-      const [rows] = await db.execute(query, [agentId]);
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('created_by', sql.Int, agentId)
+        .query('SELECT * FROM qr_codes WHERE created_by = @created_by');
       
-      return rows.map(row => new QRCode(row));
+      return result.recordset.map(row => new QRCode(row));
     } catch (error) {
+      console.error('Error finding QR codes by agent ID:', error);
       throw error;
     }
   }
@@ -76,11 +97,16 @@ class QRCode {
   // Update QR code status
   static async updateStatus(id, status) {
     try {
-      const query = 'UPDATE qr_codes SET activation_status = ? WHERE id = ?';
-      const [result] = await db.execute(query, [status, id]);
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('id', sql.Int, id)
+        .input('activation_status', sql.NVarChar, status)
+        .query('UPDATE qr_codes SET activation_status = @activation_status WHERE id = @id');
       
-      return result.affectedRows > 0;
+      return result.rowsAffected[0] > 0;
     } catch (error) {
+      console.error('Error updating QR code status:', error);
       throw error;
     }
   }
@@ -88,19 +114,22 @@ class QRCode {
   // Get QR code with merchant data joined
   static async findWithMerchantData(qrCodeId) {
     try {
-      const query = `
-        SELECT q.*, m.business_name, m.business_address, m.business_category
-        FROM qr_codes q
-        JOIN merchants m ON q.merchant_id = m.id
-        WHERE q.id = ?
-      `;
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('id', sql.Int, qrCodeId)
+        .query(`
+          SELECT q.*, m.business_name, m.business_address, m.business_category
+          FROM qr_codes q
+          JOIN merchants m ON q.merchant_id = m.id
+          WHERE q.id = @id
+        `);
       
-      const [rows] = await db.execute(query, [qrCodeId]);
+      if (result.recordset.length === 0) return null;
       
-      if (rows.length === 0) return null;
-      
-      return rows[0];
+      return result.recordset[0];
     } catch (error) {
+      console.error('Error finding QR code with merchant data:', error);
       throw error;
     }
   }
@@ -108,19 +137,22 @@ class QRCode {
   // Get active QR code for merchant
   static async findActiveMerchantQRCode(merchantId) {
     try {
-      const query = `
-        SELECT * FROM qr_codes 
-        WHERE merchant_id = ? AND activation_status = 'active'
-        ORDER BY created_at DESC LIMIT 1
-      `;
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('merchant_id', sql.Int, merchantId)
+        .query(`
+          SELECT * FROM qr_codes 
+          WHERE merchant_id = @merchant_id AND activation_status = 'active'
+          ORDER BY created_at DESC
+        `);
       
-      const [rows] = await db.execute(query, [merchantId]);
+      if (result.recordset.length === 0) return null;
       
-      if (rows.length === 0) return null;
-      
-      const qrCodeData = rows[0];
+      const qrCodeData = result.recordset[0];
       return new QRCode(qrCodeData);
     } catch (error) {
+      console.error('Error finding active QR code for merchant:', error);
       throw error;
     }
   }
@@ -128,11 +160,15 @@ class QRCode {
   // Delete a QR code
   static async delete(id) {
     try {
-      const query = 'DELETE FROM qr_codes WHERE id = ?';
-      const [result] = await db.execute(query, [id]);
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('id', sql.Int, id)
+        .query('DELETE FROM qr_codes WHERE id = @id');
       
-      return result.affectedRows > 0;
+      return result.rowsAffected[0] > 0;
     } catch (error) {
+      console.error('Error deleting QR code:', error);
       throw error;
     }
   }

@@ -1,10 +1,8 @@
-const mysql = require('mysql2/promise');
-const db = require('../config/database');
+const { sql, poolPromise } = require('../config/database');
 
 class Merchant {
   constructor(merchantData) {
     this.id = merchantData.id;
-    this.user_id = merchantData.user_id;
     this.business_name = merchantData.business_name;
     this.business_address = merchantData.business_address;
     this.business_phone = merchantData.business_phone;
@@ -21,28 +19,32 @@ class Merchant {
   // Create a new merchant
   static async create(merchantData) {
     try {
-      const query = `
-        INSERT INTO merchants (
-          user_id, business_name, business_address, business_phone, 
-          business_email, business_category, tax_id, logo_url, agent_id, approval_status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `;
-      
-      const [result] = await db.execute(query, [
-        merchantData.user_id,
-        merchantData.business_name,
-        merchantData.business_address,
-        merchantData.business_phone,
-        merchantData.business_email,
-        merchantData.business_category,
-        merchantData.tax_id,
-        merchantData.logo_url,
-        merchantData.agent_id,
-        merchantData.approval_status || 'pending'
-      ]);
-      
-      return { id: result.insertId, ...merchantData };
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('id', sql.Int, merchantData.id)
+        .input('business_name', sql.NVarChar, merchantData.business_name)
+        .input('business_address', sql.NVarChar, merchantData.business_address)
+        .input('business_phone', sql.NVarChar, merchantData.business_phone)
+        .input('business_email', sql.NVarChar, merchantData.business_email)
+        .input('business_category', sql.NVarChar, merchantData.business_category || null)
+        .input('tax_id', sql.NVarChar, merchantData.tax_id || null)
+        .input('agent_id', sql.Int, merchantData.agent_id || null)
+        .input('approval_status', sql.NVarChar, merchantData.approval_status || 'Active')
+        .query(`
+          INSERT INTO merchants (
+            id, business_name, business_address, business_phone, business_email,
+            business_category, tax_id, agent_id, approval_status
+          )
+          OUTPUT INSERTED.id
+          VALUES (
+            @id, @business_name, @business_address, @business_phone, @business_email,
+            @business_category, @tax_id, @agent_id, @approval_status
+          )
+        `);
+      return { id: result.recordset[0].id, ...merchantData };
     } catch (error) {
+      console.error('Error creating merchant:', error);
       throw error;
     }
   }
@@ -50,29 +52,15 @@ class Merchant {
   // Find merchant by ID
   static async findById(id) {
     try {
-      const query = 'SELECT * FROM merchants WHERE id = ?';
-      const [rows] = await db.execute(query, [id]);
-      
-      if (rows.length === 0) return null;
-      
-      const merchantData = rows[0];
-      return new Merchant(merchantData);
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('id', sql.Int, id)
+        .query('SELECT * FROM merchants WHERE id = @id');
+      if (result.recordset.length === 0) return null;
+      return new Merchant(result.recordset[0]);
     } catch (error) {
-      throw error;
-    }
-  }
-
-  // Find merchant by user ID
-  static async findByUserId(userId) {
-    try {
-      const query = 'SELECT * FROM merchants WHERE user_id = ?';
-      const [rows] = await db.execute(query, [userId]);
-      
-      if (rows.length === 0) return null;
-      
-      const merchantData = rows[0];
-      return new Merchant(merchantData);
-    } catch (error) {
+      console.error('Error finding merchant by ID:', error);
       throw error;
     }
   }
@@ -80,53 +68,50 @@ class Merchant {
   // Get all merchants with optional filtering and pagination
   static async findAll(filters = {}, page = 1, limit = 10) {
     try {
+      const pool = await poolPromise;
       let query = 'SELECT * FROM merchants WHERE 1=1';
-      const params = [];
-      
+      const request = pool.request();
+
       if (filters.agent_id) {
-        query += ' AND agent_id = ?';
-        params.push(filters.agent_id);
+        query += ' AND agent_id = @agent_id';
+        request.input('agent_id', sql.Int, filters.agent_id);
       }
-      
+
       if (filters.approval_status) {
-        query += ' AND approval_status = ?';
-        params.push(filters.approval_status);
+        query += ' AND approval_status = @approval_status';
+        request.input('approval_status', sql.NVarChar, filters.approval_status);
       }
-      
-      if (filters.business_category) {
-        query += ' AND business_category = ?';
-        params.push(filters.business_category);
-      }
-      
-      // Add pagination
+
       const offset = (page - 1) * limit;
-      query += ' LIMIT ? OFFSET ?';
-      params.push(parseInt(limit), parseInt(offset));
-      
-      const [rows] = await db.execute(query, params);
-      
-      return rows.map(row => new Merchant(row));
+      query += ' ORDER BY id OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY';
+      request.input('offset', sql.Int, offset);
+      request.input('limit', sql.Int, limit);
+
+      const result = await request.query(query);
+      return result.recordset.map((row) => new Merchant(row));
     } catch (error) {
+      console.error('Error finding all merchants:', error);
       throw error;
     }
   }
 
-  // Get merchant with user data joined
-  static async findWithUserData(merchantId) {
+  // Find merchants by agent ID
+  static async findByAgentId(agentId) {
     try {
+      const pool = await poolPromise;
       const query = `
-        SELECT m.*, u.username, u.email, u.first_name, u.last_name, u.phone, u.status
-        FROM merchants m
-        JOIN users u ON m.user_id = u.id
-        WHERE m.id = ?
+        SELECT * 
+        FROM merchants 
+        WHERE agent_id = @agentId
       `;
-      
-      const [rows] = await db.execute(query, [merchantId]);
-      
-      if (rows.length === 0) return null;
-      
-      return rows[0];
+      const result = await pool
+        .request()
+        .input('agentId', sql.Int, agentId)
+        .query(query);
+
+      return result.recordset;
     } catch (error) {
+      console.error('Error in Merchant.findByAgentId:', error);
       throw error;
     }
   }
@@ -135,94 +120,30 @@ class Merchant {
   static async update(id, updates) {
     try {
       const allowedUpdates = [
-        'business_name', 'business_address', 'business_phone', 
+        'business_name', 'business_address', 'business_phone',
         'business_email', 'business_category', 'tax_id',
-        'logo_url', 'agent_id', 'approval_status'
+        'logo_url', 'agent_id', 'approval_status',
       ];
-      
       const updateFields = [];
-      const updateValues = [];
-      
+      const request = (await poolPromise).request();
+
       for (const [key, value] of Object.entries(updates)) {
         if (allowedUpdates.includes(key) && value !== undefined) {
-          updateFields.push(`${key} = ?`);
-          updateValues.push(value);
+          updateFields.push(`${key} = @${key}`);
+          request.input(key, sql.NVarChar, value);
         }
       }
-      
+
       if (updateFields.length === 0) {
         return false;
       }
-      
-      const query = `UPDATE merchants SET ${updateFields.join(', ')} WHERE id = ?`;
-      updateValues.push(id);
-      
-      const [result] = await db.execute(query, updateValues);
-      return result.affectedRows > 0;
-    } catch (error) {
-      throw error;
-    }
-  }
 
-  // Get merchants by agent
-  static async findByAgentId(agentId, page = 1, limit = 10) {
-    try {
-      const query = `
-        SELECT * FROM merchants 
-        WHERE agent_id = ? 
-        LIMIT ? OFFSET ?
-      `;
-      
-      const offset = (page - 1) * limit;
-      const [rows] = await db.execute(query, [agentId, parseInt(limit), parseInt(offset)]);
-      
-      return rows.map(row => new Merchant(row));
+      request.input('id', sql.Int, id);
+      const query = `UPDATE merchants SET ${updateFields.join(', ')} WHERE id = @id`;
+      const result = await request.query(query);
+      return result.rowsAffected[0] > 0;
     } catch (error) {
-      throw error;
-    }
-  }
-
-  // Get count of merchants by approval status
-  static async countByStatus() {
-    try {
-      const query = 'SELECT approval_status, COUNT(*) as count FROM merchants GROUP BY approval_status';
-      const [rows] = await db.execute(query);
-      
-      return rows;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // Update merchant approval status
-  static async updateApprovalStatus(id, status) {
-    try {
-      const query = 'UPDATE merchants SET approval_status = ? WHERE id = ?';
-      const [result] = await db.execute(query, [status, id]);
-      
-      return result.affectedRows > 0;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // Get merchant with WiFi settings
-  static async findWithWiFiSettings(merchantId) {
-    try {
-      const query = `
-        SELECT m.*, w.ssid, w.password, w.connection_limit, w.session_duration, 
-               w.ads_before_access, w.redirect_url, w.terms_and_conditions
-        FROM merchants m
-        LEFT JOIN wifi_settings w ON m.id = w.merchant_id
-        WHERE m.id = ?
-      `;
-      
-      const [rows] = await db.execute(query, [merchantId]);
-      
-      if (rows.length === 0) return null;
-      
-      return rows[0];
-    } catch (error) {
+      console.error('Error updating merchant:', error);
       throw error;
     }
   }
@@ -230,11 +151,34 @@ class Merchant {
   // Delete a merchant
   static async delete(id) {
     try {
-      const query = 'DELETE FROM merchants WHERE id = ?';
-      const [result] = await db.execute(query, [id]);
-      
-      return result.affectedRows > 0;
+      const pool = await poolPromise;
+      const result = await pool
+        .request()
+        .input('id', sql.Int, id)
+        .query('DELETE FROM merchants WHERE id = @id');
+      return result.rowsAffected[0] > 0;
     } catch (error) {
+      console.error('Error deleting merchant:', error);
+      throw error;
+    }
+  }
+
+  // Count merchants by approval status
+  static async countByStatus(status) {
+    try {
+      const pool = await poolPromise;
+      const query = `
+        SELECT COUNT(*) AS count
+        FROM merchants
+        WHERE approval_status = @status
+      `;
+      const result = await pool.request()
+        .input('status', sql.NVarChar, status)
+        .query(query);
+
+      return result.recordset[0].count;
+    } catch (error) {
+      console.error('Error in Merchant.countByStatus:', error);
       throw error;
     }
   }
