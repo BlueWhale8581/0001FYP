@@ -23,6 +23,8 @@ const { verifyToken } = require('../config/auth');
  *               - password
  *               - first_name
  *               - last_name
+ *               - role
+ *               - phone
  *             properties:
  *               username:
  *                 type: string
@@ -39,6 +41,8 @@ const { verifyToken } = require('../config/auth');
  *               role:
  *                 type: string
  *                 enum: [admin, agent, advertiser, merchant]
+ *               phone:
+ *                 type: string
  *     responses:
  *       200:
  *         description: Registration successful

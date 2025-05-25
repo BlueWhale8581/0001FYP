@@ -15,7 +15,7 @@ CREATE TABLE users (
   created_at DATETIME DEFAULT GETDATE(),
   updated_at DATETIME DEFAULT GETDATE(),
   last_login DATETIME NULL,
-  status VARCHAR(20) CHECK (status IN ('active', 'inactive', 'pending', 'suspended')) DEFAULT 'pending'
+  status VARCHAR(20) CHECK (status IN ('ACTIVE', 'INACTIVE', 'PENDING', 'SUSPENDED')) DEFAULT 'PENDING'
 );
 
 -- Merchants table
@@ -29,19 +29,10 @@ CREATE TABLE merchants (
   tax_id VARCHAR(50),
   logo_url VARCHAR(255),
   agent_id INT,
-  approval_status VARCHAR(20) CHECK (approval_status IN ('pending', 'approved', 'rejected')) DEFAULT 'pending',
+  approval_status VARCHAR(20) CHECK (approval_status IN ('PENDING', 'APPROVED', 'REJECTED')) DEFAULT 'PENDING',
   created_at DATETIME DEFAULT GETDATE(),
   updated_at DATETIME DEFAULT GETDATE(),
   FOREIGN KEY (agent_id) REFERENCES users(id)
-);
-
--- Agents table
-CREATE TABLE agents (
-  id INT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-  commission_rate DECIMAL(5,2) DEFAULT 0.00,
-  territory VARCHAR(100),
-  created_at DATETIME DEFAULT GETDATE(),
-  updated_at DATETIME DEFAULT GETDATE()
 );
 
 -- Advertisers table
@@ -56,6 +47,17 @@ CREATE TABLE advertisers (
   updated_at DATETIME DEFAULT GETDATE()
 );
 
+-- Agents table
+CREATE TABLE agents (
+  id INT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  commission_rate DECIMAL(5,2) DEFAULT 0.00,
+  territory VARCHAR(100),
+  created_at DATETIME DEFAULT GETDATE(),
+  updated_at DATETIME DEFAULT GETDATE()
+);
+
+
+
 -- Campaigns table
 CREATE TABLE campaigns (
   id INT IDENTITY(200000001,1) PRIMARY KEY,
@@ -66,7 +68,7 @@ CREATE TABLE campaigns (
   end_date DATE NOT NULL,
   budget DECIMAL(10,2) NOT NULL,
   spent DECIMAL(10,2) DEFAULT 0.00,
-  status VARCHAR(10) CHECK (status IN ('draft', 'active', 'paused', 'completed', 'cancelled')) DEFAULT 'draft',
+  status VARCHAR(10) CHECK (status IN ('DRAFT', 'ACTIVE', 'PAUSE', 'COMPLETED', 'CANCELLED')) DEFAULT 'DRAFT',
   target_audience NVARCHAR(MAX),
   created_at DATETIME DEFAULT GETDATE(),
   updated_at DATETIME DEFAULT GETDATE(),
@@ -81,7 +83,7 @@ CREATE TABLE ads (
   title VARCHAR(100) NOT NULL,
   content TEXT NOT NULL,
   media_url VARCHAR(255),
-  type VARCHAR(10) CHECK (type IN ('image', 'video', 'text')) NOT NULL,
+  type VARCHAR(10) CHECK (type IN ('IMAGE', 'VIDEO', 'TEXT')) NOT NULL,
   redirect_url VARCHAR(255),
   duration INT DEFAULT 15, 
   created_at DATETIME DEFAULT GETDATE(),
@@ -94,7 +96,7 @@ CREATE TABLE qr_codes (
   id INT IDENTITY(400000001,1) PRIMARY KEY,
   merchant_id INT NOT NULL,
   code_image_url VARCHAR(255) NOT NULL,
-  activation_status VARCHAR(20) CHECK (activation_status IN ('active', 'inactive')) DEFAULT 'active',
+  activation_status VARCHAR(20) CHECK (activation_status IN ('ACTIVE', 'INACTIVE')) DEFAULT 'ACTIVE',
   created_by INT NOT NULL, -- User ID of the agent who created it
   created_at DATETIME DEFAULT GETDATE(),
   updated_at DATETIME DEFAULT GETDATE(),
@@ -153,7 +155,7 @@ CREATE TABLE transactions (
   id INT IDENTITY(800000001,1) PRIMARY KEY,
   type VARCHAR(20) CHECK (type IN ('ad_revenue', 'merchant_payment', 'agent_commission', 'advertiser_payment')) NOT NULL,
   amount DECIMAL(10,2) NOT NULL,
-  status  VARCHAR(20) CHECK (status IN ('pending', 'completed', 'failed', 'refunded')) DEFAULT 'pending',
+  status  VARCHAR(20) CHECK (status IN ('PENDING', 'COMPLETED', 'FAILED', 'REFUNDED')) DEFAULT 'PENDING',
   reference_id VARCHAR(100), -- External payment reference
   merchant_id INT NULL,
   advertiser_id INT NULL,
@@ -174,7 +176,7 @@ CREATE TABLE notifications (
   user_id INT NOT NULL,
   title VARCHAR(100) NOT NULL,
   message TEXT NOT NULL,
-  type VARCHAR(20) CHECK (type IN ('info', 'success', 'warning', 'error')) DEFAULT 'info',
+  type VARCHAR(20) CHECK (type IN ('INFO', 'SUCCESS', 'WARNING', 'ERROR')) DEFAULT 'INFO',
   is_read BIT DEFAULT 0,
   created_at DATETIME DEFAULT GETDATE(),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

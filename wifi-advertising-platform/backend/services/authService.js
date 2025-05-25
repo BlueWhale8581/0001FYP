@@ -198,6 +198,72 @@ class AuthService {
       throw error;
     }
   }
+
+  /**
+   * Create a agent profile
+   * @param {Object} agentData - Merchant data including user_id
+   * @returns {Promise<Object>} Created merchant object
+   */
+  async createAgent(agentData) {
+    try {
+      const result = await Agent.create({
+        id: agentData.userId,
+        commission_rate: agentData.commission_rate,
+        territory: agentData.territory
+      });
+
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Create a merchant profile
+   * @param {Object} merchantData - Merchant data including user_id
+   * @returns {Promise<Object>} Created merchant object
+   */
+  async createMerchant(merchantData) {
+    try {
+      const result = await Merchant.create({
+        id: merchantData.userId,
+        business_name: merchantData.business_name,
+        business_address: merchantData.business_address,
+        business_phone: merchantData.business_phone,
+        business_email: merchantData.business_email,
+        business_category: merchantData.business_category,
+        tax_id: merchantData.tax_id,
+        logo_url: merchantData.logo_url,
+        approval_status: 'PENDING'
+      });
+
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Create an advertiser profile
+   * @param {Object} advertiserData - Advertiser data including user_id
+   * @returns {Promise<Object>} Created advertiser object
+   */
+  async createAdvertiser(advertiserData) {
+    try {
+      const result = await Advertiser.create({
+        id: advertiserData.userId,
+        company_name: advertiserData.company_name,
+        company_address: advertiserData.company_address,
+        company_phone: advertiserData.company_phone,
+        company_email: advertiserData.company_email,
+        industry: advertiserData.industry
+      });
+
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 // Change the export to expose all methods directly
@@ -219,5 +285,11 @@ module.exports = {
   },
   changePassword: async (userId, currentPassword, newPassword) => {
     return await new AuthService().changePassword(userId, currentPassword, newPassword);
+  },
+  createMerchant: async (merchantData) => {
+    return await new AuthService().createMerchant(merchantData);
+  },
+  createAdvertiser: async (advertiserData) => {
+    return await new AuthService().createAdvertiser(advertiserData);
   }
 };

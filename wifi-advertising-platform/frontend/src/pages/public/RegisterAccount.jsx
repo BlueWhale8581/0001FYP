@@ -78,19 +78,37 @@ const RegisterPage = () => {
     }
     
     // Submit registration
-    const result = await register({
-      username: formData.username,
-      email: formData.email,
-      password: formData.password,
-      first_name: formData.first_name,
-      last_name: formData.last_name,
-      phone: formData.phone,
-      role: formData.role
-    });
-    
-    // Navigate to role-specific registration page with user ID on success
-    if (result && result.success && result.userId) {
-      navigate(`/register/${formData.role}/${result.userId}`);
+    try {
+      const result = await register({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        phone: formData.phone,
+        role: formData.role
+      });
+      
+      // Navigate based on role
+      if (result && result.success && result.userId) {
+        switch (formData.role) {
+          case 'merchant':
+            navigate(`/register/merchant/${result.userId}`);
+            break;
+          case 'advertiser':
+            navigate(`/register/advertiser/${result.userId}`);
+            break;
+          case 'agent':
+            // For agents, directly go to login as no additional info is needed
+            navigate('/login');
+            break;
+          default:
+            navigate('/login');
+        }
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      setFormErrors({ submit: error.message });
     }
   };
 
@@ -246,8 +264,14 @@ const RegisterPage = () => {
             className="w-full"
           />
         </form>
-        <div className="text-center text-sm">
-          Already have an account? <Link to="/login" className="text-blue-600 hover:text-blue-800">Log In</Link>
+        <div className="text-center text-sm mt-4">
+          <Button
+            as={Link}
+            to="/login"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Log In
+          </Button>
         </div>
       </div>
     </DashboardTemplate>
