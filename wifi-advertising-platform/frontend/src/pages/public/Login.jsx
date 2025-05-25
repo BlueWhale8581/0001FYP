@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import DashboardTemplate from '../../templates/DashboardTemplate';
 import Button from '../../components/common/Button';
 import { useLogin } from '../../hooks/useAuth';
@@ -45,8 +45,8 @@ const LoginPage = () => {
       userName="Visitor"
       pageTitle="Login"
     >
-      <div className="max-w-7xl mx-auto bg-white p-6 rounded-lg shadow-md" style={{ width: '70%' }}>
-        <h2 className="text-xl font-bold text-center mb-4">Log In</h2>
+      <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h2 className="text-xl font-bold text-center mb-4 text-black">Log In</h2>
         {error && <p className="text-red-600 text-center">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -71,8 +71,19 @@ const LoginPage = () => {
               required
             />
           </div>
-          <Button text={loading ? 'Logging in...' : 'Login'} type="submit" disabled={loading} />
+          <Button 
+            text={loading ? 'Logging in...' : 'Login'} 
+            type="submit" 
+            disabled={loading} 
+            className="w-full"
+          />
         </form>
+        <Link
+          to="/register"
+          className="w-full inline-block bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-4 mt-2"
+        >
+          Register
+        </Link>
       </div>
     </DashboardTemplate>
   );

@@ -119,7 +119,7 @@ const RegisterPage = () => {
       pageTitle="Register"
     >
       <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-bold text-center mb-4">Create an Account</h2>
+        <h2 className="text-xl font-bold text-center mb-4 text-black">Create an Account</h2>
         
         {success && (
           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">

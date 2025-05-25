@@ -123,7 +123,7 @@ const getPerformanceMetrics = async (params = {}) => {
 const exportReportData = async (params = {}) => {
   const response = await authAxios.get(`${API_URL}/reports/export`, { 
     params,
-    responseType: 'blob' // Important for file downloads
+    responseType: 'blob'
   });
   return response.data;
 };

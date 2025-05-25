@@ -65,7 +65,7 @@ const RegisterAdvertiser = () => {
       pageTitle="Complete Advertiser Registration"
     >
       <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-bold text-center mb-4">Company Information</h2>
+        <h2 className="text-xl font-bold text-center mb-4 text-black">Company Information</h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

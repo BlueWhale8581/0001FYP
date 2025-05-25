@@ -23,7 +23,7 @@ const UserDashboardPage = () => {
     // Simulate fetching WiFi speed and IP address from the device
     const fetchDeviceData = async () => {
       // Simulated WiFi speed check
-      setWifiSpeed('50 Mbps'); // Replace with actual logic to fetch WiFi speed
+      setWifiSpeed('46 Mbps'); // Replace with actual logic to fetch WiFi speed
       setIpAddress('192.168.1.1'); // Replace with actual logic to fetch IP address
     };
 

@@ -24,7 +24,7 @@ const QRCodeCreatePage = () => {
       pageTitle="Create QR Code"
     >
       <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-bold text-center mb-4">Generate QR Code</h2>
+        <h2 className="text-xl font-bold text-center mb-4 text-black">Generate QR Code</h2>
         <form className="space-y-4">
           <div>
             <label className="block text-sm text-gray-700">QR Code Name</label>
