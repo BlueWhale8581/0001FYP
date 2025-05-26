@@ -18,8 +18,9 @@ export const useRegister = () => {
       setSuccess(true);
       return result;
     } catch (err) {
-      setError(err.message || 'Registration failed');
-      return { success: false, error: err.message };
+      const errorMessage = typeof err === 'string' ? err : 'Registration failed';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
     }

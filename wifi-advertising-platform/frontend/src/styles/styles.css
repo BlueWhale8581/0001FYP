@@ -217,7 +217,7 @@
 }
 
 .page-content {
-  @apply grid gap-4;
+  @apply grid gap-4 text-black;
 }
 
 /* Bottom navigation styles - dynamic colors based on role */
@@ -267,8 +267,12 @@
   @apply bg-white rounded-lg shadow-sm p-4 text-black;
 }
 
+.card p {
+  @apply text-gray-900;
+}
+
 .card-header {
-  @apply flex justify-between items-center mb-3;
+  @apply flex justify-between items-center mb-3 text-gray-800;
 }
 
 .card-title {
@@ -281,11 +285,11 @@
 
 /* Chart container styles */
 .chart-container {
-  @apply bg-white rounded-lg shadow-md p-6;
+  @apply bg-white rounded-lg shadow-md p-6 text-black;
 }
 
 .chart-header {
-  @apply flex justify-between items-center mb-4;
+  @apply flex justify-between items-center mb-4 text-black;
 }
 
 .chart-title {
@@ -298,7 +302,7 @@
 
 /* Empty state styles */
 .empty-state {
-  @apply bg-gray-100 rounded-lg p-6 text-center;
+  @apply bg-gray-100 rounded-lg p-6 text-center text-gray-600;
 }
 
 .empty-state-title {
