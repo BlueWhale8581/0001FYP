@@ -19,48 +19,15 @@ exports.register = async (req, res) => {
   try {
     const { username, password, email, first_name, last_name, phone, role } = req.body;
 
-    // Validate input
-    if (!username) {
-      return res.status(400).json({
-        success: false,
-        message: 'Username is required',
-      });
-    }
-    if (!password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Password is required',
-      });
-    }
-    if (!email) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email is required',
-      });
-    }
-    if (!first_name) {
-      return res.status(400).json({
-        success: false,
-        message: 'First name is required',
-      });
-    }
-    if (!last_name) {
-      return res.status(400).json({
-        success: false,
-        message: 'Last name is required',
-      });
-    }
-    if (!phone) {
-      return res.status(400).json({
-        success: false,
-        message: 'Phone number is required',
-      });
-    }
-    if (!role) {
-      return res.status(400).json({
-        success: false,
-        message: 'Role is required',
-      });
+    // Validate required fields
+    const requiredFields = { username, password, email, first_name, last_name, phone, role };
+    for (const [field, value] of Object.entries(requiredFields)) {
+      if (!value) {
+        return res.status(400).json({
+          success: false,
+          message: `${field.replace('_', ' ')} is required`
+        });
+      }
     }
 
     // Check if user already exists
@@ -68,24 +35,32 @@ exports.register = async (req, res) => {
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: 'User with this email or username already exists',
+        message: 'User with this email or username already exists'
       });
     }
 
     // Register user using AuthService
-    const user = await AuthService.register({ username, password, email, phone, first_name, last_name, role });
+    const user = await AuthService.register({ 
+      username, 
+      password, 
+      email, 
+      phone, 
+      first_name, 
+      last_name, 
+      role 
+    });
 
+    // Return success with user ID
     return res.status(201).json({
       success: true,
       message: 'Registration successful',
-      userId: user.id,
+      userId: user.id
     });
   } catch (error) {
     console.error('Registration error:', error);
     return res.status(500).json({
       success: false,
-      message: 'Registration failed',
-      error: error.message,
+      message: error.message || 'Registration failed'
     });
   }
 };
@@ -109,13 +84,34 @@ exports.registerRole = async (req, res) => {
     let result;
     switch (role) {
       case 'merchant':
-        result = await Merchant.create({ id: userId, ...roleData });
+        result = await Merchant.create({
+          id: userId,
+          business_name: roleData.business_name,
+          business_address: roleData.business_address,
+          business_phone: roleData.business_phone,
+          business_email: roleData.business_email,
+          business_category: roleData.business_category,
+          tax_id: roleData.tax_id,
+          logo_url: roleData.logo_url,
+          approval_status: 'PENDING'
+        });
         break;
       case 'advertiser':
-        result = await Advertiser.create({ id: userId, ...roleData });
+        result = await Advertiser.create({
+          id: userId,
+          company_name: roleData.company_name,
+          company_address: roleData.company_address,
+          company_phone: roleData.company_phone,
+          company_email: roleData.company_email,
+          industry: roleData.industry
+        });
         break;
       case 'agent':
-        result = await Agent.create({ id: userId, ...roleData });
+        result = await Agent.create({ 
+          id: userId,
+          commission_rate: roleData.commission_rate,
+          territory: roleData.territory, 
+        });
         break;
       default:
         return res.status(400).json({

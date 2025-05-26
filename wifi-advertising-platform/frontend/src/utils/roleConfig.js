@@ -48,8 +48,8 @@ export const navigationItems = {
   agent: [
     { id: 'dashboard', icon: <Home size={20} />, label: 'Dashboard' , route:"/agent"},
     { id: 'merchants', icon: <Users size={20} />, label: 'Merchants' , route:"/agent/merchants"},
-    { id: 'qrcodes', icon: <FileText size={20} />, label: 'QR Codes' , route:"/agent/QRcode"},
-    { id: 'earnings', icon: <CreditCard size={20} />, label: 'Earnings' , route:"/agent/earning"},
+    { id: 'qrcodes', icon: <FileText size={20} />, label: 'QR Codes' , route:"/agent/qrcodes"},
+    { id: 'earnings', icon: <CreditCard size={20} />, label: 'Earnings' , route:"/agent/earnings"},
     { id: 'profile', icon: <User size={20} />, label: 'Profile' , route:"/agent/profile"},
   ],
   advertiser: [
@@ -90,8 +90,8 @@ export const navigationSideBarItems = {
     { id: 'dashboard', icon: <Home size={20} />, label: 'Dashboard' , route:"/agent"},
     { id: 'scan', icon: <Scan size={20} />, label: 'Scan QR', route: '/scan' },
     { id: 'merchants', icon: <Users size={20} />, label: 'Merchants' , route:"/merchants"},
-    { id: 'qrcodes', icon: <FileText size={20} />, label: 'QR Codes' , route:"/QRcode"},
-    { id: 'earnings', icon: <CreditCard size={20} />, label: 'Earnings' , route:"/earning"},
+    { id: 'qrcodes', icon: <FileText size={20} />, label: 'QR Codes' , route:"/qrcodes"},
+    { id: 'earnings', icon: <CreditCard size={20} />, label: 'Earnings' , route:"/earnings"},
     { id: 'aboutus', icon: <Settings size={20} />, label: 'About Us', route: '/aboutus' },
     { id: 'profile', icon: <User size={20} />, label: 'Profile' , route:"/profile"},
   ],

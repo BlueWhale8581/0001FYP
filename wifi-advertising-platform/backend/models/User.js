@@ -29,7 +29,7 @@ class User {
         .input('username', sql.NVarChar, userData.username)
         .input('email', sql.NVarChar, userData.email)
         .input('password', sql.NVarChar, hashedPassword)
-        .input('role', sql.NVarChar, userData.role.toUpperCase())
+        .input('role', sql.NVarChar, userData.role)
         .input('first_name', sql.NVarChar, userData.first_name)
         .input('last_name', sql.NVarChar, userData.last_name)
         .input('phone', sql.NVarChar, userData.phone)

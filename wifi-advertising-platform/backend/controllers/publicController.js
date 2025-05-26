@@ -19,6 +19,10 @@ const authService = require('../services/authService');
 const emailService = require('../services/emailService');
 const notificationService = require('../services/notificationService');
 const auditService = require('../services/auditService');
+const path = require('path');
+const fs = require('fs');
+const QRCodeLib = require('qrcode');
+const QRCodeModel = require('../models/QRCode');
 
 /**
  * Get Wi-Fi details directly from the user's device
@@ -174,7 +178,7 @@ exports.completeAdView = async (req, res) => {
     await WiFiAccessModel.updateAdsViewed(sessionId);
     
     // Record ad impression
-    const userId = session.user_id;
+    const userId = session.id;
     const merchantId = session.merchant_id;
     
     await adService.recordImpression(adId, merchantId, userId, {
@@ -595,6 +599,113 @@ exports.submitFeedback = async (req, res) => {
       message: 'Failed to submit feedback',
       error: error.message,
     });
+  }
+};
+
+/**
+ * @desc    Generate a demo QR code with custom SSID and password
+ * @route   POST /api/qrcodes/demo-generate
+ * @access  Public
+ */
+exports.demoGenerateQRCode = async (req, res) => {
+  try {
+    const {
+      merchant_id,
+      ssid,
+      password,
+      qr_content,
+      activation_status,
+      created_by,
+      name,
+      expiration_date
+    } = req.body;
+
+    if (!merchant_id || !ssid || !password || !qr_content) {
+      return res.status(400).json({ success: false, message: 'Missing required fields' });
+    }
+
+    // Generate unique filename
+    const timestamp = Date.now();
+    const filename = `demo_qrcode_${merchant_id}_${timestamp}.png`;
+    const uploadDir = path.join(__dirname, '../../uploads/qr_codes');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    const filePath = path.join(uploadDir, filename);
+
+    // Generate QR code image
+    await QRCodeLib.toFile(filePath, qr_content, {
+      errorCorrectionLevel: 'H',
+      margin: 1,
+      width: 300,
+      color: {
+        dark: '#000000',
+        light: '#ffffff'
+      }
+    });
+
+    // Store QR code record in DB (optional for demo, but included)
+    const code_image_url = `/uploads/qr_codes/${filename}`;
+    await QRCodeModel.create({
+      merchant_id,
+      code_image_url,
+      activation_status: activation_status || 'ACTIVE',
+      created_by,
+      // Optionally store name, expiration_date if your model supports it
+    });
+
+    return res.status(201).json({ success: true, code_image_url });
+  } catch (error) {
+    console.error('Error generating demo QR code:', error);
+    return res.status(500).json({ success: false, message: 'Failed to generate QR code' });
+  }
+};
+
+exports.getMerchants = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, status, search, sortBy = 'created_at', sortOrder = 'desc' } = req.query;
+    const offset = (page - 1) * limit;
+    
+    const filters = {};
+    if (status) filters.status = status;
+    if (search) filters.search = search;
+    
+    const merchants = await Merchant.findAll({ 
+      ...filters, 
+      limit, 
+      offset,
+      sortBy,
+      sortOrder
+    });
+    
+    const total = await Merchant.getCount(filters);
+    
+    // Get associated user data
+    const enrichedMerchants = await Promise.all(merchants.map(async (merchant) => {
+      const userData = await User.findById(merchant.id);
+      return {
+        ...merchant,
+        user: userData ? {
+          id: userData.id,
+          email: userData.email,
+          first_name: userData.first_name,
+          last_name: userData.last_name,
+          status: userData.status
+        } : null
+      };
+    }));
+    
+    res.status(200).json({
+      merchants: enrichedMerchants,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total
+      }
+    });
+  } catch (error) {
+    console.error('Error getting merchants:', error);
+    res.status(500).json({ message: 'Error retrieving merchants' });
   }
 };
 

@@ -29,17 +29,18 @@ class Merchant {
         .input('business_email', sql.NVarChar, merchantData.business_email)
         .input('business_category', sql.NVarChar, merchantData.business_category || null)
         .input('tax_id', sql.NVarChar, merchantData.tax_id || null)
+        .input('logo_url', sql.NVarChar, merchantData.logo_url || null)
         .input('agent_id', sql.Int, merchantData.agent_id || null)
-        .input('approval_status', sql.NVarChar, merchantData.approval_status || 'Active')
+        .input('approval_status', sql.NVarChar, merchantData.approval_status || 'PENDING')
         .query(`
           INSERT INTO merchants (
             id, business_name, business_address, business_phone, business_email,
-            business_category, tax_id, agent_id, approval_status
+            business_category, tax_id, logo_url, agent_id, approval_status
           )
           OUTPUT INSERTED.id
           VALUES (
             @id, @business_name, @business_address, @business_phone, @business_email,
-            @business_category, @tax_id, @agent_id, @approval_status
+            @business_category, @tax_id, @logo_url, @agent_id, @approval_status
           )
         `);
       return { id: result.recordset[0].id, ...merchantData };

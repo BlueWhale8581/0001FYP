@@ -343,7 +343,7 @@ router.post('/check-role', async (req, res) => {
       const agentExists = await Agent.findById(userId);
       if (!agentExists) {
         await Agent.create({
-          user_id: userId,
+          id: userId,
           commission_rate: 0.5,
           territory: 'Malaysia',
         });

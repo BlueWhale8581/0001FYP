@@ -46,8 +46,13 @@ import MerchantDetailsPage from './pages/merchant/Details';
 import UserDashboardPage from './pages/public/Dashboard';
 import RegisterPage from './pages/public/RegisterAccount';
 import LoginPage from './pages/public/Login';
+import RegisterAgent from './pages/public/RegisterAgent';
 import RegisterMerchant from './pages/public/RegisterMerchant';
 import RegisterAdvertiser from './pages/public/RegisterAdvertiser';
+
+// Demo Page
+import PublicQRCodeCreate from './pages/public/QRCodeCreate';
+import PublicQRCodeList from './pages/public/QRCode';
 
 const App = () => {
   return (
@@ -67,7 +72,7 @@ const App = () => {
         <Route path="/agent/merchants" element={<AgentMerchantsPage />} />
         <Route path="/agent/createmerchant" element={<AgentCreateMerchantPage />} />
         <Route path="/agent/editmerchant/:id" element={<AgentEditMerchantPage />} />
-        <Route path="/agent/qrcode" element={<AgentQRCodePage />} />
+        <Route path="/agent/qrcodes" element={<AgentQRCodePage />} />
         <Route path="/agent/earnings" element={<AgentEarningsPage />} />
         <Route path="/agent/profile" element={<AgentProfilePage />} />
 
@@ -97,9 +102,16 @@ const App = () => {
         <Route path="/" element={<UserDashboardPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register/agent/:userId" element={<RegisterAgent />} />
         <Route path="/register/merchant/:userId" element={<RegisterMerchant />} />
         <Route path="/register/advertiser/:userId" element={<RegisterAdvertiser />} />
         
+        {/* Demo Route */}
+        <Route path="/demo/qrcodes/create" element={<PublicQRCodeCreate />} />
+        <Route path="/demo/qrcodes" element={<PublicQRCodeList />} />
+        
+        {/* Fallback Route */}
+
       </Routes>
     </Router>
   );

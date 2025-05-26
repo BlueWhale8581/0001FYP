@@ -77,7 +77,7 @@ const UsersCreatePage = () => {
       // Handle role-specific data
       if (formData.role === 'agent') {
         await createAgent({
-          user_id: user.id,
+          id: user.id,
           commission_rate: roleSpecificData.commission_rate,
           territory: roleSpecificData.territory,
         });

@@ -1,7 +1,7 @@
 CREATE TABLE [dbo].[wifi_access_logs](
 	[id] [int] IDENTITY(600000001,1) NOT NULL,
 	[merchant_id] [int] NOT NULL,
-	[user_id] [int] NULL,
+	[id] [int] NULL,
 	[device_mac] [varchar](17) NOT NULL,
 	[connection_time] [datetime] NULL,
 	[disconnection_time] [datetime] NULL,
@@ -22,7 +22,7 @@ GO
 ALTER TABLE [dbo].[wifi_access_logs]  WITH CHECK ADD FOREIGN KEY([merchant_id])
 REFERENCES [dbo].[merchants] ([id])
 GO
-ALTER TABLE [dbo].[wifi_access_logs]  WITH CHECK ADD FOREIGN KEY([user_id])
+ALTER TABLE [dbo].[wifi_access_logs]  WITH CHECK ADD FOREIGN KEY([id])
 REFERENCES [dbo].[users] ([id])
 GO
 
@@ -163,7 +163,7 @@ GO
 
 CREATE TABLE [dbo].[notifications](
 	[id] [int] IDENTITY(900000001,1) NOT NULL,
-	[user_id] [int] NOT NULL,
+	[id] [int] NOT NULL,
 	[title] [varchar](100) NOT NULL,
 	[message] [text] NOT NULL,
 	[type] [varchar](20) NULL,
@@ -182,7 +182,7 @@ ALTER TABLE [dbo].[notifications] ADD  DEFAULT ((0)) FOR [is_read]
 GO
 ALTER TABLE [dbo].[notifications] ADD  DEFAULT (getdate()) FOR [created_at]
 GO
-ALTER TABLE [dbo].[notifications]  WITH CHECK ADD FOREIGN KEY([user_id])
+ALTER TABLE [dbo].[notifications]  WITH CHECK ADD FOREIGN KEY([id])
 REFERENCES [dbo].[users] ([id])
 ON DELETE CASCADE
 GO
@@ -261,7 +261,7 @@ GO
 
 CREATE TABLE [dbo].[audit_logs](
 	[id] [int] IDENTITY(960000001,1) NOT NULL,
-	[user_id] [int] NULL,
+	[id] [int] NULL,
 	[action] [varchar](100) NOT NULL,
 	[entity_type] [varchar](50) NOT NULL,
 	[entity_id] [int] NULL,
@@ -278,7 +278,7 @@ ALTER TABLE [dbo].[audit_logs] ADD PRIMARY KEY CLUSTERED
 GO
 ALTER TABLE [dbo].[audit_logs] ADD  DEFAULT (getdate()) FOR [created_at]
 GO
-ALTER TABLE [dbo].[audit_logs]  WITH CHECK ADD FOREIGN KEY([user_id])
+ALTER TABLE [dbo].[audit_logs]  WITH CHECK ADD FOREIGN KEY([id])
 REFERENCES [dbo].[users] ([id])
 GO
 
@@ -316,7 +316,7 @@ GO
 CREATE TABLE [dbo].[ad_impressions](
 	[id] [int] IDENTITY(700000001,1) NOT NULL,
 	[ad_id] [int] NOT NULL,
-	[user_id] [int] NULL,
+	[id] [int] NULL,
 	[merchant_id] [int] NOT NULL,
 	[view_time] [datetime] NULL,
 	[view_duration] [int] NULL,
@@ -339,7 +339,7 @@ GO
 ALTER TABLE [dbo].[ad_impressions]  WITH CHECK ADD FOREIGN KEY([merchant_id])
 REFERENCES [dbo].[merchants] ([id])
 GO
-ALTER TABLE [dbo].[ad_impressions]  WITH CHECK ADD FOREIGN KEY([user_id])
+ALTER TABLE [dbo].[ad_impressions]  WITH CHECK ADD FOREIGN KEY([id])
 REFERENCES [dbo].[users] ([id])
 GO
 

@@ -49,10 +49,34 @@ const RegisterAdvertiser = () => {
       return;
     }
 
-    // TODO: Implement API call to save advertiser details
     try {
-      // Add API call here
-      navigate('/login'); // Redirect to login after successful registration
+      const response = await fetch('/api/auth/register-role', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          role: 'advertiser',
+          userId,
+          roleData: {
+            company_name: formData.company_name,
+            company_address: formData.company_address,
+            company_phone: formData.company_phone,
+            company_email: formData.company_email,
+            industry: formData.industry
+          }
+        }),
+      });
+
+      if (response.ok) {
+        navigate('/login', { 
+          state: { 
+            message: 'Registration successful! Please login to continue.' 
+          }
+        });
+      } else {
+        throw new Error('Failed to register advertiser details');
+      }
     } catch (error) {
       console.error('Registration error:', error);
     }

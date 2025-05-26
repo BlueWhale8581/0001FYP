@@ -19,7 +19,7 @@ class AuthService {
    */
   async register(userData) {
     try {
-      // Check if user already exists
+      // Check for existing user
       const existingUser = await User.findByEmail(userData.email);
       if (existingUser) {
         throw new Error('User with this email already exists');
@@ -28,9 +28,9 @@ class AuthService {
       const existingUsername = await User.findByUsername(userData.username);
       if (existingUsername) {
         throw new Error('Username is already taken');
-      }
+     }
 
-      // Create the user
+      // Create user with raw password (hashing will be done in User.create)
       const user = await User.create({
         username: userData.username,
         email: userData.email,
@@ -39,22 +39,12 @@ class AuthService {
         first_name: userData.first_name,
         last_name: userData.last_name,
         role: userData.role,
+        status: 'PENDING'
       });
 
-      // If the role is agent, create an Agent entry
-      if (userData.role === 'agent') {
-        await Agent.create({
-          user_id: user.id,
-          commission_rate: 0.5,
-          territory: 'Malaysia',
-        });
-      }
-
-      // Remove the password from the returned user object
-      const userResponse = { ...user };
-      delete userResponse.password;
-
-      return userResponse;
+      // Return user data without password
+      const { password, ...userWithoutPassword } = user;
+      return userWithoutPassword;
     } catch (error) {
       throw error;
     }
@@ -201,13 +191,13 @@ class AuthService {
 
   /**
    * Create a agent profile
-   * @param {Object} agentData - Merchant data including user_id
+   * @param {Object} agentData - Merchant data including id
    * @returns {Promise<Object>} Created merchant object
    */
   async createAgent(agentData) {
     try {
       const result = await Agent.create({
-        id: agentData.userId,
+        id: agentData.userId, 
         commission_rate: agentData.commission_rate,
         territory: agentData.territory
       });
@@ -220,13 +210,13 @@ class AuthService {
 
   /**
    * Create a merchant profile
-   * @param {Object} merchantData - Merchant data including user_id
+   * @param {Object} merchantData - Merchant data including id
    * @returns {Promise<Object>} Created merchant object
    */
   async createMerchant(merchantData) {
     try {
       const result = await Merchant.create({
-        id: merchantData.userId,
+        id: merchantData.userId, 
         business_name: merchantData.business_name,
         business_address: merchantData.business_address,
         business_phone: merchantData.business_phone,
@@ -245,13 +235,13 @@ class AuthService {
 
   /**
    * Create an advertiser profile
-   * @param {Object} advertiserData - Advertiser data including user_id
+   * @param {Object} advertiserData - Advertiser data including id
    * @returns {Promise<Object>} Created advertiser object
    */
   async createAdvertiser(advertiserData) {
     try {
       const result = await Advertiser.create({
-        id: advertiserData.userId,
+        id: advertiserData.userId, 
         company_name: advertiserData.company_name,
         company_address: advertiserData.company_address,
         company_phone: advertiserData.company_phone,

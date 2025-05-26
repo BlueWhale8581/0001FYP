@@ -226,11 +226,19 @@ export const useQRCodes = () => {
     try {
       setLoading(true);
       const data = await agentService.getAllQRCodes();
-      setQRCodes(data.qrcodes || []);
+      // Defensive: handle both array and object response
+      if (Array.isArray(data)) {
+        setQRCodes(data);
+      } else if (Array.isArray(data.qrcodes)) {
+        setQRCodes(data.qrcodes);
+      } else {
+        setQRCodes([]);
+      }
       setError(null);
       return data;
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load QR codes');
+      setQRCodes([]);
       return null;
     } finally {
       setLoading(false);
@@ -245,11 +253,19 @@ export const useQRCodes = () => {
     try {
       setLoading(true);
       const data = await agentService.getQRCodesByMerchant(merchantId);
-      setQRCodes(data.qrcodes || []);
+      // Defensive: handle both array and object response
+      if (Array.isArray(data)) {
+        setQRCodes(data);
+      } else if (Array.isArray(data.qrcodes)) {
+        setQRCodes(data.qrcodes);
+      } else {
+        setQRCodes([]);
+      }
       setError(null);
       return data;
     } catch (err) {
       setError(err.response?.data?.message || `Failed to load QR codes for merchant ${merchantId}`);
+      setQRCodes([]);
       return null;
     } finally {
       setLoading(false);

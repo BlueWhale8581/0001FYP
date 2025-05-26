@@ -137,14 +137,17 @@ class AuthService {
     try {
       const response = await axios.post('/api/auth/register', {
         ...userData,
-        role: userData.role.toUpperCase() // Convert role to uppercase
+        role: userData.role.toUpperCase()
       });
       
-      // Handle the response data directly
-      if (response.data) {
-        return { success: true, userId: response.data.id };
+      // Check if we have the response and user ID
+      if (response.data && response.data.userId) {
+        return {
+          success: true,
+          id: response.data.userId
+        };
       }
-      throw new Error('Invalid registration response');
+      throw new Error('Registration failed - Invalid server response');
     } catch (error) {
       console.error('Registration error:', error);
       throw error.response?.data?.message || 'Registration failed';

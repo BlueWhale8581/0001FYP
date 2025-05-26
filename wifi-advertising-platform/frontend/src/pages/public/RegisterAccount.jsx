@@ -89,12 +89,10 @@ const RegisterPage = () => {
         role: formData.role
       });
       
-      if (result && result.success && result.userId) {
-        if (formData.role === 'agent') {
-          navigate('/login');
-        } else {
-          navigate(`/register/${formData.role}/${result.userId}`);
-        }
+      if (result && result.success && result.id) {
+        navigate(`/register/${formData.role}/${result.id}`);
+      } else {
+        throw new Error('Registration failed - missing user ID');
       }
     } catch (error) {
       console.error('Registration error:', error);

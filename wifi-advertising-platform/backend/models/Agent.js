@@ -3,7 +3,6 @@ const { sql, poolPromise } = require('../config/database');
 class Agent {
   constructor(agentData) {
     this.id = agentData.id;
-    this.user_id = agentData.user_id;
     this.commission_rate = agentData.commission_rate;
     this.territory = agentData.territory;
     this.created_at = agentData.created_at;
@@ -14,16 +13,19 @@ class Agent {
   static async create(agentData) {
     try {
       const pool = await poolPromise;
-      const result = await pool
-        .request()
-        .input('user_id', sql.Int, agentData.user_id)
+      const request = pool.request();
+      request
+        .input('id', sql.Int, agentData.id)
         .input('commission_rate', sql.Decimal(5, 2), agentData.commission_rate)
-        .input('territory', sql.NVarChar, agentData.territory)
-        .query(`
-          INSERT INTO agents (user_id, commission_rate, territory)
-          OUTPUT INSERTED.id
-          VALUES (@user_id, @commission_rate, @territory)
-        `);
+        .input('territory', sql.NVarChar, agentData.territory);
+
+      const query = `
+        INSERT INTO agents (id, commission_rate, territory)
+        OUTPUT INSERTED.id
+        VALUES (@id, @commission_rate, @territory)
+      `;
+
+      const result = await request.query(query);
       return { id: result.recordset[0].id, ...agentData };
     } catch (error) {
       console.error('Error creating agent:', error);

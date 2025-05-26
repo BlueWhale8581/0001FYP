@@ -263,7 +263,7 @@ exports.registerMerchant = async (req, res) => {
     
     // Now create merchant profile
     const merchantProfile = {
-      user_id: newUser.id,
+      id: newUser.id,
       business_name: merchantData.business_name,
       business_address: merchantData.business_address,
       business_phone: merchantData.business_phone || merchantData.phone,
@@ -356,7 +356,7 @@ exports.updateMerchant = async (req, res) => {
     
     // If user data needs to be updated
     if (updateData.user_data) {
-      await User.update(merchant.user_id, updateData.user_data);
+      await User.update(merchant.id, updateData.user_data);
     }
     
     // Log this action
@@ -413,7 +413,7 @@ exports.approveMerchantApplication = async (req, res) => {
     const updatedMerchant = await Merchant.updateApprovalStatus(merchantId, 'approved');
     
     // Update user status to active
-    await User.update(merchant.user_id, { status: 'ACTIVE' });
+    await User.update(merchant.id, { status: 'ACTIVE' });
     
     // Log this action
     await auditService.logStatusChange({
@@ -427,7 +427,7 @@ exports.approveMerchantApplication = async (req, res) => {
     
     // Create notification for the merchant
     await notificationService.createNotification(
-      merchant.user_id,
+      merchant.id,
       'Application Approved',
       'Your merchant application has been approved. You can now start setting up your WiFi.',
       'success'
@@ -478,7 +478,7 @@ exports.rejectMerchantApplication = async (req, res) => {
     const updatedMerchant = await Merchant.updateApprovalStatus(merchantId, 'rejected');
     
     // Update user status
-    await User.update(merchant.user_id, { status: 'inactive' });
+    await User.update(merchant.id, { status: 'inactive' });
     
     // Log this action
     await auditService.logStatusChange({
@@ -492,7 +492,7 @@ exports.rejectMerchantApplication = async (req, res) => {
     
     // Create notification for the merchant
     await notificationService.createNotification(
-      merchant.user_id,
+      merchant.id,
       'Application Rejected',
       `Your merchant application has been rejected. Reason: ${rejectionReason || 'Not specified'}`,
       'error'
@@ -552,7 +552,7 @@ exports.generateQRCode = async (req, res) => {
     
     // Create notification for the merchant
     await notificationService.createNotification(
-      merchant.user_id,
+      merchant.id,
       'QR Code Generated',
       'A new QR code has been generated for your business.',
       'info'
@@ -615,7 +615,7 @@ exports.regenerateQRCode = async (req, res) => {
     
     // Create notification for the merchant
     await notificationService.createNotification(
-      merchant.user_id,
+      merchant.id,
       'QR Code Regenerated',
       'Your QR code has been regenerated. Previous QR codes are now inactive.',
       'info'

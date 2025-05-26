@@ -51,10 +51,36 @@ const RegisterMerchant = () => {
       return;
     }
 
-    // TODO: Implement API call to save merchant details
     try {
-      // Add API call here
-      navigate('/login'); // Redirect to login after successful registration
+      const response = await fetch('/api/auth/register-role', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          role: 'merchant',
+          userId,
+          roleData: {
+            business_name: formData.business_name,
+            business_address: formData.business_address,
+            business_phone: formData.business_phone,
+            business_email: formData.business_email,
+            business_category: formData.business_category,
+            tax_id: formData.tax_id,
+            logo_url: formData.logo_url
+          }
+        }),
+      });
+
+      if (response.ok) {
+        navigate('/login', { 
+          state: { 
+            message: 'Registration successful! Please login to continue.' 
+          }
+        });
+      } else {
+        throw new Error('Failed to register merchant details');
+      }
     } catch (error) {
       console.error('Registration error:', error);
     }

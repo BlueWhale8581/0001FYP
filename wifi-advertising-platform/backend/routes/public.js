@@ -94,4 +94,13 @@ router.get('/ads/:merchantId', publicController.getAdsToView);
  */
 router.post('/ads/impression/:adId/:merchantId', publicController.recordAdImpression);
 
+/**
+ * @route   POST /api/demo/qrcodes/create
+ * @desc    Generate a demo QR code with custom SSID and password
+ * @access  Public
+ */
+router.post('/demo/qrcodes/create', require('../controllers/publicController').demoGenerateQRCode);
+
+router.get('/demo/merchants', publicController.getMerchants);
+
 module.exports = router;
