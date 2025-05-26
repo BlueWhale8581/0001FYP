@@ -272,7 +272,7 @@ exports.registerMerchant = async (req, res) => {
       tax_id: merchantData.tax_id,
       logo_url: null, // Will be updated later
       agent_id: agentId,
-      approval_status: 'pending'
+      approval_status: 'PENDING'
     };
     
     const newMerchant = await Merchant.create(merchantProfile);
@@ -413,7 +413,7 @@ exports.approveMerchantApplication = async (req, res) => {
     const updatedMerchant = await Merchant.updateApprovalStatus(merchantId, 'approved');
     
     // Update user status to active
-    await User.update(merchant.user_id, { status: 'active' });
+    await User.update(merchant.user_id, { status: 'ACTIVE' });
     
     // Log this action
     await auditService.logStatusChange({

@@ -95,7 +95,7 @@ class TransactionService {
   /**
    * Update transaction status
    * @param {number} transactionId - Transaction ID
-   * @param {string} newStatus - New status ('pending', 'completed', 'failed', 'refunded')
+   * @param {string} newStatus - New status ('PENDING', 'completed', 'failed', 'refunded')
    * @param {number} adminId - Admin user ID making the change
    * @returns {Promise<Object>} Updated transaction
    */
@@ -108,7 +108,7 @@ class TransactionService {
       }
       
       // Validate status
-      const validStatuses = ['pending', 'completed', 'failed', 'refunded'];
+      const validStatuses = ['PENDING', 'completed', 'failed', 'refunded'];
       if (!validStatuses.includes(newStatus)) {
         throw new Error('Invalid transaction status');
       }

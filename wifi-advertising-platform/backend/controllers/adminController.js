@@ -73,8 +73,8 @@ exports.getNotifications = async (req, res) => {
 exports.getAlerts = async (req, res) => {
   try {
     // Get system alerts like low campaign budgets, high wifi usage, etc.
-    const pendingMerchants = await Merchant.countByStatus('pending');
-    const pendingTransactions = await Transaction.findAll({ status: 'pending', limit: 5 });
+    const pendingMerchants = await Merchant.countByStatus('PENDING');
+    const pendingTransactions = await Transaction.findAll({ status: 'PENDING', limit: 5 });
     
     // Get settings for threshold values
     const settings = await SystemSettings.getMultiple(['alert_low_budget_threshold', 'alert_high_wifi_usage']);
@@ -161,7 +161,7 @@ exports.createUser = async (req, res) => {
       first_name: first_name,
       last_name: last_name,
       phone,
-      status: status || 'active'
+      status: status || 'ACTIVE'
     };
     
     const newUser = await User.create(userData);
@@ -289,7 +289,7 @@ exports.changeUserStatus = async (req, res) => {
       id,
       'Account Status Updated',
       `Your account status has been changed to ${status}`,
-      status === 'active' ? 'success' : 'warning'
+      status === 'ACTIVE' ? 'success' : 'warning'
     );
     
     res.status(200).json({

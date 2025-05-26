@@ -293,7 +293,7 @@ exports.resumeCampaign = async (req, res) => {
     const advertiserId = req.user.advertiserId;
     
     // Update campaign status to active
-    const updatedCampaign = await CampaignService.changeCampaignStatus(campaignId, 'active', advertiserId);
+    const updatedCampaign = await CampaignService.changeCampaignStatus(campaignId, 'ACTIVE', advertiserId);
     
     if (!updatedCampaign) {
       return res.status(404).json({
@@ -610,7 +610,7 @@ exports.getAdBudget = async (req, res) => {
     
     // Get active campaigns
     const activeCampaigns = await Campaign.findByAdvertiserId(advertiserId, { 
-      status: 'active'
+      status: 'ACTIVE'
     });
     
     // Calculate budget details
@@ -1059,7 +1059,7 @@ exports.updateCampaignStatus = async (req, res) => {
     const advertiserId = req.user.advertiserId;
     const { status } = req.body;
     
-    if (!['active', 'paused', 'completed'].includes(status)) {
+    if (!['ACTIVE', 'paused', 'completed'].includes(status)) {
       return res.status(400).json({
         success: false,
         message: 'Invalid status value. Must be one of: active, paused, completed'

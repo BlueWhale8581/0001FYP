@@ -295,7 +295,7 @@ exports.getSystemAlerts = async (limit = 5) => {
     // Check for low budgets in campaigns
     const lowBudgetCampaigns = await Campaign.findAll({
       where: {
-        status: 'active',
+        status: 'ACTIVE',
         // Where remaining budget is less than 10%
         spentPercentage: { $gt: 90 }
       },
@@ -360,7 +360,7 @@ exports.getQuickStats = async (role, entityId = null) => {
       case 'admin':
         // Admin quick stats
         stats.totalUsers = await User.countByRole();
-        stats.pendingMerchants = await Merchant.countByStatus('pending');
+        stats.pendingMerchants = await Merchant.countByStatus('PENDING');
         
         // Revenue stats for last 30 days
         const revenueSummary = await Transaction.getRevenueSummary({
@@ -372,7 +372,7 @@ exports.getQuickStats = async (role, entityId = null) => {
         stats.totalRevenue = revenueSummary.total || 0;
         stats.adRevenue = revenueSummary.byType?.ad_revenue || 0;
         stats.pendingTransactions = await Transaction.findAll({
-          where: { status: 'pending' },
+          where: { status: 'PENDING' },
           count: true
         });
         
@@ -387,7 +387,7 @@ exports.getQuickStats = async (role, entityId = null) => {
         // Agent quick stats
         stats.totalMerchants = await Merchant.findByAgentId(entityId, { count: true });
         stats.pendingMerchants = await Merchant.findByAgentId(entityId, { 
-          where: { approval_status: 'pending' },
+          where: { approval_status: 'PENDING' },
           count: true
         });
         
@@ -404,7 +404,7 @@ exports.getQuickStats = async (role, entityId = null) => {
         
         // QR code stats
         stats.activeQRCodes = await require('../models/QRCode').findByAgentId(entityId, {
-          where: { activation_status: 'active' },
+          where: { activation_status: 'ACTIVE' },
           count: true
         });
         break;
@@ -412,7 +412,7 @@ exports.getQuickStats = async (role, entityId = null) => {
       case 'advertiser':
         // Advertiser quick stats
         stats.activeCampaigns = await Campaign.findByAdvertiserId(entityId, {
-          where: { status: 'active' },
+          where: { status: 'ACTIVE' },
           count: true
         });
         

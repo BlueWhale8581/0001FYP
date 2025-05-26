@@ -46,6 +46,8 @@ import MerchantDetailsPage from './pages/merchant/Details';
 import UserDashboardPage from './pages/public/Dashboard';
 import RegisterPage from './pages/public/RegisterAccount';
 import LoginPage from './pages/public/Login';
+import RegisterMerchant from './pages/public/RegisterMerchant';
+import RegisterAdvertiser from './pages/public/RegisterAdvertiser';
 
 const App = () => {
   return (
@@ -95,6 +97,9 @@ const App = () => {
         <Route path="/" element={<UserDashboardPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register/merchant/:userId" element={<RegisterMerchant />} />
+        <Route path="/register/advertiser/:userId" element={<RegisterAdvertiser />} />
+        
       </Routes>
     </Router>
   );

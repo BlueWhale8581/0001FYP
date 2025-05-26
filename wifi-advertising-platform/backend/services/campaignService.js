@@ -86,7 +86,7 @@ class CampaignService {
   /**
    * Change campaign status (activate, pause, complete, cancel)
    * @param {number} campaignId - Campaign ID
-   * @param {string} newStatus - New status ('active', 'paused', 'completed', 'cancelled')
+   * @param {string} newStatus - New status ('ACTIVE', 'paused', 'completed', 'CANCELLED')
    * @param {number} advertiserId - Advertiser ID for validation
    * @returns {Promise<Object>} Updated campaign
    */
@@ -103,18 +103,18 @@ class CampaignService {
       }
       
       // Validate status changes
-      const validStatuses = ['draft', 'active', 'paused', 'completed', 'cancelled'];
+      const validStatuses = ['draft', 'ACTIVE', 'paused', 'completed', 'CANCELLED'];
       if (!validStatuses.includes(newStatus)) {
         throw new Error('Invalid status');
       }
       
       // Check specific rules for status changes
-      if (existingCampaign.status === 'completed' || existingCampaign.status === 'cancelled') {
+      if (existingCampaign.status === 'completed' || existingCampaign.status === 'CANCELLED') {
         throw new Error(`Cannot change status of a ${existingCampaign.status} campaign`);
       }
       
       // If activating, ensure campaign has at least one ad
-      if (newStatus === 'active') {
+      if (newStatus === 'ACTIVE') {
         const adCount = await Ad.countByCampaignId(campaignId);
         if (adCount === 0) {
           throw new Error('Cannot activate campaign without ads');
@@ -135,7 +135,7 @@ class CampaignService {
         active: 'activated',
         paused: 'paused',
         completed: 'completed',
-        cancelled: 'cancelled',
+        cancelled: 'CANCELLED',
         draft: 'returned to draft'
       };
       
@@ -265,7 +265,7 @@ class CampaignService {
       }
       
       // Get active campaigns
-      const activeCampaigns = await Campaign.findByAdvertiserId(advertiserId, { status: 'active' });
+      const activeCampaigns = await Campaign.findByAdvertiserId(advertiserId, { status: 'ACTIVE' });
       
       // Get campaign summaries
       const campaignSummary = await Campaign.getDashboardSummary(advertiserId);

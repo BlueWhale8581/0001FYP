@@ -81,7 +81,7 @@ const AdvertiserPaymentsPage = () => {
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'paid': return 'green';
-      case 'pending': return 'yellow';
+      case 'PENDING': return 'yellow';
       case 'failed': return 'red';
       default: return 'gray';
     }
@@ -265,7 +265,7 @@ const AdvertiserPaymentsPage = () => {
                               <Download size={16} className="mr-1" />
                               PDF
                             </button>
-                            {invoice.status.toLowerCase() === 'pending' && (
+                            {invoice.status.toLowerCase() === 'PENDING' && (
                               <button 
                                 className="text-green-600 hover:text-green-800 flex items-center"
                                 onClick={() => handleMakePayment({ invoiceId: invoice.id, amount: invoice.amount })}

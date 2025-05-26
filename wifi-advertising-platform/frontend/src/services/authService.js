@@ -128,6 +128,22 @@ class AuthService {
     }
   }
 
+  /**
+   * Register a new user
+   * @param {Object} userData - User registration data
+   * @returns {Promise<Object>} - Registration response
+   */
+  async register(userData) {
+    try {
+      const response = await axios.post('/api/auth/register', userData);
+      const { data } = response.data;
+      return { success: true, userId: data.user.id };
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    }
+  }
+
   getStoredUser() {
     try {
       return JSON.parse(localStorage.getItem('user'));

@@ -5,7 +5,7 @@ class QRCode {
     this.id = qrCodeData.id;
     this.merchant_id = qrCodeData.merchant_id;
     this.code_image_url = qrCodeData.code_image_url;
-    this.activation_status = qrCodeData.activation_status || 'active';
+    this.activation_status = qrCodeData.activation_status || 'ACTIVE';
     this.created_by = qrCodeData.created_by;
     this.created_at = qrCodeData.created_at;
     this.updated_at = qrCodeData.updated_at;
@@ -19,7 +19,7 @@ class QRCode {
         .request()
         .input('merchant_id', sql.Int, qrCodeData.merchant_id)
         .input('code_image_url', sql.NVarChar, qrCodeData.code_image_url)
-        .input('activation_status', sql.NVarChar, qrCodeData.activation_status || 'active')
+        .input('activation_status', sql.NVarChar, qrCodeData.activation_status || 'ACTIVE')
         .input('created_by', sql.Int, qrCodeData.created_by)
         .query(`
           INSERT INTO qr_codes (
@@ -143,7 +143,7 @@ class QRCode {
         .input('merchant_id', sql.Int, merchantId)
         .query(`
           SELECT * FROM qr_codes 
-          WHERE merchant_id = @merchant_id AND activation_status = 'active'
+          WHERE merchant_id = @merchant_id AND activation_status = 'ACTIVE'
           ORDER BY created_at DESC
         `);
       

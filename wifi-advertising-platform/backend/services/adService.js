@@ -159,7 +159,7 @@ class AdService {
       
       // Filter out ads from inactive campaigns
       const activeCampaignIds = new Set();
-      const campaigns = await Campaign.findAll({ status: 'active' });
+      const campaigns = await Campaign.findAll({ status: 'ACTIVE' });
       campaigns.forEach(campaign => activeCampaignIds.add(campaign.id));
       
       const activeAds = ads.filter(ad => activeCampaignIds.has(ad.campaign_id));

@@ -5,7 +5,7 @@ class Transaction {
     this.id = transactionData.id;
     this.type = transactionData.type;
     this.amount = transactionData.amount;
-    this.status = transactionData.status || 'pending';
+    this.status = transactionData.status || 'PENDING';
     this.reference_id = transactionData.reference_id;
     this.merchant_id = transactionData.merchant_id;
     this.advertiser_id = transactionData.advertiser_id;
@@ -24,7 +24,7 @@ class Transaction {
         .request()
         .input('type', sql.NVarChar, transactionData.type)
         .input('amount', sql.Decimal(10, 2), transactionData.amount)
-        .input('status', sql.NVarChar, transactionData.status || 'pending')
+        .input('status', sql.NVarChar, transactionData.status.toUpperCase() || 'PENDING')
         .input('reference_id', sql.NVarChar, transactionData.reference_id)
         .input('merchant_id', sql.Int, transactionData.merchant_id)
         .input('advertiser_id', sql.Int, transactionData.advertiser_id)

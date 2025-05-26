@@ -241,14 +241,14 @@ exports.verifyEmail = async (req, res) => {
       });
     }
     
-    if (user.status === 'active') {
+    if (user.status === 'ACTIVE') {
       return res.status(200).json({
         success: true,
         message: 'Email already verified'
       });
     }
     
-    await UserModel.update(decoded.userId, { status: 'active' });
+    await UserModel.update(decoded.userId, { status: 'ACTIVE' });
     
     // Log the verification
     await AuditService.logActivity({
@@ -395,7 +395,7 @@ exports.refreshToken = async (req, res) => {
     // Get user data
     const user = await UserModel.findById(decoded.userId);
     
-    if (!user || user.status !== 'active') {
+    if (!user || user.status !== 'ACTIVE') {
       // Clear refresh token if user not found or inactive
       res.clearCookie('refreshToken');
       

@@ -89,21 +89,11 @@ const RegisterPage = () => {
         role: formData.role
       });
       
-      // Navigate based on role
       if (result && result.success && result.userId) {
-        switch (formData.role) {
-          case 'merchant':
-            navigate(`/register/merchant/${result.userId}`);
-            break;
-          case 'advertiser':
-            navigate(`/register/advertiser/${result.userId}`);
-            break;
-          case 'agent':
-            // For agents, directly go to login as no additional info is needed
-            navigate('/login');
-            break;
-          default:
-            navigate('/login');
+        if (formData.role === 'agent') {
+          navigate('/login');
+        } else {
+          navigate(`/register/${formData.role}/${result.userId}`);
         }
       }
     } catch (error) {
@@ -264,14 +254,13 @@ const RegisterPage = () => {
             className="w-full"
           />
         </form>
-        <div className="text-center text-sm mt-4">
-          <Button
-            as={Link}
+        <div className="text-center mt-4">
+          <Link
             to="/login"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            className="w-full inline-block bg-gray-600 hover:bg-blue-700 text-white text-center py-2 px-4"
           >
             Log In
-          </Button>
+          </Link>
         </div>
       </div>
     </DashboardTemplate>

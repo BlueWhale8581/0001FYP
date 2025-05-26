@@ -247,7 +247,7 @@ class WiFiService {
       }
       
       // Check if QR code is active
-      if (qrCode.activation_status !== 'active') {
+      if (qrCode.activation_status !== 'ACTIVE') {
         throw new Error('This QR code is no longer active');
       }
       

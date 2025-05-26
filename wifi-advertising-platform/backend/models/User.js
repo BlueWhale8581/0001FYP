@@ -14,7 +14,7 @@ class User {
     this.created_at = userData.created_at;
     this.updated_at = userData.updated_at;
     this.last_login = userData.last_login;
-    this.status = userData.status || 'Active';
+    this.status = userData.status || 'ACTIVE';
   }
 
   // Create a new user
@@ -29,11 +29,11 @@ class User {
         .input('username', sql.NVarChar, userData.username)
         .input('email', sql.NVarChar, userData.email)
         .input('password', sql.NVarChar, hashedPassword)
-        .input('role', sql.NVarChar, userData.role)
+        .input('role', sql.NVarChar, userData.role.toUpperCase())
         .input('first_name', sql.NVarChar, userData.first_name)
         .input('last_name', sql.NVarChar, userData.last_name)
         .input('phone', sql.NVarChar, userData.phone)
-        .input('status', sql.NVarChar, userData.status || 'Active')
+        .input('status', sql.NVarChar, userData.status.toUpperCase() || 'PENDING')
         .query(`
           INSERT INTO users (username, email, password, role, first_name, last_name, phone, status)
           OUTPUT INSERTED.id

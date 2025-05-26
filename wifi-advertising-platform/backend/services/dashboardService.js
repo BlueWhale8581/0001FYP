@@ -21,7 +21,7 @@ class DashboardService {
     try {
       const userMetrics = await User.countByRole();
       const merchantMetrics = await Merchant.findAll({ count: true });
-      const pendingMerchants = await Merchant.findAll({ filters: { approval_status: 'pending' }, count: true });
+      const pendingMerchants = await Merchant.findAll({ filters: { approval_status: 'PENDING' }, count: true });
       const recentTransactions = await Transaction.findAll({ limit: 10 }) || [];
       const totalImpressions = await AdImpression.findByAdId(null, { count: true });
       return {
@@ -46,7 +46,7 @@ class DashboardService {
     try {
       const merchants = await Merchant.findByAgentId(agentId);
       const totalMerchants = merchants.length;
-      const pendingMerchants = merchants.filter((m) => m.approval_status === 'pending').length;
+      const pendingMerchants = merchants.filter((m) => m.approval_status === 'PENDING').length;
       const qrCodes = await QRCode.findByAgentId(agentId);
 
       return {
@@ -68,7 +68,7 @@ class DashboardService {
   async getAdvertiserDashboard(advertiserId) {
     try {
       const campaigns = await Campaign.findByAdvertiserId(advertiserId);
-      const activeCampaigns = campaigns.filter((c) => c.status === 'active').length;
+      const activeCampaigns = campaigns.filter((c) => c.status === 'ACTIVE').length;
       const totalBudget = campaigns.reduce((sum, c) => sum + parseFloat(c.budget), 0);
       const totalSpent = campaigns.reduce((sum, c) => sum + parseFloat(c.spent), 0);
 

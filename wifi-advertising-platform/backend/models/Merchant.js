@@ -11,7 +11,7 @@ class Merchant {
     this.tax_id = merchantData.tax_id;
     this.logo_url = merchantData.logo_url;
     this.agent_id = merchantData.agent_id;
-    this.approval_status = merchantData.approval_status || 'pending';
+    this.approval_status = merchantData.approval_status || 'PENDING';
     this.created_at = merchantData.created_at;
     this.updated_at = merchantData.updated_at;
   }

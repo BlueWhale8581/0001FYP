@@ -10,7 +10,7 @@ class Campaign {
     this.end_date = campaignData.end_date;
     this.budget = parseFloat(campaignData.budget);
     this.spent = parseFloat(campaignData.spent || 0);
-    this.status = campaignData.status || 'draft';
+    this.status = campaignData.status || 'DRAFT';
     this.target_audience = campaignData.target_audience;
     this.created_at = campaignData.created_at;
     this.updated_at = campaignData.updated_at;
@@ -28,7 +28,7 @@ class Campaign {
         .input('start_date', sql.Date, campaignData.start_date)
         .input('end_date', sql.Date, campaignData.end_date)
         .input('budget', sql.Decimal(10, 2), campaignData.budget)
-        .input('status', sql.NVarChar, campaignData.status || 'draft')
+        .input('status', sql.NVarChar, campaignData.status.toUpperCase() || 'draft')
         .input('target_audience', sql.NVarChar, JSON.stringify(campaignData.target_audience || null))
         .query(`
           INSERT INTO campaigns (
@@ -79,7 +79,7 @@ class Campaign {
       }
 
       if (filters.active === true) {
-        query += ' AND status = \'active\' AND start_date <= GETDATE() AND end_date >= GETDATE()';
+        query += ' AND status = \'ACTIVE\' AND start_date <= GETDATE() AND end_date >= GETDATE()';
       }
 
       // Add sorting
@@ -233,7 +233,7 @@ class Campaign {
         .query(`
           SELECT 
             COUNT(*) as total_campaigns,
-            SUM(CASE WHEN status = 'active' AND start_date <= GETDATE() AND end_date >= GETDATE() THEN 1 ELSE 0 END) as active_campaigns,
+            SUM(CASE WHEN status = 'ACTIVE' AND start_date <= GETDATE() AND end_date >= GETDATE() THEN 1 ELSE 0 END) as active_campaigns,
             SUM(budget) as total_budget,
             SUM(spent) as total_spent
           FROM campaigns

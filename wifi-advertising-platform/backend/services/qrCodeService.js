@@ -97,7 +97,7 @@ class QRCodeService {
       const qrCode = await QRCodeModel.create({
         merchant_id: merchantId,
         code_image_url: relativeUrl,
-        activation_status: 'active',
+        activation_status: 'ACTIVE',
         created_by: agentId
       });
       
@@ -118,7 +118,7 @@ class QRCodeService {
       const activeQRCodes = await QRCodeModel.findByMerchantId(merchantId);
       
       for (const qrCode of activeQRCodes) {
-        if (qrCode.activation_status === 'active') {
+        if (qrCode.activation_status === 'ACTIVE') {
           await QRCodeModel.updateStatus(qrCode.id, 'inactive');
         }
       }
@@ -175,12 +175,12 @@ class QRCodeService {
   /**
    * Activate or deactivate a QR code
    * @param {number} qrCodeId - QR code ID
-   * @param {string} status - New status ('active' or 'inactive')
+   * @param {string} status - New status ('ACTIVE' or 'inactive')
    * @returns {Promise<Object>} Updated QR code
    */
   async updateQRCodeStatus(qrCodeId, status) {
     try {
-      if (status !== 'active' && status !== 'inactive') {
+      if (status !== 'ACTIVE' && status !== 'inactive') {
         throw new Error('Invalid status. Use "active" or "inactive"');
       }
       
@@ -190,7 +190,7 @@ class QRCodeService {
       }
       
       // If activating, deactivate other QR codes for the same merchant
-      if (status === 'active') {
+      if (status === 'ACTIVE') {
         await this.deactivateExistingQRCodes(qrCode.merchant_id);
       }
       

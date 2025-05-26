@@ -80,7 +80,7 @@ ALTER TABLE [dbo].[transactions] ADD PRIMARY KEY CLUSTERED
 	[id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 GO
-ALTER TABLE [dbo].[transactions] ADD  DEFAULT ('pending') FOR [status]
+ALTER TABLE [dbo].[transactions] ADD  DEFAULT ('PENDING') FOR [status]
 GO
 ALTER TABLE [dbo].[transactions] ADD  DEFAULT (getdate()) FOR [created_at]
 GO
@@ -98,7 +98,7 @@ GO
 ALTER TABLE [dbo].[transactions]  WITH CHECK ADD FOREIGN KEY([merchant_id])
 REFERENCES [dbo].[merchants] ([id])
 GO
-ALTER TABLE [dbo].[transactions]  WITH CHECK ADD CHECK  (([status]='refunded' OR [status]='failed' OR [status]='completed' OR [status]='pending'))
+ALTER TABLE [dbo].[transactions]  WITH CHECK ADD CHECK  (([status]='refunded' OR [status]='failed' OR [status]='completed' OR [status]='PENDING'))
 GO
 ALTER TABLE [dbo].[transactions]  WITH CHECK ADD CHECK  (([type]='advertiser_payment' OR [type]='agent_commission' OR [type]='merchant_payment' OR [type]='ad_revenue'))
 GO
@@ -118,7 +118,7 @@ ALTER TABLE [dbo].[qr_codes] ADD PRIMARY KEY CLUSTERED
 	[id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 GO
-ALTER TABLE [dbo].[qr_codes] ADD  DEFAULT ('active') FOR [activation_status]
+ALTER TABLE [dbo].[qr_codes] ADD  DEFAULT ('ACTIVE') FOR [activation_status]
 GO
 ALTER TABLE [dbo].[qr_codes] ADD  DEFAULT (getdate()) FOR [created_at]
 GO
@@ -131,7 +131,7 @@ ALTER TABLE [dbo].[qr_codes]  WITH CHECK ADD FOREIGN KEY([merchant_id])
 REFERENCES [dbo].[merchants] ([id])
 ON DELETE CASCADE
 GO
-ALTER TABLE [dbo].[qr_codes]  WITH CHECK ADD CHECK  (([activation_status]='inactive' OR [activation_status]='active'))
+ALTER TABLE [dbo].[qr_codes]  WITH CHECK ADD CHECK  (([activation_status]='inactive' OR [activation_status]='ACTIVE'))
 GO
 
 CREATE TABLE [dbo].[system_settings](
@@ -220,7 +220,7 @@ GO
 ALTER TABLE [dbo].[campaigns]  WITH CHECK ADD FOREIGN KEY([advertiser_id])
 REFERENCES [dbo].[advertisers] ([id])
 GO
-ALTER TABLE [dbo].[campaigns]  WITH CHECK ADD CHECK  (([status]='cancelled' OR [status]='completed' OR [status]='paused' OR [status]='active' OR [status]='draft'))
+ALTER TABLE [dbo].[campaigns]  WITH CHECK ADD CHECK  (([status]='CANCELLED' OR [status]='completed' OR [status]='paused' OR [status]='ACTIVE' OR [status]='draft'))
 GO
 
 CREATE TABLE [dbo].[merchants](
@@ -243,7 +243,7 @@ ALTER TABLE [dbo].[merchants] ADD PRIMARY KEY CLUSTERED
 	[id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 GO
-ALTER TABLE [dbo].[merchants] ADD  DEFAULT ('pending') FOR [approval_status]
+ALTER TABLE [dbo].[merchants] ADD  DEFAULT ('PENDING') FOR [approval_status]
 GO
 ALTER TABLE [dbo].[merchants] ADD  DEFAULT (getdate()) FOR [created_at]
 GO
@@ -256,7 +256,7 @@ ALTER TABLE [dbo].[merchants]  WITH CHECK ADD FOREIGN KEY([id])
 REFERENCES [dbo].[users] ([id])
 ON DELETE CASCADE
 GO
-ALTER TABLE [dbo].[merchants]  WITH CHECK ADD CHECK  (([approval_status]='rejected' OR [approval_status]='approved' OR [approval_status]='pending'))
+ALTER TABLE [dbo].[merchants]  WITH CHECK ADD CHECK  (([approval_status]='rejected' OR [approval_status]='approved' OR [approval_status]='PENDING'))
 GO
 
 CREATE TABLE [dbo].[audit_logs](
@@ -429,9 +429,9 @@ ALTER TABLE [dbo].[users] ADD  DEFAULT (getdate()) FOR [created_at]
 GO
 ALTER TABLE [dbo].[users] ADD  DEFAULT (getdate()) FOR [updated_at]
 GO
-ALTER TABLE [dbo].[users] ADD  DEFAULT ('pending') FOR [status]
+ALTER TABLE [dbo].[users] ADD  DEFAULT ('PENDING') FOR [status]
 GO
 ALTER TABLE [dbo].[users]  WITH CHECK ADD CHECK  (([role]='merchant' OR [role]='advertiser' OR [role]='agent' OR [role]='admin'))
 GO
-ALTER TABLE [dbo].[users]  WITH CHECK ADD CHECK  (([status]='suspended' OR [status]='pending' OR [status]='inactive' OR [status]='active'))
+ALTER TABLE [dbo].[users]  WITH CHECK ADD CHECK  (([status]='suspended' OR [status]='PENDING' OR [status]='inactive' OR [status]='ACTIVE'))
 GO
